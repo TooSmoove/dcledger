@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Verify.XunitV3" Version="31.25.0" />
-    <PackageReference Include="WireMock.Net" Version="2.19.0" />
+    <!-- Minimal: avoids the full package's GraphQL/ProtoBuf/OpenTelemetry and json-everything (OSMF EULA) dependencies. -->
+    <PackageReference Include="WireMock.Net.Minimal" Version="2.19.0" />
   </ItemGroup>
 </Project>

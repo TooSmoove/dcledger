@@ -32,8 +32,24 @@ for slug in guilford winston-salem; do
   fetch "api_${slug}_events" "https://webapi.legistar.com/v1/${slug}/events?\$top=5&\$orderby=EventDate%20desc"
 done
 
+# Full text of any robots.txt that exists (small files).
+for f in "$OUT"/robots_*.status; do
+  name=$(basename "$f" .status)
+  if [ "$(cat "$f")" = "200" ]; then
+    { echo; echo "### $name (full)"; echo '```'; head -c 4000 "$OUT/$name.body"; echo; echo '```'; } >> "$SUMMARY"
+  fi
+done
+
 # eSCRIBE: look for calendar/feed links on the public portal home page (S9).
 fetch "escribe_home" "https://pub-greensboro-nc.escribemeetings.com/"
+fetch "escribe_calendar" "https://pub-greensboro-nc.escribemeetings.com/meetingscalendarview.aspx?Expanded=City+Council+Meetings"
+{
+  echo
+  echo "### eSCRIBE feed-looking links and endpoints on the City Council calendar page"
+  echo '```'
+  grep -oiE '(href|src|url)[=:]\s*"[^"]*(rss|ical|ics|feed|json|api|GetCalendar|Meeting\.aspx|FileStream)[^"]*"' "$OUT/escribe_calendar.body" | sort -u | head -40 || true
+  echo '```'
+} >> "$SUMMARY"
 {
   echo
   echo "### eSCRIBE feed-looking links on the portal home page"

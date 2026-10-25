@@ -32,6 +32,6 @@ public class TestStackSpikeTests
         var body = await http.GetStringAsync($"{server.Url}/v1/guilford/events", TestContext.Current.CancellationToken);
 
         body.ShouldContain("5:30 PM");
-        Findings.Write("S10", "WireMock.Net 2.19.0 served a fixture");
+        Findings.Write("S10", "WireMock.Net.Minimal 2.19.0 served a fixture");
     }
 }

@@ -6,6 +6,7 @@ using Ical.Net.DataTypes;
 using Ical.Net.Serialization;
 using Shouldly;
 using Xunit;
+using Calendar = Ical.Net.Calendar;
 
 namespace Spikes.ICal;
 
