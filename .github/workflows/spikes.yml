@@ -116,7 +116,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          global-json-file: spikes/dotnet/global.json
+          dotnet-version: 10.0.402 # exact; 10.0.403 was listed but not downloadable on Oct 25
       - run: mkdir -p "$SPIKE_OUT" "$(dirname "$REPORT")" && dotnet --version | tee "$SPIKE_OUT/sdk.txt"
       - id: s6
         name: S6 iCal + pinned VTIMEZONE
@@ -201,7 +201,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          global-json-file: spikes/dotnet/global.json
+          dotnet-version: 10.0.402 # exact; 10.0.403 was listed but not downloadable on Oct 25
       - id: r2
         name: R2 round trip (skips without secrets)
         continue-on-error: true
