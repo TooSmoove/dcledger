@@ -180,6 +180,8 @@ jobs:
     name: S2/S3 R2 round trip
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Environment secrets are only released to jobs that name the environment (and only on main).
+    environment: r2-docs
     defaults:
       run:
         shell: bash
@@ -187,8 +189,8 @@ jobs:
     env:
       SPIKE_OUT: ${{ github.workspace }}/out/r2
       REPORT: ${{ github.workspace }}/out/report/4-r2.md
-      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-      R2_PRIVATE_BUCKET: ${{ secrets.R2_PRIVATE_BUCKET }}
+      R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+      R2_PRIVATE_BUCKET: ${{ vars.R2_PRIVATE_BUCKET }}
       R2_PRIVATE_ACCESS_KEY_ID: ${{ secrets.R2_PRIVATE_ACCESS_KEY_ID }}
       R2_PRIVATE_SECRET_ACCESS_KEY: ${{ secrets.R2_PRIVATE_SECRET_ACCESS_KEY }}
       R2_PUBLIC_BUCKET: ${{ vars.R2_PUBLIC_BUCKET }}
@@ -216,7 +218,7 @@ jobs:
         run: |
           {
             echo "## S2/S3 R2 (outcome: ${{ steps.r2.outcome }})"
-            if [ -z "$R2_ACCOUNT_ID" ]; then echo "Skipped: R2 secrets not configured yet."; fi
+            if [ -z "$R2_PRIVATE_ACCESS_KEY_ID" ]; then echo "Skipped: r2-docs environment secrets not configured yet."; fi
             cat "$SPIKE_OUT"/findings-*.md 2>/dev/null || true
             if [ "${{ steps.r2.outcome }}" != "success" ] && [ -f "$SPIKE_OUT/r2.log" ]; then echo '```'; tail -30 "$SPIKE_OUT/r2.log"; echo '```'; fi
           } >> "$REPORT"

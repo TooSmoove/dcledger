@@ -1,0 +1,73 @@
+# Builds the North Carolina basemap extract and uploads it to the public R2 bucket.
+# Manual only. The only job that holds the public-bucket token (docs/SPEC.md §C).
+name: basemap
+
+on:
+  workflow_dispatch:
+    inputs:
+      maxzoom:
+        description: "Max zoom (14 recommended; 15 is ~2x the size)"
+        required: true
+        default: "14"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: basemap
+  cancel-in-progress: false
+
+jobs:
+  extract-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: r2-basemap
+    env:
+      GH_TOKEN: ${{ github.token }}
+      MAXZOOM: ${{ inputs.maxzoom }}
+      PMTILES_VERSION: "1.31.2"
+      NC_BBOX: "-84.33,33.84,-75.46,36.59"
+      OBJECT_KEY: basemap/nc.pmtiles
+      BUCKET: ${{ vars.R2_PUBLIC_BUCKET }}
+      ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_PUBLIC_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_PUBLIC_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      # R2 rejects the AWS SDKs' default streaming checksums (verified for AWSSDK.S3 4.x).
+      AWS_REQUEST_CHECKSUM_CALCULATION: WHEN_REQUIRED
+      AWS_RESPONSE_CHECKSUM_VALIDATION: WHEN_REQUIRED
+    steps:
+      - name: Check inputs and configuration
+        run: |
+          [[ "$MAXZOOM" =~ ^1[0-5]$ ]] || { echo "maxzoom must be 10-15"; exit 1; }
+          [ -n "$BUCKET" ] && [ -n "$AWS_ACCESS_KEY_ID" ] || { echo "Set repo variables R2_ACCOUNT_ID, R2_PUBLIC_BUCKET and r2-basemap environment secrets first"; exit 1; }
+      - name: Fetch go-pmtiles ${{ env.PMTILES_VERSION }}
+        run: |
+          gh release download "v$PMTILES_VERSION" --repo protomaps/go-pmtiles \
+            --pattern "go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz" --output pmtiles.tgz
+          mkdir -p pm && tar -xzf pmtiles.tgz -C pm
+          install -m 0755 "$(find pm -type f -name pmtiles | head -1)" ./pmtiles
+      - name: Extract North Carolina from the latest daily build
+        run: |
+          build=""
+          for i in $(seq 1 10); do
+            d=$(date -u -d "-$i day" +%Y%m%d)
+            if curl -sfI "https://build.protomaps.com/$d.pmtiles" > /dev/null; then build="https://build.protomaps.com/$d.pmtiles"; break; fi
+          done
+          [ -n "$build" ] || { echo "no Protomaps build found in the last 10 days"; exit 1; }
+          ./pmtiles extract "$build" nc.pmtiles --bbox="$NC_BBOX" --maxzoom="$MAXZOOM"
+          ./pmtiles show nc.pmtiles | head -20
+          {
+            echo "## Basemap"
+            echo "- source: $build"
+            echo "- bbox: $NC_BBOX, maxzoom: $MAXZOOM"
+            echo "- size: $(du -h nc.pmtiles | cut -f1), sha256: $(sha256sum nc.pmtiles | cut -d' ' -f1)"
+            echo "- license: OpenStreetMap data, ODbL — attribution \"© OpenStreetMap contributors\" required"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload to R2
+        run: |
+          aws s3 cp nc.pmtiles "s3://$BUCKET/$OBJECT_KEY" --endpoint-url "$ENDPOINT" \
+            --content-type application/octet-stream --cache-control "public, max-age=86400" --only-show-errors
+          aws s3api head-object --bucket "$BUCKET" --key "$OBJECT_KEY" --endpoint-url "$ENDPOINT" \
+            --query '{bytes: ContentLength, modified: LastModified}' --output text
+          echo "- uploaded: s3://$BUCKET/$OBJECT_KEY" >> "$GITHUB_STEP_SUMMARY"
