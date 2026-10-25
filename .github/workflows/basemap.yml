@@ -39,8 +39,14 @@ jobs:
     steps:
       - name: Check inputs and configuration
         run: |
-          [[ "$MAXZOOM" =~ ^1[0-5]$ ]] || { echo "maxzoom must be 10-15"; exit 1; }
-          [ -n "$BUCKET" ] && [ -n "$AWS_ACCESS_KEY_ID" ] || { echo "Set repo variables R2_ACCOUNT_ID, R2_PUBLIC_BUCKET and r2-basemap environment secrets first"; exit 1; }
+          [[ "$MAXZOOM" =~ ^1[0-5]$ ]] || { echo "::error::maxzoom must be 10-15"; exit 1; }
+          # Report missing configuration by name only (never values).
+          missing=()
+          [ -n "${{ vars.R2_ACCOUNT_ID }}" ] || missing+=("variable R2_ACCOUNT_ID")
+          [ -n "$BUCKET" ] || missing+=("variable R2_PUBLIC_BUCKET")
+          [ -n "$AWS_ACCESS_KEY_ID" ] || missing+=("r2-basemap secret R2_PUBLIC_ACCESS_KEY_ID")
+          [ -n "$AWS_SECRET_ACCESS_KEY" ] || missing+=("r2-basemap secret R2_PUBLIC_SECRET_ACCESS_KEY")
+          if [ ${#missing[@]} -gt 0 ]; then echo "::error::Missing: ${missing[*]}"; exit 1; fi
       - name: Fetch go-pmtiles ${{ env.PMTILES_VERSION }}
         run: |
           gh release download "v$PMTILES_VERSION" --repo protomaps/go-pmtiles \
