@@ -1,0 +1,182 @@
+# Week-1 spikes (see docs/SPEC.md §I). Throwaway: remove with spikes/ once results are recorded.
+name: spikes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["spikes/**", ".github/workflows/spikes.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spikes-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  sources:
+    name: S1/S9/S13 sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Probe Legistar and eSCRIBE (S1, S9)
+        run: bash spikes/tools/probe_sources.sh out/probe
+      - name: Agenda lead time, last 6 months (S13)
+        run: |
+          UA="dc-ledger-spike/0.1 (+https://github.com/TooSmoove/dcledger)"
+          from=$(date -u -d '-183 days' +%Y-%m-%d); to=$(date -u +%Y-%m-%d)
+          files=()
+          for slug in guilford winston-salem; do
+            if [ "$(cat out/probe/api_${slug}_events.status)" != "200" ]; then echo "- $slug: API not open, skipped" >> "$GITHUB_STEP_SUMMARY"; continue; fi
+            url="https://webapi.legistar.com/v1/${slug}/events?\$filter=EventDate+ge+datetime%27${from}%27+and+EventDate+lt+datetime%27${to}%27"
+            curl -sS -A "$UA" --max-time 60 -o "out/probe/events_6mo_${slug}.json" "$url" && files+=("out/probe/events_6mo_${slug}.json")
+            sleep 2
+          done
+          if [ ${#files[@]} -gt 0 ]; then
+            { echo; echo "## S13 agenda lead time (hours, agenda published -> meeting start)"; python3 -I spikes/tools/lead_time.py "${files[@]}"; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: sources
+          path: out/probe
+          retention-days: 14
+
+  basemap:
+    name: S4 basemap extract size
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: List go-pmtiles release assets and fetch the Linux CLI
+        run: |
+          gh release view --repo protomaps/go-pmtiles --json tagName,assets -q '"release " + .tagName, (.assets[].name)' | tee assets.txt
+          { echo "## S4 go-pmtiles release assets"; echo '```'; cat assets.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          gh release download --repo protomaps/go-pmtiles --pattern '*Linux_x86_64*' --output pmtiles.tgz
+          mkdir -p pm && tar -xzf pmtiles.tgz -C pm
+          bin=$(find pm -type f -name pmtiles | head -1) && chmod +x "$bin" && cp "$bin" ./pmtiles
+          ./pmtiles version || true
+      - name: Dry-run NC extract at z14 and z15
+        run: |
+          build=""
+          for i in $(seq 1 10); do
+            d=$(date -u -d "-$i day" +%Y%m%d)
+            if curl -sfI "https://build.protomaps.com/$d.pmtiles" > /dev/null; then build="https://build.protomaps.com/$d.pmtiles"; break; fi
+          done
+          echo "build=$build"
+          { echo "## S4 NC extract dry run ($build)"; } >> "$GITHUB_STEP_SUMMARY"
+          for z in 14 15; do
+            { echo "### maxzoom $z"; echo '```'; ./pmtiles extract "$build" nc-z$z.pmtiles --bbox=-84.33,33.84,-75.46,36.59 --maxzoom=$z --dry-run 2>&1 | tail -15; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          done
+
+  dotnet:
+    name: S6/S7/S10 .NET (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+        working-directory: spikes/dotnet
+    env:
+      SPIKE_OUT: ${{ github.workspace }}/out/dotnet
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - run: mkdir -p "$SPIKE_OUT" && dotnet --version
+      - id: s6
+        name: S6 iCal + pinned VTIMEZONE
+        continue-on-error: true
+        run: dotnet run --project Spikes.ICal -c Release
+      - id: s7
+        name: S7 DuckDB natives + offline Parquet
+        continue-on-error: true
+        run: dotnet run --project Spikes.DuckDb -c Release
+      - id: s10run
+        name: S10 test stack via dotnet run
+        continue-on-error: true
+        run: dotnet run --project Spikes.TestStack -c Release
+      - id: s10test
+        name: S10 test stack via dotnet test (MTP mode from global.json)
+        continue-on-error: true
+        run: dotnet test --project Spikes.TestStack -c Release
+      - name: S10 transitive license report
+        if: runner.os == 'Linux'
+        continue-on-error: true
+        run: |
+          dotnet restore Spikes.R2
+          { echo "## S10 license report"; } >> "$GITHUB_STEP_SUMMARY"
+          for p in Spikes.ICal Spikes.DuckDb Spikes.TestStack Spikes.R2; do
+            dotnet list "$p" package --include-transitive --format json > "$SPIKE_OUT/$p.packages.json"
+            { echo "### $p"; python3 -I ../tools/license_report.py "$SPIKE_OUT/$p.packages.json" "$HOME/.nuget/packages"; } >> "$GITHUB_STEP_SUMMARY"
+          done
+      - name: Outcomes
+        if: always()
+        run: |
+          {
+            echo "## .NET spike outcomes (${{ runner.os }})"
+            echo "| spike | outcome |"; echo "|---|---|"
+            echo "| S6 iCal/VTIMEZONE | ${{ steps.s6.outcome }} |"
+            echo "| S7 DuckDB | ${{ steps.s7.outcome }} |"
+            echo "| S10 dotnet run | ${{ steps.s10run.outcome }} |"
+            echo "| S10 dotnet test (MTP) | ${{ steps.s10test.outcome }} |"
+            echo; cat "$SPIKE_OUT"/findings-*.md 2>/dev/null || echo "(no findings written)"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: dotnet-${{ matrix.os }}
+          path: out/dotnet
+          retention-days: 14
+
+  r2:
+    name: S2/S3 R2 round trip
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+        working-directory: spikes/dotnet
+    env:
+      SPIKE_OUT: ${{ github.workspace }}/out/r2
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_PRIVATE_BUCKET: ${{ secrets.R2_PRIVATE_BUCKET }}
+      R2_PRIVATE_ACCESS_KEY_ID: ${{ secrets.R2_PRIVATE_ACCESS_KEY_ID }}
+      R2_PRIVATE_SECRET_ACCESS_KEY: ${{ secrets.R2_PRIVATE_SECRET_ACCESS_KEY }}
+      R2_PUBLIC_BUCKET: ${{ vars.R2_PUBLIC_BUCKET }}
+      BASEMAP_URL: ${{ vars.BASEMAP_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - name: R2 round trip (skips without secrets)
+        continue-on-error: true
+        run: mkdir -p "$SPIKE_OUT" && dotnet run --project Spikes.R2 -c Release
+      - name: Basemap range + CORS check (skips without BASEMAP_URL)
+        if: env.BASEMAP_URL != ''
+        run: |
+          curl -sS -o /dev/null -D headers.txt -H 'Origin: https://example.org' -H 'Range: bytes=0-16383' "$BASEMAP_URL"
+          { echo "## S3 basemap range/CORS"; echo '```'; cat headers.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          grep -qE '^HTTP/[0-9.]+ 206' headers.txt && grep -qi '^access-control-allow-origin:' headers.txt
+      - name: Findings
+        if: always()
+        run: cat "$SPIKE_OUT"/findings-*.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "R2 skipped (no secrets yet)" >> "$GITHUB_STEP_SUMMARY"

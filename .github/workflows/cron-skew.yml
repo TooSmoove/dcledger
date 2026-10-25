@@ -1,0 +1,17 @@
+# Spike S5: measure how late GitHub starts scheduled runs. Run for 14 days, then delete.
+# Analysis: gh run list -w cron-skew.yml -L 400 --json createdAt,event  (skew = createdAt minute - 17)
+name: cron-skew
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: echo "slot=${{ github.event.schedule }} started=$(date -u +%FT%TZ)"

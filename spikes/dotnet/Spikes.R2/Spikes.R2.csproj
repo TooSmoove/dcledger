@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <!-- Floating on purpose for the spike: the resolved 4.x version is recorded and then pinned. -->
+    <PackageReference Include="AWSSDK.S3" Version="4.*" />
+  </ItemGroup>
+</Project>

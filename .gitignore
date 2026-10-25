@@ -1,0 +1,10 @@
+bin/
+obj/
+out/
+*.received.*
+node_modules/
+dist/
+.astro/
+.vs/
+.idea/
+*.user
