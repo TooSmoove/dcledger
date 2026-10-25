@@ -44,7 +44,7 @@ public sealed class DependencyRulesTests
             """;
 
         DependencyRules.Violations("DcLedger.Domain", xml)
-            .ShouldBe(new[] { "DcLedger.Domain must not reference project DcLedger.Infrastructure." });
+            .ShouldHaveSingleItem().ShouldBe("DcLedger.Domain must not reference project DcLedger.Infrastructure.");
     }
 
     [Fact]
@@ -59,14 +59,14 @@ public sealed class DependencyRulesTests
             """;
 
         DependencyRules.Violations("DcLedger.Application", xml)
-            .ShouldBe(new[] { "DcLedger.Application must not reference package AWSSDK.S3." });
+            .ShouldHaveSingleItem().ShouldBe("DcLedger.Application must not reference package AWSSDK.S3.");
     }
 
     [Fact]
     public void An_unknown_project_is_reported()
     {
         DependencyRules.Violations("DcLedger.Unplanned", "<Project />")
-            .ShouldBe(new[] { "DcLedger.Unplanned has no entry in DependencyRules; add one deliberately." });
+            .ShouldHaveSingleItem().ShouldBe("DcLedger.Unplanned has no entry in DependencyRules; add one deliberately.");
     }
 
     private static Dictionary<string, string> SourceProjectFiles() =>

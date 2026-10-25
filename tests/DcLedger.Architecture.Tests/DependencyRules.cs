@@ -86,5 +86,5 @@ internal static class DependencyRules
     private static string ProjectNameFromPath(string path) =>
         Path.GetFileNameWithoutExtension(path.Replace('\\', '/'));
 
-    private static IReadOnlySet<string> Set(params string[] names) => new HashSet<string>(names, StringComparer.Ordinal);
+    private static HashSet<string> Set(params string[] names) => new(names, StringComparer.Ordinal);
 }
