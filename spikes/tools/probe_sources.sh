@@ -5,7 +5,7 @@ set -uo pipefail
 OUT="${1:-out/probe}"
 mkdir -p "$OUT"
 UA="dc-ledger-spike/0.1 (+https://github.com/TooSmoove/dcledger)"
-SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+SUMMARY="${REPORT:-${GITHUB_STEP_SUMMARY:-/dev/stdout}}"
 
 fetch() { # name url
   local name="$1" url="$2"
