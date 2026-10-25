@@ -1,0 +1,79 @@
+# TEMPORARY (issue #8): builds and tests the .NET scaffold on Linux and Windows and
+# generates packages.lock.json files. Removed before the PR merges; ci.yml (#9) replaces it.
+name: scaffold-check
+
+on:
+  push:
+    branches: [chore/8-dotnet-scaffold]
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  build-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.402
+      - name: Restore (locked mode once lock files are committed)
+        run: |
+          if [ -f src/DcLedger.Cli/packages.lock.json ]; then
+            dotnet restore DcLedger.slnx --locked-mode 2>&1 | tee restore.log
+          else
+            dotnet restore DcLedger.slnx 2>&1 | tee restore.log
+          fi
+      - name: Build
+        run: dotnet build DcLedger.slnx --no-restore -c Release 2>&1 | tee build.log
+      - name: Test
+        run: dotnet test --solution DcLedger.slnx --no-build -c Release 2>&1 | tee test.log
+      - name: Publish linux-x64 CLI
+        if: runner.os == 'Linux'
+        run: dotnet publish src/DcLedger.Cli -c Release -r linux-x64 --self-contained false -o out/dcl 2>&1 | tee publish.log && ./out/dcl/dcl --version
+      - name: Surface failures as annotations
+        if: failure()
+        run: |
+          for f in restore.log build.log test.log publish.log; do
+            [ -f "$f" ] || continue
+            msg=$(grep -E 'error|Error|failed|Failed|FAIL|Exception|Should' "$f" | head -25 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')
+            [ -n "$msg" ] && echo "::error title=${{ runner.os }} $f::$msg"
+          done
+          exit 0
+
+  lockfiles:
+    # Writes generated lock files to the throwaway branch ci/lockfiles-8 so they can be reviewed and
+    # committed by hand. Only this job can write, and only on the scaffold branch.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.402
+      - name: Generate lock files
+        run: dotnet restore DcLedger.slnx --force-evaluate
+      - name: Push them to ci/lockfiles-8
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci/lockfiles-8
+          git add -f -- '*packages.lock.json'
+          git commit -m "Generated packages.lock.json files (temporary, #8)" || { echo "no changes"; exit 0; }
+          git push -f origin ci/lockfiles-8

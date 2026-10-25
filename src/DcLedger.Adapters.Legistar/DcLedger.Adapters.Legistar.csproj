@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Legistar Web API adapter. Implements Application ports; never references Infrastructure (ADR-0001). -->
+  <ItemGroup>
+    <ProjectReference Include="..\DcLedger.Application\DcLedger.Application.csproj" />
+    <ProjectReference Include="..\DcLedger.Domain\DcLedger.Domain.csproj" />
+  </ItemGroup>
+</Project>

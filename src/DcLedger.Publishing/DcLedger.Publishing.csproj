@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- DuckDB build and JSON/CSV/ICS/RSS/Parquet exporters (ADR-0001). -->
+  <ItemGroup>
+    <ProjectReference Include="..\DcLedger.Application\DcLedger.Application.csproj" />
+    <ProjectReference Include="..\DcLedger.Domain\DcLedger.Domain.csproj" />
+  </ItemGroup>
+</Project>

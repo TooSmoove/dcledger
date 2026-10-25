@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Use cases, ports and the quality gate. References Domain only (ADR-0001). -->
+  <ItemGroup>
+    <ProjectReference Include="..\DcLedger.Domain\DcLedger.Domain.csproj" />
+  </ItemGroup>
+</Project>
