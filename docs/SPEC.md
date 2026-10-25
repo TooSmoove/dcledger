@@ -1,7 +1,7 @@
 # dc-ledger — Project Brief (v0.1)
 
-**Status:** Gate 0A approved Oct 25, 2026 · Owner: Keith (@TooSmoove).
-Verified by two research passes. Items still unverified were turned into Week-1 spikes (§I); results are recorded in `docs/spikes/`.
+**Status:** Gate 0A approved Oct 25, 2026; amended Oct 25, 2026 after the Week-1 spikes and Gate 0B (see §J). Owner: Keith (@TooSmoove).
+Architecture decisions live in `docs/adr/`; spike evidence in `docs/spikes/`.
 
 ## A. Problem & users
 
@@ -27,7 +27,7 @@ Due live and unlisted by **Sun Nov 22, 2026**.
 - **AC6 Labels:** Each item carries exactly one label: "reported (news)" or "confirmed (official record)". "Confirmed" requires a document row from an official platform.
 - **AC7 CSV safety:** UTF-8 with BOM, RFC 4180 quoting. Text cells starting with `=` `+` `-` `@`, tab or CR get a leading apostrophe (text columns only; documented in the data dictionary). A fixture containing all six triggers round-trips.
 - **AC8 Nothing unreviewed is public:** The site builds only from merged YAML on main, and a test proves it needs nothing else.
-- **AC9 Review SLA:** Given an agenda posted at time T, a review issue exists by T+12h. T is the platform's agenda-published timestamp (`EventAgendaLastPublishedUTC` when the Legistar API is used). If the fallback path exposes no such timestamp, AC9 is verified by cadence: ingest starts at least every 6 hours, with start skew logged.
+- **AC9 Review SLA (amended):** T is the time an ingest run first sees a published agenda (recorded as `first_seen_utc`). The review issue for that agenda opens in the same ingest run. Ingest starts at least every 6 hours (every 4 hours if spike S5 shows the 12-hour target is at risk), with start delay logged, so the worst case from posting to issue is one cadence interval plus GitHub's scheduling delay, within 12 hours. Legistar's `EventAgendaLastPublishedUTC` is not used: it records the *last* republication, not the first (spike S13).
 - **AC10 Freshness:** Each jurisdiction shows "last checked" in Eastern time; a text-plus-icon stale flag appears after 48 hours without a successful check. For Greensboro, "last checked" is the reviewer's last manual check.
 - **AC11 Unlisted:** `noindex` meta tag plus `X-Robots-Tag: noindex` header; no sitemap.
 - **AC12 Quality:** axe reports zero critical or serious issues; Lighthouse mobile ≥ 90 on /radar and the map page; non-map pages ship no `<script>` (asserted in CI).
@@ -35,25 +35,24 @@ Due live and unlisted by **Sun Nov 22, 2026**.
 
 ## C. Walking skeleton (Guilford only, by Sun Nov 8, 2026)
 
+Modules follow ADR-0001; contracts follow ADR-0004.
+
 | Component | Role |
 |---|---|
-| DcLedger.Domain | Records, UID hashing, DST-safe instant conversion, status and label enums. No I/O. |
-| DcLedger.Application | Ingest, classify, propose-review and publish use cases, written over ports |
-| DcLedger.Cli | System.CommandLine 2.0.x: `ingest`, `validate`, `build-data`, `export`. Published as linux-x64. |
-| Fetcher | IHttpClientFactory, resilience and rate limiter; honors robots.txt; identifying user agent |
-| DcLedger.Adapters.Legistar | Web API events/agenda items; if token-gated, per-meeting iCal + meeting-detail HTML (where robots.txt allows). EventDate + EventTime → America/New_York → UTC. |
-| DcLedger.Storage.R2 | AWSSDK.S3 4.x, both checksum modes WHEN_REQUIRED, DisablePayloadSigning. Private bucket: raw bytes, hash manifest, run logs. |
-| Classifier | Deterministic keyword rules. No AI. |
-| Review queue | GitHub Issue with neutral placeholder title, case number, hash, retrieval time, ready-to-paste YAML (incl. document row). Never the original title. |
-| `data/` YAML | Canonical records |
-| DcLedger.Validation | Hand-written C# quality gate |
-| DcLedger.Export | DuckDB (DuckDB.NET.Data.Full 1.5.6.1, CI only, never committed); JSON, CSV, ICS (Ical.Net + pinned VTIMEZONE), RSS (System.ServiceModel.Syndication), Parquet |
-| `site/` (Astro 7.x) | /radar, item pages, map page (MapLibre GL JS 6.x + pmtiles 4.x) |
-| Public R2 basemap | Protomaps NC extract. r2.dev allowed for the skeleton only. |
-| Cloudflare Pages | Static deploy |
-| Workflows | `ci` (ubuntu + windows matrix), `ingest` (cron 6h), `publish` (push to main), `basemap` (manual; only job holding the public-bucket token) |
+| DcLedger.Domain | Records (jurisdiction, document, event, local action), UID hashing, Eastern-time rules (DST gap and overlap rejected), status and label enums, keyword classifier. No I/O. |
+| DcLedger.Application | Use cases (ingest, validate, export) and ports; the hand-written validator (quality gate) |
+| DcLedger.Adapters.Legistar | Web API events and event items (API verified open, no token). EventDate + EventTime → America/New_York → UTC. |
+| DcLedger.Infrastructure | Fetcher (IHttpClientFactory, standard resilience, rate limit, robots.txt, identifying user agent, size caps); R2 store and ingest state (AWSSDK.S3 4.0.104.6, both checksum modes WHEN_REQUIRED, DisablePayloadSigning); GitHub review queue; YAML reader |
+| DcLedger.Publishing | DuckDB (DuckDB.NET.Data.Full 1.5.6.1, built in CI, never committed); JSON, CSV, ICS (Ical.Net 5.2.3 + pinned VTIMEZONE), RSS (System.ServiceModel.Syndication), Parquet |
+| DcLedger.Cli | System.CommandLine 2.0.13: `ingest`, `validate`, `export`. Published as linux-x64. Only composition root. |
+| Review queue | GitHub Issue with neutral placeholder title, case number, hash, retrieval and first-seen times, ready-to-paste YAML (incl. document row). Never the original title. |
+| `data/` YAML | Canonical records, one file each |
+| `site/` (Astro 7.4.2) | /radar, item pages, map page (MapLibre GL JS 6.16 + pmtiles 4.5, loaded on demand) |
+| Public R2 basemap | Protomaps NC extract at z14 (370 MB). r2.dev allowed for the skeleton only. |
+| Cloudflare Pages | Static deploy (project `dcledger`) |
+| Workflows | `ci` (ubuntu-24.04 + windows-2025), `ingest` (cron 6 h), `publish` (green CI on main + every 6 h), `basemap` (manual; only job holding the public-bucket token) |
 
-- **WS-AC1:** `dotnet build`/`test` green on ubuntu-latest and windows-latest; Astro build green on Linux.
+- **WS-AC1:** `dotnet build`/`test` green on ubuntu-24.04 and windows-2025; Astro build green on Linux.
 - **WS-AC2:** Ingesting the same fixtures twice gives byte-identical output and hashes, and no new issue.
 - **WS-AC3:** A live Guilford ingest writes raw bytes and the manifest to the private bucket and opens one sanitized issue (no original title; @-mentions neutralized).
 - **WS-AC4:** Merging the YAML PR triggers publish; the item appears on /radar.
@@ -67,70 +66,78 @@ Due live and unlisted by **Sun Nov 22, 2026**.
 ## D. Out of scope for v0.1
 
 - **Coverage:** jurisdictions beyond the three; eSCRIBE adapter (plan week 6); automated NC DAQ, Forsyth EAP, NCUC, NCGA ingest (manual entries only); parcels and GIS layers.
-- **Features:** project/entity pages; search and filter UI; DuckDB-WASM; PDF extraction (PdfPig deferred); email, accounts, notifications, analytics; any LLM or AI.
+- **Records:** `fact`, `project`, `entity`, `correction` (no AC needs them).
+- **Features:** project/entity pages; search and filter UI; DuckDB-WASM; PDF extraction (PdfPig deferred); HTML or iCal fallback adapter and AngleSharp (the Legistar API is open); email, accounts, notifications, analytics; any LLM or AI.
 - **Publishing:** public mirror of agenda packets; versioned data releases, Frictionless, Zenodo; SEO and indexing.
 - **Process:** bot-authored PRs, a GitHub App, required approvals.
 - **Deferred migrations:** Workers, DuckDB 2.0, AOT publishing.
 
 ## E. Non-negotiable constraints
 
-- **Platforms:** .NET 10 LTS (supported to Nov 2028). Dev on Windows; CI on Linux plus a Windows matrix leg. Node pinned in `.nvmrc` to Astro 7's engines requirement. Last two versions of evergreen browsers plus iOS Safari.
-- **Privacy:** Public: neutral titles, case numbers, meeting metadata, source URLs, hashes, retrieval times, basemap. Private R2 only: agenda packets, original titles, manifest, run logs. No private individuals' names in git, site, feeds, downloads or issues. Fixtures scrubbed of PII. No cookies, analytics, third-party scripts or AI services. Git history is permanent, so PII is caught before merge; a runbook covers history rewrites.
-- **Security & trust boundaries:** All fetched content is untrusted (AngleSharp parsing; never `set:html`; RFC 5545 escaping; CSV guard; size caps and parse timeouts; sanitized issue bodies). `ingest`: `contents: read`, `issues: write`, private-bucket token. `publish`: `contents: read`, Pages deploy token only. No `pull_request_target`; fork PRs get no secrets; actions pinned by SHA; Dependabot and CodeQL on. No CAPTCHA or bot-wall circumvention.
-- **Performance:** Lighthouse mobile ≥ 90; no JS off the map page; map bundle measured and budgeted in CI; PMTiles served by range requests from R2 (Pages 25 MiB per-file limit); publish ≤ 10 minutes.
+- **Platforms:** .NET 10 LTS (supported to Nov 2028), exact SDK pinned in `global.json` and CI (10.0.402). Dev on Windows; CI on pinned runner images (ubuntu-24.04, windows-2025). Node ≥ 22.23.4 pinned in `.nvmrc` (Astro 7.4.2 engines). Last two versions of evergreen browsers plus iOS Safari.
+- **Privacy:** Public: neutral titles, case numbers, meeting metadata, source URLs, hashes, retrieval times, basemap. Private R2 only: agenda packets, original titles, ingest state, run logs. No private individuals' names in git, site, feeds, downloads or issues. Fixtures scrubbed of PII. No cookies, analytics, third-party scripts or AI services. Git history is permanent, so PII is caught before merge; a runbook covers history rewrites.
+- **Security & trust boundaries (ADR-0003):** All fetched content is untrusted (static-typed JSON parsing; never `set:html`; RFC 5545 escaping; CSV guard; size caps and timeouts; sanitized issue bodies). Credentials live in GitHub environments restricted to main: `r2-docs` (ingest), `r2-basemap` (basemap), `cloudflare-pages` (publish). Default workflow permissions `contents: read`, raised per job. No `pull_request_target`; fork PRs get no secrets; actions pinned by full SHA; Dependabot and CodeQL on. No CAPTCHA or bot-wall circumvention.
+- **Performance:** Lighthouse mobile ≥ 90; no JS off the map page; on the map page MapLibre loads only when the user opens the map (bundle 289 KB gzip, measured); PMTiles served by range requests from R2 (Pages 25 MiB per-file limit); publish ≤ 10 minutes.
 - **Accessibility:** WCAG 2.2 AA; map has an equivalent table; status in text; times show their zone.
-- **Offline/online:** full fixture pipeline runs offline; only `ingest` touches the network; no runtime extension downloads; event table works without JavaScript.
+- **Offline/online:** full fixture pipeline runs offline; only `ingest` touches the network; no runtime extension downloads (verified: parquet, json, icu statically linked); event table works without JavaScript.
 - **Neutrality:** reviewer-written neutral titles; labels applied mechanically; no editorial adjectives.
-- **FOSS readiness:** MIT, CC BY 4.0, DCO; README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, AGENTS.md; license report in CI; no runtime dependency with fee-bearing binary terms.
+- **FOSS readiness:** MIT, CC BY 4.0, DCO (enforced by a CI check); README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, AGENTS.md; license report in CI; no runtime dependency with fee-bearing binary terms.
 
 ## F. License
 
 | | Fit with goals (maximum reuse by newsrooms and governments) | Verdict |
 |---|---|---|
-| **MIT** | Compatible with every verified dependency (BSD-3: MapLibre, pmtiles, Shouldly; MIT: Syndication, DuckDB.NET, WireMock.Net, Astro) | **Chosen** |
+| **MIT** | Compatible with every verified dependency (BSD-3: MapLibre, pmtiles, Shouldly; MIT: Syndication, DuckDB.NET, Ical.Net, YamlDotNet, Astro; Apache-2.0: AWSSDK, xunit.v3, WireMock.Net.Minimal, NodaTime) | **Chosen** |
 | Apache-2.0 | Patent grant; heavier NOTICE handling | Viable, not needed |
 | MPL-2.0 | File-level copyleft; friction for agency forks | No |
 | GPL-3.0 | Deters government and newsroom reuse | No |
 
-Data: CC BY 4.0. Basemap: ODbL Produced Work in a separate bucket with OSM attribution. JsonSchema.Net removed (fee-bearing binary EULA). WireMock.Net's json-everything dependency is test-only, never redistributed, flagged in the license report. Parcels out of v0.1 (G.S. 132-10 resale concern; statute wording to confirm in S12b).
+Data: CC BY 4.0. Basemap: ODbL Produced Work in a separate bucket with OSM attribution. JsonSchema.Net removed (fee-bearing binary EULA). Full WireMock.Net replaced by WireMock.Net.Minimal, which drops its OSMF-EULA dependencies (spike S10). Parcels out of v0.1 (G.S. 132-10 resale concern; statute wording to confirm in S12b).
 
-## G. Stack check (pins)
+## G. Stack (verified pins)
 
-| Component | Choice | Concern | Spike |
-|---|---|---|---|
-| Runtime | .NET 10 LTS | None | — |
-| CLI | System.CommandLine 2.0.13 | API changed from betas (SetAction/ParseResult) | — |
-| YAML | YamlDotNet 18.x (MIT) | No AOT publishing, so AOT caveats don't apply | — |
-| DB | DuckDB.NET.Data.Full 1.5.6.1 | Native RIDs and offline Parquet to confirm; AccessViolation under debugger | S7 |
-| Object storage | AWSSDK.S3 4.x → R2 | WHEN_REQUIRED checksums + DisablePayloadSigning on every request incl. multipart; ForcePathStyle unknown | S2/S3 |
-| iCal | Ical.Net 5.2.x + pinned VTIMEZONE | Never use `FromSystemTimeZone` | S6 |
-| RSS | System.ServiceModel.Syndication 10.0.x (MIT) | None | — |
-| Validation | Hand-written C# | JsonSchema.Net dropped | — |
-| Tests | xunit.v3 4.0.2, Verify.XunitV3 31.25.0, Shouldly 4.3.0, WireMock.Net 2.19.0 | Verify declares xunit ≥ 3.2.2; 4.x compatibility to confirm | S10 |
-| Site | Astro 7.x | Stricter compiler; Node requirement | S14 |
-| Map | MapLibre GL JS 6.x + pmtiles 4.5 | ESM namespace import; bundle size | CI budget |
-| Basemap | Protomaps NC extract on R2 behind custom domain | Self-host (daily builds not CORS-open); size unknown; custom-domain CORS reported flaky | S3/S4 |
-| Hosting | Cloudflare Pages | Workers recommended for new projects; migrate after domain exists | — |
-| CI | GitHub Actions | Cron delays; 60-day schedule disable on public repos | S5/S12 |
-| Ingest source | Legistar Web API | Token status unknown; 1000-row cap; stale timestamps | S1 |
-| Greensboro | Manual YAML | eSCRIBE since July 2021 | S9 |
+| Component | Pin | Evidence |
+|---|---|---|
+| Runtime | .NET 10 LTS, SDK 10.0.402 exact | S6/S7/S10 on Linux + Windows; 10.0.403 feed entry was undownloadable on Oct 25 |
+| CLI | System.CommandLine 2.0.13 | NuGet (pass 1) |
+| YAML | YamlDotNet 18.1.0 | NuGet, MIT |
+| DB | DuckDB.NET.Data.Full 1.5.6.1 (engine 1.5.6) | S7: natives for linux-x64/win-x64; Parquet offline |
+| Object storage | AWSSDK.S3 4.0.104.6; no ForcePathStyle | S2/S3 against live R2 |
+| iCal | Ical.Net 5.2.3 + pinned VTIMEZONE injected before the first VEVENT; never `FromSystemTimeZone` | S6 |
+| RSS | System.ServiceModel.Syndication 10.0.x | NuGet, MIT |
+| Validation | Hand-written C# | JsonSchema.Net dropped |
+| Tests | xunit.v3 4.0.2, Verify.XunitV3 31.25.0, Shouldly 4.3.0, WireMock.Net.Minimal 2.19.0 | S10 (`dotnet run` and `dotnet test` in MTP mode) |
+| Site | Astro 7.4.2 | S14: escaping verified, zero script off-map |
+| Map | MapLibre GL JS 6.16.0 + pmtiles 4.5.0; go-pmtiles 1.31.2 | S14, S4 |
+| Basemap | Protomaps NC extract, z14, `basemap/nc.pmtiles` | S4, S3: 206 + CORS on r2.dev |
+| Hosting | Cloudflare Pages (Workers after the domain exists) | — |
+| CI | GitHub Actions, pinned images and SHAs | Cron delay under measurement (S5) |
+| Ingest source | Legistar Web API, open, no robots.txt | S1 |
+| Greensboro | Manual YAML; eSCRIBE robots.txt blocks only PetalBot | S9 |
 
 ## H. Name check
 
-Repo `dc-ledger` (GitHub repo created as `TooSmoove/dcledger`), namespace `DcLedger.*`, domain best guess ncdcledger.org (alternatives: ncdatacenterledger.org, triaddatacenters.org, triadhearingradar.org). "Ledger" is a Ledger SAS trademark in crypto; "DC" commonly reads as District of Columbia. Register the domain on Cloudflare by Nov 15. Findings: `docs/spikes/`.
+Repo `TooSmoove/dcledger`, namespace `DcLedger.*`, Pages project `dcledger`. npm and PyPI names free (S11). Domain best guess ncdcledger.org (alternatives: ncdatacenterledger.org, triaddatacenters.org, triadhearingradar.org); register on Cloudflare by Nov 15. "Ledger" is a Ledger SAS trademark in crypto; "DC" commonly reads as District of Columbia.
 
-## I. Risks & Week-1 spikes (riskiest first)
+## I. Remaining risks & spikes (riskiest first)
 
-1. **S1 Legistar access** — events endpoint for `guilford` and `winston-salem`, robots.txt on all hosts. JSON → use API; 403/"Token is required" → email clerks + iCal/HTML fallback; robots disallow → manual entry.
-2. **Schedule** — ~40 h across 16 components; build in risk order: Legistar, gate, publish, map last.
-3. **S2/S3 R2 round-trip in CI** — single + multipart with v4 flags, ForcePathStyle on/off, anonymous denied, per-bucket tokens, ranged GET + CORS on custom domain.
-4. **S13 Lead time** — agenda-published → meeting start over 6 months. G.S. 143-318.12 requires 48-hour notice for special meetings but sets no agenda lead time.
-5. **S5 Cron skew** — 14 days of start skew; move to 4h if p95 skew + run time threatens the 12h SLA.
-6. **S6 VTIMEZONE** — in-model vs post-serialization injection; golden test on both OSes.
-7. **S7 DuckDB** — Parquet `COPY` with autoinstall off on both OSes; win-x64 and linux-x64 runtimes present.
-8. **S4 Basemap** — dry-run extract sizes z14/z15; Windows go-pmtiles; font/sprite licenses.
-9. **S10 Tests and licenses** — xunit.v3 4.x + Verify; transitive license report; fail on EULA-bearing runtime dependency.
-10. **S9 eSCRIBE** — robots.txt and iCal/RSS/JSON feeds.
-11. **S12 GitHub** — 60-day "activity" definition; rulesets with zero approvals; DCO app; S12b G.S. 132-10 text.
-12. **S14 Astro 7** — escaping golden test; `set:html` ban; Node requirement.
-13. **S11 Name/domain** — checks in §H; register by Nov 15.
+1. **Schedule:** the skeleton spans ~20 roadmap items by Nov 8; Claude implements, Keith reviews and merges.
+2. **S15 Legistar event items** (#2): classifier precision, the cancellation field, PII rate in titles.
+3. **S16 Pages** (#11): `_headers` noindex on direct upload; Pages: Edit-only token.
+4. **S17 artifact handoff** (#12): scheduled workflows run the CLI from the latest green `ci`.
+5. **S18 map Lighthouse** (#3): ≥ 90 with on-demand MapLibre.
+6. **S5 cron delay** (#4): p95 by Nov 8; decides 6 h vs 4 h ingest.
+7. **S11 domain / S12 settings / S12b statute** (#10): owner tasks.
+
+Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7, S9, S10, S13, S14.
+
+## J. Amendments log
+
+- **Oct 25, 2026 — Week-1 spikes and Gate 0B:**
+  - AC9 redefined around first-seen time (S13).
+  - Module names aligned with ADR-0001 (Validation → Application, Export → Publishing, Storage.R2 → Infrastructure).
+  - CLI commands reduced to `ingest`, `validate`, `export` (`build-data` merged into `export`).
+  - v0.1 records limited to jurisdiction, document, event, local_action.
+  - Publish runs on green CI on main and every 6 h; "last checked" comes from ingest run history.
+  - DCO enforced by a CI check; Pages project `dcledger`.
+  - Pins and constraints updated from spikes: WireMock.Net.Minimal, basemap z14, on-demand map, DST gap/overlap rejection, Node ≥ 22.23.4, AWSSDK.S3 4.0.104.6, exact SDK pin, pinned runner images, no HTML/iCal fallback.
