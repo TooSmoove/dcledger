@@ -116,7 +116,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: 10.0.x
+          global-json-file: spikes/dotnet/global.json
       - run: mkdir -p "$SPIKE_OUT" "$(dirname "$REPORT")" && dotnet --version | tee "$SPIKE_OUT/sdk.txt"
       - id: s6
         name: S6 iCal + pinned VTIMEZONE
@@ -201,7 +201,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: 10.0.x
+          global-json-file: spikes/dotnet/global.json
       - id: r2
         name: R2 round trip (skips without secrets)
         continue-on-error: true
@@ -216,6 +216,7 @@ jobs:
       - name: Publish report
         if: always()
         run: |
+          mkdir -p "$SPIKE_OUT" "$(dirname "$REPORT")"
           {
             echo "## S2/S3 R2 (outcome: ${{ steps.r2.outcome }})"
             if [ -z "$R2_PRIVATE_ACCESS_KEY_ID" ]; then echo "Skipped: r2-docs environment secrets not configured yet."; fi
