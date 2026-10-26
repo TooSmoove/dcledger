@@ -1,0 +1,36 @@
+---
+// Scaffold (#7): lists every event in events.json. The 30-day window, provenance and labels arrive in #21.
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const events = (await getCollection('events')).sort((a, b) =>
+  a.data.starts_utc.localeCompare(b.data.starts_utc),
+);
+---
+
+<Base title="Hearing Radar">
+  <h1>Hearing Radar</h1>
+  <table>
+    <caption>Upcoming meetings and hearings</caption>
+    <thead>
+      <tr>
+        <th scope="col">When (Eastern)</th>
+        <th scope="col">Body</th>
+        <th scope="col">Item</th>
+        <th scope="col">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {events.map(({ data }) => (
+        <tr>
+          <td>
+            <time datetime={data.starts_utc}>{data.starts_local}</time>
+          </td>
+          <td>{data.body}</td>
+          <td>{data.title}</td>
+          <td>{data.status === 'cancelled' ? 'Cancelled' : 'Scheduled'}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</Base>

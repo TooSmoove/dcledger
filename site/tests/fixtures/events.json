@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-10-25T21:00:00Z",
+  "jurisdictions": [
+    {
+      "id": "guilford",
+      "name": "Guilford County Board of Commissioners",
+      "last_checked_utc": "2026-10-25T21:17:00Z",
+      "stale": false
+    }
+  ],
+  "events": [
+    {
+      "id": "fixture-guilford-boc-2026-11-05",
+      "uid": "fixture-uid-0001",
+      "jurisdiction_id": "guilford",
+      "body": "Board of Commissioners",
+      "title": "Fixture: regular meeting",
+      "case_number": null,
+      "starts_utc": "2026-11-05T22:30:00Z",
+      "starts_local": "2026-11-05T17:30:00-05:00",
+      "status": "scheduled",
+      "sequence": 0,
+      "label": "confirmed_official",
+      "documents": [
+        {
+          "url": "https://guilford.legistar.com/",
+          "retrieved_utc": "2026-10-25T21:17:05Z",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "id": "fixture-escaping-check",
+      "uid": "fixture-uid-0002",
+      "jurisdiction_id": "guilford",
+      "body": "Board of Commissioners",
+      "title": "Fixture: escaping check <script>alert(1)</script> & \"quotes\"",
+      "case_number": "Z-26-01",
+      "starts_utc": "2026-10-15T21:30:00Z",
+      "starts_local": "2026-10-15T17:30:00-04:00",
+      "status": "cancelled",
+      "sequence": 1,
+      "label": "reported_news",
+      "documents": [
+        {
+          "url": "https://guilford.legistar.com/",
+          "retrieved_utc": "2026-10-10T12:00:00Z",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
+    }
+  ]
+}
