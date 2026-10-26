@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The dcl command and the only composition root (ADR-0001, ADR-0004). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>dcl</AssemblyName>
+    <RootNamespace>DcLedger.Cli</RootNamespace>
+    <!-- Listed so the lock file covers `dotnet publish -r linux-x64` in CI and win-x64 locally. -->
+    <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DcLedger.Application\DcLedger.Application.csproj" />
+    <ProjectReference Include="..\DcLedger.Domain\DcLedger.Domain.csproj" />
+    <ProjectReference Include="..\DcLedger.Adapters.Legistar\DcLedger.Adapters.Legistar.csproj" />
+    <ProjectReference Include="..\DcLedger.Infrastructure\DcLedger.Infrastructure.csproj" />
+    <ProjectReference Include="..\DcLedger.Publishing\DcLedger.Publishing.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DcLedger.Cli.Tests" />
+  </ItemGroup>
+</Project>

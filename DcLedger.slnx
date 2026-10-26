@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DcLedger.Domain/DcLedger.Domain.csproj" />
+    <Project Path="src/DcLedger.Application/DcLedger.Application.csproj" />
+    <Project Path="src/DcLedger.Adapters.Legistar/DcLedger.Adapters.Legistar.csproj" />
+    <Project Path="src/DcLedger.Infrastructure/DcLedger.Infrastructure.csproj" />
+    <Project Path="src/DcLedger.Publishing/DcLedger.Publishing.csproj" />
+    <Project Path="src/DcLedger.Cli/DcLedger.Cli.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DcLedger.Architecture.Tests/DcLedger.Architecture.Tests.csproj" />
+    <Project Path="tests/DcLedger.Cli.Tests/DcLedger.Cli.Tests.csproj" />
+  </Folder>
+</Solution>

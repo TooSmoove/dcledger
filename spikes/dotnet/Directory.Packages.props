@@ -1,0 +1,6 @@
+<Project>
+  <!-- Stops the root central package management from applying to the throwaway spike projects. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>

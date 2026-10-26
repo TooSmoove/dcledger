@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DcLedger.Cli\DcLedger.Cli.csproj" />
+  </ItemGroup>
+</Project>
