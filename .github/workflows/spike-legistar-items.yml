@@ -1,0 +1,24 @@
+# TEMPORARY (issue #2): proves spikes/legistar-items/spike.py works against the live Legistar API.
+# Prints aggregates only (no item titles) as an annotation. Deleted before the spike PR merges.
+name: spike-legistar-items
+
+on:
+  push:
+    branches: [spike/2-legistar-items]
+
+permissions:
+  contents: read
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Collect (aggregate only)
+        shell: bash
+        run: |
+          python3 spikes/legistar-items/spike.py collect --aggregate-only > "$RUNNER_TEMP/summary.json"
+          python3 -c "import json,sys; print('::notice title=S15 aggregates::' + json.dumps(json.load(open(sys.argv[1]))).replace('%','%25'))" "$RUNNER_TEMP/summary.json"
