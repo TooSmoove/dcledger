@@ -1,0 +1,183 @@
+# Build, test and audit on every pull request and every push to main (docs/SPEC.md §E, Gate 0B §6).
+# Required status check for the main ruleset: "CI passed".
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  ASTRO_TELEMETRY_DISABLED: "1"
+  # Exact SDK: 10.0.403 was listed but not downloadable on Oct 25, 2026 (docs/spikes).
+  DOTNET_SDK: 10.0.402
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  dotnet:
+    name: dotnet (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK }}
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+      - name: Restore (locked)
+        # Vulnerability advisories are checked in the audit job, so a new advisory never breaks builds.
+        run: dotnet restore DcLedger.slnx --locked-mode -p:NuGetAudit=false 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Format check
+        if: runner.os == 'Linux'
+        run: dotnet format DcLedger.slnx --verify-no-changes --no-restore 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Build (warnings as errors)
+        run: dotnet build DcLedger.slnx --no-restore -c Release 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Test
+        run: dotnet test --solution DcLedger.slnx --no-build -c Release 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Annotate failure
+        if: failure()
+        run: bash tools/ci_annotate.sh "dotnet on ${{ matrix.os }}" "$RUNNER_TEMP/ci.log"
+
+  site:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+        working-directory: site
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci --no-audit --no-fund 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - run: npm run format:check 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - run: npm run fixture 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - run: npm run check 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - run: npm run build 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - run: npm test 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Annotate failure
+        if: failure()
+        working-directory: .
+        run: bash tools/ci_annotate.sh "site" "$RUNNER_TEMP/ci.log"
+
+  tools:
+    name: tools (python)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s tools -p 'test_*.py' -v 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Annotate failure
+        if: failure()
+        run: bash tools/ci_annotate.sh "tools" "$RUNNER_TEMP/ci.log"
+
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK }}
+      - name: NuGet vulnerabilities (direct and transitive)
+        # NuGetAudit warnings (NU1901-NU1904) become errors through TreatWarningsAsErrors.
+        run: |
+          dotnet restore DcLedger.slnx -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=low \
+            2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: npm vulnerabilities (non-dev)
+        working-directory: site
+        run: npm audit --omit=dev --audit-level=low 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Licenses
+        run: |
+          python3 tools/license_check.py --policy tools/license-policy.json --repo . \
+            --nuget-packages "${NUGET_PACKAGES:-$HOME/.nuget/packages}" --npm-lock site/package-lock.json
+      - name: Dependency review
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: low
+      - name: Annotate failure
+        if: failure()
+        run: bash tools/ci_annotate.sh "audit" "$RUNNER_TEMP/ci.log"
+
+  dco:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Every commit is signed off
+        run: python3 tools/dco_check.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [dotnet, site, tools, audit, dco]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: All required jobs succeeded (dco is skipped on pushes)
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in success|skipped) ;; *) exit 1 ;; esac
+          done
+
+  package:
+    name: package (dcl linux-x64)
+    if: github.event_name == 'push'
+    needs: [ci-passed]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK }}
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+      - run: dotnet restore src/DcLedger.Cli -r linux-x64 --locked-mode -p:NuGetAudit=false
+      - run: dotnet publish src/DcLedger.Cli -c Release -r linux-x64 --self-contained false --no-restore -o out/dcl
+      - run: ./out/dcl/dcl --version
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dcl-linux-x64
+          path: out/dcl
+          if-no-files-found: error
+          retention-days: 90

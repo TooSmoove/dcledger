@@ -1,0 +1,22 @@
+{
+  "comment": "Licenses allowed for every NuGet package (src and tests) and every non-dev npm package in site/. Anything else fails CI unless a scoped exception below allows it. No fee-bearing or source-available terms (SPEC §E).",
+  "allowed": [
+    "0BSD",
+    "Apache-2.0",
+    "BlueOak-1.0.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "MIT",
+    "MPL-2.0"
+  ],
+  "exceptions": [
+    {
+      "ecosystem": "npm",
+      "package": "@img/sharp-*",
+      "license": "LGPL-3.0-or-later",
+      "reason": "libvips inside sharp, Astro's optional image service. Build time only; nothing from it ships in the static site."
+    }
+  ]
+}
