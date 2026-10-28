@@ -8,7 +8,8 @@ internal static class CliApp
     internal const string Description =
         "dc-ledger: source-linked public-record ledger and Hearing Radar for NC Triad data-center decisions.";
 
-    internal static RootCommand CreateRootCommand() => new(Description);
+    internal static RootCommand CreateRootCommand(TextWriter output, TextWriter error) =>
+        new(Description) { ValidateCommand.Create(output, error) };
 
     internal static int Run(string[] args, TextWriter output, TextWriter error)
     {
@@ -16,7 +17,7 @@ internal static class CliApp
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(error);
 
-        var parseResult = CreateRootCommand().Parse(args);
+        var parseResult = CreateRootCommand(output, error).Parse(args);
         if (parseResult.Errors.Count > 0)
         {
             foreach (var parseError in parseResult.Errors)

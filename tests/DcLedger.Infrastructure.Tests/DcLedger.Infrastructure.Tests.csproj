@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DcLedger.Infrastructure\DcLedger.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

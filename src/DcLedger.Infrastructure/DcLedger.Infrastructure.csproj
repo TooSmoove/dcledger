@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Fetcher, R2 store and ingest state, GitHub review queue, YAML reader (ADR-0001). -->
   <ItemGroup>
+    <PackageReference Include="YamlDotNet" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DcLedger.Application\DcLedger.Application.csproj" />
     <ProjectReference Include="..\DcLedger.Domain\DcLedger.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DcLedger.Infrastructure.Tests" />
   </ItemGroup>
 </Project>

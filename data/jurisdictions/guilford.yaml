@@ -1,0 +1,9 @@
+id: guilford
+name: Guilford County
+platform: legistar
+legistar_client: guilford
+# Body names exactly as the Legistar API spells them (spike S15, docs/spikes/2026-10-27-legistar-items.md).
+bodies:
+  - Board of Commissioners
+  - Board of Commissioners - Work Session
+  - Board of Commissioners Work Session
