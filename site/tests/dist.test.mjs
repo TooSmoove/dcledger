@@ -27,10 +27,17 @@ const pages = await Promise.all(
   })),
 );
 
-test('the build produced the home and radar pages', () => {
+test('the build produced the home, radar and about pages', () => {
   const names = pages.map((page) => page.path.slice(dist.length).replaceAll('\\', '/'));
   assert.ok(names.includes('index.html'), names.join(', '));
   assert.ok(names.includes('radar/index.html'), names.join(', '));
+  assert.ok(names.includes('about/index.html'), names.join(', '));
+});
+
+test('the about page tells site operators how to block the fetcher', () => {
+  const about = pages.find((page) => page.path.endsWith(join('about', 'index.html')));
+  assert.ok(about, 'about/index.html');
+  assert.match(about.html, /User-agent: dc-ledger\s+Disallow: \//);
 });
 
 test('every page is marked noindex', () => {

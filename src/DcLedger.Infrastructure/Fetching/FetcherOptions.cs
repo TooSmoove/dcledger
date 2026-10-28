@@ -3,8 +3,11 @@ namespace DcLedger.Infrastructure.Fetching;
 /// <summary>How politely and how much the fetcher reads (SPEC §E, ADR-0003).</summary>
 public sealed class FetcherOptions
 {
-    /// <summary>Sent on every request so site operators can see who we are and how to reach us.</summary>
-    public string UserAgent { get; set; } = "dc-ledger/0.1 (+https://github.com/TooSmoove/dcledger)";
+    /// <summary>
+    /// Sent on every request so site operators can see who we are. The URL is the site's about page, which explains
+    /// the fetcher, how to block it and how to reach us; it must stay live.
+    /// </summary>
+    public string UserAgent { get; set; } = "dc-ledger/0.1 (+https://ncdcledger.org/about/)";
 
     /// <summary>Our product token for matching robots.txt groups.</summary>
     public string RobotsToken { get; set; } = "dc-ledger";
