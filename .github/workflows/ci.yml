@@ -6,7 +6,7 @@ name: ci
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, ci/tmp-12] # THROWAWAY: ci/tmp-12 only
   # Weekly, so a fresh signed CLI exists when nothing is pushed (artifacts expire after 90 days), and so new
   # advisories surface. Also dispatchable to rebuild main's CLI on demand.
   schedule:
@@ -260,7 +260,7 @@ jobs:
     # never ran on main (#12).
     if: >-
       !cancelled() && needs.ci-passed.result == 'success' && needs.package.outputs.artifact-id != '' &&
-      github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+      github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci/tmp-12')
     needs: [ci-passed, package]
     runs-on: ubuntu-24.04
     timeout-minutes: 5

@@ -1,0 +1,146 @@
+# THROWAWAY on branch ci/tmp-12, never merged: end-to-end check of the CLI handoff (#12) before review.
+# The first commit makes ci build and sign on this branch; a later push under .tmp-12/ runs this against that
+# build, from a different workflow run, exactly as a scheduled consumer would (with branch ci/tmp-12 for main).
+name: tmp-12
+
+on:
+  push:
+    branches: [ci/tmp-12]
+    paths: [".tmp-12/**"]
+
+permissions: {}
+
+env:
+  FETCH_CLI_BRANCH: ci/tmp-12
+  FETCH_CLI_EVENTS: push
+
+jobs:
+  handoff:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      attestations: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            tools
+            .tmp-12
+
+      - name: "Positive: the composite action fetches the CLI"
+        id: cli
+        uses: ./.github/actions/fetch-cli
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.cli.outputs.head-sha }}
+          path: build
+          persist-credentials: false
+      - name: "Positive: run the downloaded CLI"
+        working-directory: build
+        env:
+          CLI: ${{ steps.cli.outputs.cli-path }}
+        run: |
+          "$CLI" --version
+          "$CLI" validate --data tests/fixtures/ledger/valid
+          "$CLI" validate --data data
+          echo "unpacked: $(du -sh "$(dirname "$CLI")" | cut -f1), $(find "$(dirname "$CLI")" -type f | wc -l) files"
+
+      - name: Select again for the negative tests
+        id: sel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -I tools/cli_artifact.py select
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.sel.outputs.run-id }}
+          artifact-ids: ${{ steps.sel.outputs.artifact-id }}
+          path: ${{ steps.sel.outputs.download-dir }}
+          digest-mismatch: error
+      - name: Show the verified provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DOWNLOAD_DIR: ${{ steps.sel.outputs.download-dir }}
+          HEAD_SHA: ${{ steps.sel.outputs.head-sha }}
+          DIGEST: ${{ steps.sel.outputs.digest }}
+        run: |
+          f="$(find "$DOWNLOAD_DIR" -type f)"
+          echo "file: $f ($(stat -c %s "$f") bytes)"; echo "sha256: $(sha256sum "$f" | cut -d' ' -f1)"; echo "API digest: $DIGEST"
+          gh --version | head -1
+          gh attestation verify "$f" --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/ci.yml" --source-ref refs/heads/ci/tmp-12 \
+            --source-digest "$HEAD_SHA" --deny-self-hosted-runners --format json \
+            | jq '.[] | .verificationResult.statement | {subject, invocation: .predicate.runDetails.metadata.invocationId,
+                 workflow: .predicate.buildDefinition.externalParameters.workflow}'
+
+      - name: "Negative: main has no signed build yet, and there is no fallback"
+        id: neg_main
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FETCH_CLI_BRANCH: main
+          FETCH_CLI_EVENTS: push schedule workflow_dispatch
+        run: python3 -I tools/cli_artifact.py select
+      - name: "Negative: a pull-request run is refused"
+        id: neg_pr
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: FETCH_CLI_RUN_ID="$(cat .tmp-12/pr-run-id)" python3 -I tools/cli_artifact.py select
+      - name: "Negative: the attestation doesn't cover another ref"
+        id: neg_ref
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FETCH_CLI_BRANCH: main
+          RUN_ID: ${{ steps.sel.outputs.run-id }}
+          HEAD_SHA: ${{ steps.sel.outputs.head-sha }}
+          DIGEST: ${{ steps.sel.outputs.digest }}
+          DOWNLOAD_DIR: ${{ steps.sel.outputs.download-dir }}
+        run: python3 -I tools/cli_artifact.py verify --run-id "$RUN_ID" --head-sha "$HEAD_SHA" --digest "$DIGEST" --download-dir "$DOWNLOAD_DIR"
+      - name: "Negative: another run ID is refused"
+        id: neg_run
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ steps.sel.outputs.run-id }}
+          HEAD_SHA: ${{ steps.sel.outputs.head-sha }}
+          DIGEST: ${{ steps.sel.outputs.digest }}
+          DOWNLOAD_DIR: ${{ steps.sel.outputs.download-dir }}
+        run: python3 -I tools/cli_artifact.py verify --run-id "$((RUN_ID + 1))" --head-sha "$HEAD_SHA" --digest "$DIGEST" --download-dir "$DOWNLOAD_DIR"
+      - name: "Negative: a modified tarball (with its own digest) has no attestation"
+        id: neg_tamper
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ steps.sel.outputs.run-id }}
+          HEAD_SHA: ${{ steps.sel.outputs.head-sha }}
+          DOWNLOAD_DIR: ${{ steps.sel.outputs.download-dir }}
+        run: |
+          d="$RUNNER_TEMP/tampered"; mkdir -p "$d"; cp "$(find "$DOWNLOAD_DIR" -type f)" "$d/x.tar.gz"; printf 'x' >> "$d/x.tar.gz"
+          digest="sha256:$(sha256sum "$d/x.tar.gz" | cut -d' ' -f1)"
+          python3 -I tools/cli_artifact.py verify --run-id "$RUN_ID" --head-sha "$HEAD_SHA" --digest "$digest" --download-dir "$d"
+      - name: "Negative: the API digest doesn't match a modified tarball"
+        id: neg_digest
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ steps.sel.outputs.run-id }}
+          HEAD_SHA: ${{ steps.sel.outputs.head-sha }}
+          DIGEST: ${{ steps.sel.outputs.digest }}
+        run: python3 -I tools/cli_artifact.py verify --run-id "$RUN_ID" --head-sha "$HEAD_SHA" --digest "$DIGEST" --download-dir "$RUNNER_TEMP/tampered"
+
+      - name: Every negative test failed, as it should
+        env:
+          OUTCOMES: >-
+            main=${{ steps.neg_main.outcome }} pr=${{ steps.neg_pr.outcome }} ref=${{ steps.neg_ref.outcome }}
+            run=${{ steps.neg_run.outcome }} tamper=${{ steps.neg_tamper.outcome }} digest=${{ steps.neg_digest.outcome }}
+        run: |
+          echo "$OUTCOMES"
+          { echo "### Negative tests"; for o in $OUTCOMES; do echo "- ${o%%=*}: ${o#*=}"; done; } >> "$GITHUB_STEP_SUMMARY"
+          for o in $OUTCOMES; do [ "${o#*=}" = failure ] || { echo "::error::${o%%=*} should have failed"; exit 1; }; done
