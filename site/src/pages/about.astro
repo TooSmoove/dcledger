@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="About">
+  <h1>About</h1>
+  <p>
+    NC Data Center Ledger collects public records on data-center decisions in North Carolina's
+    Triad: meetings, agenda items and the documents behind them. Every item links to its official
+    source, and every saved document carries the SHA-256 hash of the copy we retrieved. The project
+    is free and open-source software.
+  </p>
+
+  <h2 id="fetcher">Our fetcher</h2>
+  <p>
+    If your site logged requests from a user agent starting with <code>dc-ledger/</code> and linking
+    to this page, they came from this project. The fetcher:
+  </p>
+  <ul>
+    <li>reads only public meeting and agenda information;</li>
+    <li>
+      follows <code>robots.txt</code> for the product token <code>dc-ledger</code>, and stays away
+      from a site whose
+      <code>robots.txt</code> it can't read;
+    </li>
+    <li>
+      sends at most one request to a site every half second, and waits when a site asks it to;
+    </li>
+    <li>never gets around sign-ins, CAPTCHAs or bot walls.</li>
+  </ul>
+  <p>
+    To stop it, add this to your <code>robots.txt</code>:
+  </p>
+  <pre><code>User-agent: dc-ledger
+Disallow: /</code></pre>
+
+  <h2 id="contact">Contact</h2>
+  <p>
+    For questions, corrections or a request to stop fetching,
+    <a href="https://github.com/TooSmoove/dcledger/issues">open an issue on GitHub</a>.
+  </p>
+</Base>

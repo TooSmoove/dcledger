@@ -48,7 +48,9 @@ public sealed class HttpFetcherTests : IDisposable
 
         var headers = _server.LogEntries.Last(entry => entry.RequestMessage?.Path == "/x").RequestMessage?.Headers;
         headers.ShouldNotBeNull();
-        headers["User-Agent"].ShouldHaveSingleItem().ShouldContain("dc-ledger/");
+        var userAgent = headers["User-Agent"].ShouldHaveSingleItem();
+        userAgent.ShouldStartWith("dc-ledger/");
+        userAgent.ShouldContain("(+https://ncdcledger.org/about/)");
     }
 
     [Fact]
