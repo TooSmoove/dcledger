@@ -1,11 +1,17 @@
 # Build, test and audit on every pull request and every push to main (docs/SPEC.md §E, Gate 0B §6).
 # Required status check for the main ruleset: "CI passed".
+# On main it also signs the dcl linux-x64 package that scheduled workflows run (ADR-0007).
 name: ci
 
 on:
   pull_request:
   push:
     branches: [main]
+  # Weekly, so a fresh signed CLI exists when nothing is pushed (artifacts expire after 90 days), and so new
+  # advisories surface. Also dispatchable to rebuild main's CLI on demand.
+  schedule:
+    - cron: "43 7 * * 1" # Mondays 07:43 UTC
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -170,10 +176,71 @@ jobs:
           dotnet run --project src/DcLedger.Cli -c Release --no-restore -- \
             validate --data data --previous-files "$RUNNER_TEMP/previous-files.txt" --format github
 
+  package:
+    name: package (dcl linux-x64)
+    # Built and smoke-tested on every event so a pull request can't break it unnoticed; uploaded except on pull
+    # requests. Self-contained, so scheduled jobs need no SDK; not single-file (native libraries stay plain files)
+    # and not trimmed (YamlDotNet and AWSSDK use reflection). See ADR-0007.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      file-name: ${{ steps.pack.outputs.file-name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK }}
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+      - name: Publish self-contained linux-x64
+        run: |
+          dotnet publish src/DcLedger.Cli -c Release -p:DclPublishRid=linux-x64 -p:RestoreLockedMode=true \
+            -p:NuGetAudit=false -o "$RUNNER_TEMP/dcl" 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Smoke test (the version names this commit; Eastern-time validation runs)
+        env:
+          CLI: ${{ runner.temp }}/dcl/dcl
+        run: |
+          version="$("$CLI" --version)"
+          echo "dcl --version: $version"
+          if [[ "$version" != *"+$GITHUB_SHA" ]]; then
+            echo "::error title=package::dcl --version printed '$version', which doesn't name commit $GITHUB_SHA"
+            exit 1
+          fi
+          "$CLI" validate --data tests/fixtures/ledger/valid 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Pack (deterministic tarball; keeps the executable bit)
+        id: pack
+        run: |
+          python3 -I tools/cli_artifact.py pack --source "$RUNNER_TEMP/dcl" --out-dir "$RUNNER_TEMP/package" \
+            --head-sha "$GITHUB_SHA" --attempt "$GITHUB_RUN_ATTEMPT" --epoch "$(git log -1 --format=%ct)"
+      - name: Upload (unzipped)
+        id: upload
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{ steps.pack.outputs.path }}
+          # The artifact is named after the file. Never combine with overwrite (actions/upload-artifact#769).
+          archive: false
+          if-no-files-found: error
+          retention-days: 90
+      - name: The uploaded digest is the tarball's
+        if: github.event_name != 'pull_request'
+        env:
+          UPLOADED: ${{ steps.upload.outputs.artifact-digest }}
+          PACKED: ${{ steps.pack.outputs.sha256 }}
+        run: |
+          echo "uploaded ${UPLOADED}, packed sha256:${PACKED}"
+          [ "${UPLOADED#sha256:}" = "$PACKED" ] || { echo "::error title=package::digest mismatch"; exit 1; }
+      - name: Annotate failure
+        if: failure()
+        run: bash tools/ci_annotate.sh "package" "$RUNNER_TEMP/ci.log"
+
   ci-passed:
     name: CI passed
     if: always()
-    needs: [dotnet, site, tools, audit, dco, ledger]
+    needs: [dotnet, site, tools, audit, dco, ledger, package]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
@@ -186,27 +253,27 @@ jobs:
             case "$result" in success|skipped) ;; *) exit 1 ;; esac
           done
 
-  package:
-    name: package (dcl linux-x64)
-    if: github.event_name == 'push'
-    needs: [ci-passed]
+  attest:
+    name: attest (dcl linux-x64)
+    # Signs main's package once every required job passed. The status check is explicit on purpose: dco is
+    # skipped on pushes, and a skipped job upstream skips any job without one. That is why the old package job
+    # never ran on main (#12).
+    if: >-
+      !cancelled() && needs.ci-passed.result == 'success' && needs.package.outputs.artifact-id != '' &&
+      github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [ci-passed, package]
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write # Sigstore signing certificate; public repository, so recorded in the public Rekor log
+      attestations: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          persist-credentials: false
-      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+          artifact-ids: ${{ needs.package.outputs.artifact-id }}
+          path: ${{ runner.temp }}/attest
+          digest-mismatch: error
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          dotnet-version: ${{ env.DOTNET_SDK }}
-          cache: true
-          cache-dependency-path: "**/packages.lock.json"
-      - run: dotnet restore src/DcLedger.Cli -r linux-x64 --locked-mode -p:NuGetAudit=false
-      - run: dotnet publish src/DcLedger.Cli -c Release -r linux-x64 --self-contained false --no-restore -o out/dcl
-      - run: ./out/dcl/dcl --version
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: dcl-linux-x64
-          path: out/dcl
-          if-no-files-found: error
-          retention-days: 90
+          subject-path: ${{ runner.temp }}/attest/${{ needs.package.outputs.file-name }}

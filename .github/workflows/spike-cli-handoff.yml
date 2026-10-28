@@ -1,0 +1,58 @@
+# Spike S17 (#12): can a dispatched workflow run dcl from the newest green ci build on main?
+# Exit criterion: a dispatched run prints `dcl --version` from the downloaded artifact. Throwaway: delete with the
+# other spike workflows (#4) once ingest.yml (#19) uses .github/actions/fetch-cli. Results: docs/spikes/.
+name: spike-cli-handoff
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci-run-id:
+        description: "Pin a ci run ID (negative test: a pull-request run must be refused)"
+        default: ""
+      allow-stale:
+        description: "Turn staleness failures into warnings"
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  run-cli:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read # list ci runs and download their artifacts
+      contents: read # compare commits, check out
+      attestations: read # gh attestation verify
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            tools
+      - id: cli
+        uses: ./.github/actions/fetch-cli
+        with:
+          run-id: ${{ inputs.ci-run-id }}
+          allow-stale: ${{ inputs.allow-stale }}
+      - name: Check out the commit the CLI was built from
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.cli.outputs.head-sha }}
+          path: build
+          persist-credentials: false
+      - name: Run the downloaded CLI
+        env:
+          CLI: ${{ steps.cli.outputs.cli-path }}
+          RUN_ID: ${{ steps.cli.outputs.run-id }}
+        working-directory: build
+        run: |
+          "$CLI" --version
+          "$CLI" validate --data tests/fixtures/ledger/valid
+          "$CLI" validate --data data
+          {
+            echo "### Spike S17 result"
+            echo "- \`dcl --version\`: \`$("$CLI" --version)\` from ci run $RUN_ID"
+            echo "- \`dcl validate\` on the fixture ledger and on \`data/\`: passed"
+          } >> "$GITHUB_STEP_SUMMARY"

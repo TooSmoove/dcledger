@@ -23,7 +23,8 @@ updates:
         update-types: [minor, patch]
 
   - package-ecosystem: github-actions
-    directory: /
+    # Workflows, plus each local composite action (they pin actions by SHA too).
+    directories: [/, /.github/actions/fetch-cli]
     schedule:
       interval: weekly
       day: monday
