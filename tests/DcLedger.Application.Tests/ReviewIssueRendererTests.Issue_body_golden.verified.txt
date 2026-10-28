@@ -1,0 +1,52 @@
+﻿<!-- dc-ledger:meeting legistar/guilford/1599 -->
+A keyword rule matched 1 agenda item for **Guilford County, Board of Commissioners** on **Thursday, October 15, 2026 at 5:30 PM Eastern**. Publish it only if it's about a data center.
+
+| | |
+|---|---|
+| Meeting | [Legistar meeting 1599](<https://guilford.legistar.com/MeetingDetail.aspx?LEGID=1599&GID=590>) |
+| Agenda | [agenda file](<https://guilford.legistar1.com/guilford/meetings/2026/10/1599_A_Board_of_Commissioners_26-10-15_Meeting_Agenda.pdf>) · application/pdf · 123,456 bytes |
+| SHA-256 | `df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b` |
+| Retrieved | 2026-10-28T12:47:03Z |
+| First seen | 2026-10-28T12:47:03Z (the review clock starts here, SPEC AC9) |
+
+### Matched items
+
+Original titles are private and never copied here; read them in the agenda.
+
+| Agenda no. | Case | Type | Rules |
+|---|---|---|---|
+| A. | 2026-439 | Public Hearing | data\_center |
+
+### To publish
+
+Add both files in one pull request. Write a neutral `title` (never the source's wording) and check `starts_at` against the agenda.
+
+`data/documents/df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b.yaml`
+
+```yaml
+id: df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b
+url: "https://guilford.legistar1.com/guilford/meetings/2026/10/1599_A_Board_of_Commissioners_26-10-15_Meeting_Agenda.pdf"
+retrieved_at: 2026-10-28T12:47:03Z
+media_type: "application/pdf"
+bytes: 123456
+source_type: official
+```
+
+`data/events/guilford-board-of-commissioners-2026-10-15.yaml`
+
+```yaml
+id: guilford-board-of-commissioners-2026-10-15
+jurisdiction_id: guilford
+platform: legistar
+platform_meeting_id: "1599"
+body: "Board of Commissioners"
+title: "" # REQUIRED: a neutral title in your own words
+case_number: "2026-439"
+starts_at: 2026-10-15T17:30:00-04:00
+status: scheduled
+sequence: 0
+label: confirmed_official
+document_ids:
+  - df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b
+first_seen_utc: 2026-10-28T12:47:03Z
+```

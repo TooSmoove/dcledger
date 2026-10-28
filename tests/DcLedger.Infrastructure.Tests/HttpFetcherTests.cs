@@ -176,9 +176,11 @@ public sealed class HttpFetcherTests : IDisposable
     [Fact]
     public async Task Slow_server_times_out_after_three_retries()
     {
+        // The per-host token can take up to one 100 ms limiter tick to arrive, and that wait counts toward the attempt
+        // timeout. A 100 ms timeout let some attempts expire before reaching the server (flaky on Windows), so 400 ms.
         var attempts = 0;
         var fetcher = Fetcher(
-            resilience: options => options.AttemptTimeout.Timeout = TimeSpan.FromMilliseconds(100),
+            resilience: options => options.AttemptTimeout.Timeout = TimeSpan.FromMilliseconds(400),
             primary: new StubHandler(async (_, cancellationToken) =>
             {
                 Interlocked.Increment(ref attempts);

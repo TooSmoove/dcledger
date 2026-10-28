@@ -1,0 +1,62 @@
+﻿<!-- dc-ledger:meeting legistar/guilford/1631 -->
+A keyword rule matched 2 agenda items for **Guilford County, Board of Commissioners** on **Thursday, October 15, 2026 (no start time given)**. Publish it only if it's about a data center.
+
+| | |
+|---|---|
+| Meeting | [Legistar meeting 1631](<https://guilford.legistar.com/MeetingDetail.aspx?LEGID=1631&GID=590>) |
+| Agenda | [agenda file](<https://guilford.legistar1.com/guilford/meetings/2026/10/1599_A_Board_of_Commissioners_26-10-15_Meeting_Agenda.pdf>) · application/pdf · 123,456 bytes |
+| SHA-256 | `df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b` |
+| Retrieved | 2026-10-28T12:47:03Z |
+| First seen | 2026-10-28T12:47:03Z (the review clock starts here, SPEC AC9) |
+
+### Matched items
+
+Original titles are private and never copied here; read them in the agenda.
+
+| Agenda no. | Case | Type | Rules |
+|---|---|---|---|
+| @&#8203;octocat &lt;img src=x&gt; \| \*\*A.\*\* | Z-2601team | Public Hearing \# heading | data\_center |
+| — | 2026-440 | — | data\_center |
+
+> [!WARNING]
+> Legistar also lists meeting 1599 for the same body, date and time, and its public site can hide some of them. Open each meeting page and approve only the one that's live.
+
+> [!WARNING]
+> A comment on this meeting mentions a cancellation. Confirm it on the meeting page before publishing.
+
+> [!WARNING]
+> The source gives no start time. Take it from the agenda.
+
+### To publish
+
+Add both files in one pull request. Write a neutral `title` (never the source's wording) and check `starts_at` against the agenda.
+
+`data/documents/df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b.yaml`
+
+```yaml
+id: df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b
+url: "https://guilford.legistar1.com/guilford/meetings/2026/10/1599_A_Board_of_Commissioners_26-10-15_Meeting_Agenda.pdf"
+retrieved_at: 2026-10-28T12:47:03Z
+media_type: "application/pdf"
+bytes: 123456
+source_type: official
+```
+
+`data/events/guilford-board-of-commissioners-2026-10-15.yaml`
+
+```yaml
+id: guilford-board-of-commissioners-2026-10-15
+jurisdiction_id: guilford
+platform: legistar
+platform_meeting_id: "1631"
+body: "Board of Commissioners"
+title: "" # REQUIRED: a neutral title in your own words
+case_number: "Z-2601team" # also on this agenda: 2026-440
+starts_at: "" # REQUIRED: from the agenda, with the Eastern offset, for example 2026-11-05T17:30:00-05:00
+status: scheduled
+sequence: 0
+label: confirmed_official
+document_ids:
+  - df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b
+first_seen_utc: 2026-10-28T12:47:03Z
+```

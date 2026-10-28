@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Verify.XunitV3" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\DcLedger.Application\DcLedger.Application.csproj" />
   </ItemGroup>
 </Project>
