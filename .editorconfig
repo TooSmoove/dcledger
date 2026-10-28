@@ -17,7 +17,9 @@ csharp_using_directive_placement = outside_namespace:warning
 [*.md]
 trim_trailing_whitespace = false
 
-# Test projects: descriptive test names use underscores, and xunit requires public test classes.
+# Test projects: descriptive test names use underscores, xunit requires public test classes, and xunit runs tests
+# without a synchronization context (its xUnit1030 rule forbids ConfigureAwait(false) in tests).
 [tests/**/*.cs]
 dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA2007.severity = none

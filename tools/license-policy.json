@@ -1,5 +1,5 @@
 {
-  "comment": "Licenses allowed for every NuGet package (src and tests) and every non-dev npm package in site/. Anything else fails CI unless a scoped exception below allows it. No fee-bearing or source-available terms (SPEC §E).",
+  "comment": "Licenses allowed for every NuGet package (src and tests) and every non-dev npm package in site/. Anything else fails CI unless a scoped exception below allows it. No fee-bearing or source-available terms (SPEC \u00a7E).",
   "allowed": [
     "0BSD",
     "Apache-2.0",
@@ -17,6 +17,48 @@
       "package": "@img/sharp-*",
       "license": "LGPL-3.0-or-later",
       "reason": "libvips inside sharp, Astro's optional image service. Build time only; nothing from it ships in the static site."
+    },
+    {
+      "ecosystem": "nuget",
+      "package": "Fare",
+      "license": "url:https://github.com/moodmosaic/Fare/blob/master/LICENSE",
+      "reason": "MIT (license text read Oct 27, 2026). Test-only (WireMock.Net.Minimal); never shipped."
+    },
+    {
+      "ecosystem": "nuget",
+      "package": "JmesPath.Net.Parser",
+      "license": "url:https://github.com/jdevillard/JmesPath.Net/blob/master/LICENSE",
+      "reason": "Apache-2.0 (license text read Oct 27, 2026). Test-only (WireMock.Net.Minimal); never shipped."
+    },
+    {
+      "ecosystem": "nuget",
+      "package": "Microsoft.AspNetCore.Http*",
+      "license": "url:https://raw.githubusercontent.com/aspnet/AspNetCore/2.0.0/LICENSE.txt",
+      "reason": "Apache-2.0 (license text read Oct 27, 2026). Test-only (WireMock.Net.Minimal); never shipped."
+    },
+    {
+      "ecosystem": "nuget",
+      "package": "Microsoft.AspNetCore.WebUtilities",
+      "license": "url:https://raw.githubusercontent.com/aspnet/AspNetCore/2.0.0/LICENSE.txt",
+      "reason": "Apache-2.0 (license text read Oct 27, 2026). Test-only (WireMock.Net.Minimal); never shipped."
+    },
+    {
+      "ecosystem": "nuget",
+      "package": "Microsoft.Net.Http.Headers",
+      "license": "url:https://raw.githubusercontent.com/aspnet/AspNetCore/2.0.0/LICENSE.txt",
+      "reason": "Apache-2.0 (license text read Oct 27, 2026). Test-only (WireMock.Net.Minimal); never shipped."
+    },
+    {
+      "ecosystem": "nuget",
+      "package": "SimMetrics.Net",
+      "license": "url:https://raw.githubusercontent.com/StefH/SimMetrics.Net/master/LICENSE",
+      "reason": "MIT (license text read Oct 27, 2026). Test-only (WireMock.Net.Minimal); never shipped."
+    },
+    {
+      "ecosystem": "nuget",
+      "package": "XPath2",
+      "license": "MS-PL",
+      "reason": "Microsoft Public License (OSI-approved; obligations apply only when distributing it). Test-only (WireMock.Net.Minimal via Handlebars.Net.Helpers.XPath); never shipped."
     }
   ]
 }

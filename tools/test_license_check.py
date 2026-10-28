@@ -7,7 +7,10 @@ from license_check import Package, license_allowed, npm_packages, nuget_packages
 
 POLICY = {
     "allowed": ["MIT", "Apache-2.0", "BSD-3-Clause"],
-    "exceptions": [{"ecosystem": "npm", "package": "@img/sharp-*", "license": "LGPL-3.0-or-later", "reason": "test"}],
+    "exceptions": [
+        {"ecosystem": "npm", "package": "@img/sharp-*", "license": "LGPL-3.0-or-later", "reason": "test"},
+        {"ecosystem": "nuget", "package": "Fare", "license": "url:https://example.org/FARE-LICENSE", "reason": "MIT, read"},
+    ],
 }
 
 
@@ -38,6 +41,11 @@ class LicenseAllowedTests(unittest.TestCase):
         self.assertTrue(allowed("npm", "@img/sharp-wasm32", "Apache-2.0 AND LGPL-3.0-or-later AND MIT"))
         self.assertFalse(allowed("npm", "other-lgpl", "LGPL-3.0-or-later"))
         self.assertFalse(allowed("nuget", "@img/sharp-x", "LGPL-3.0-or-later"))
+
+    def test_reviewed_url_license_is_allowed_only_for_that_package_and_url(self):
+        self.assertTrue(allowed("nuget", "Fare", "url:https://example.org/FARE-LICENSE"))
+        self.assertFalse(allowed("nuget", "Fare", "url:https://example.org/OTHER"))
+        self.assertFalse(allowed("nuget", "NotFare", "url:https://example.org/FARE-LICENSE"))
 
 
 class ReaderTests(unittest.TestCase):
