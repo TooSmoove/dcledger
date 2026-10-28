@@ -1,0 +1,14 @@
+# Test fixture: fictional meeting.
+id: fixture-county-boc-2026-11-05
+jurisdiction_id: fixture-county
+platform: legistar
+platform_meeting_id: "1599"
+body: Board of Commissioners
+title: "Fixture: regular meeting"
+starts_at: 2026-11-05T17:30:00-05:00
+status: scheduled
+sequence: 0
+label: confirmed_official
+document_ids:
+  - bf771d2f48e40c8ff1c60d5b2a63fc3680ba510fb30d8e9fa1e4fb069d163811
+first_seen_utc: 2026-10-25T21:17:05Z

@@ -1,0 +1,10 @@
+# Test fixture: fictional decision.
+id: fixture-county-action-2026-01-15
+jurisdiction_id: fixture-county
+action_type: moratorium
+outcome: adopted
+decided_on: 2026-01-15
+votes: 5-2
+label: confirmed_official
+document_ids:
+  - bf771d2f48e40c8ff1c60d5b2a63fc3680ba510fb30d8e9fa1e4fb069d163811

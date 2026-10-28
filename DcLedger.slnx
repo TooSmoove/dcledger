@@ -8,8 +8,10 @@
     <Project Path="src/DcLedger.Cli/DcLedger.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/DcLedger.Application.Tests/DcLedger.Application.Tests.csproj" />
     <Project Path="tests/DcLedger.Architecture.Tests/DcLedger.Architecture.Tests.csproj" />
     <Project Path="tests/DcLedger.Cli.Tests/DcLedger.Cli.Tests.csproj" />
     <Project Path="tests/DcLedger.Domain.Tests/DcLedger.Domain.Tests.csproj" />
+    <Project Path="tests/DcLedger.Infrastructure.Tests/DcLedger.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

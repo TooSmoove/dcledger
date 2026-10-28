@@ -141,10 +141,39 @@ jobs:
       - name: Every commit is signed off
         run: python3 tools/dco_check.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
 
+  ledger:
+    name: ledger data (dcl validate)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK }}
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+      - name: Record files on the base branch (published IDs are permanent)
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          : > "$RUNNER_TEMP/previous-files.txt"
+          if [ -n "$BASE" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            git ls-tree -r --name-only "$BASE" -- data/ | sed 's#^data/##' > "$RUNNER_TEMP/previous-files.txt"
+          fi
+          wc -l < "$RUNNER_TEMP/previous-files.txt"
+      - run: dotnet restore src/DcLedger.Cli --locked-mode -p:NuGetAudit=false
+      - name: Validate
+        run: |
+          dotnet run --project src/DcLedger.Cli -c Release --no-restore -- \
+            validate --data data --previous-files "$RUNNER_TEMP/previous-files.txt" --format github
+
   ci-passed:
     name: CI passed
     if: always()
-    needs: [dotnet, site, tools, audit, dco]
+    needs: [dotnet, site, tools, audit, dco, ledger]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
