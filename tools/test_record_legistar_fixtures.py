@@ -1,7 +1,7 @@
 import unittest
 from datetime import date
 
-from record_legistar_fixtures import SCRUBBED, events_url, scrub_event, scrub_item, trim_items
+from record_legistar_fixtures import SCRUBBED, events_url, in_bodies, scrub_event, scrub_item, trim_items
 
 
 class ScrubEventTests(unittest.TestCase):
@@ -9,6 +9,9 @@ class ScrubEventTests(unittest.TestCase):
         event = {"EventId": 1599, "EventBodyName": "Board of Commissioners", "EventDate": "2026-11-05T00:00:00",
                  "EventTime": "5:30 PM", "EventAgendaFile": "https://example.gov/a.pdf"}
         self.assertEqual(scrub_event(event), event)
+
+    def test_location_is_scrubbed(self):
+        self.assertEqual(scrub_event({"EventLocation": "A. Person Conference Room"})["EventLocation"], SCRUBBED)
 
     def test_comment_keeps_only_the_cancellation_signal(self):
         self.assertEqual(scrub_event({"EventComment": "CANCELLED - see Mr. Smith"})["EventComment"],
@@ -47,6 +50,12 @@ class TrimAndUrlTests(unittest.TestCase):
         items = [{"EventItemTitle": f"item {n}"} for n in range(8)] + [{"EventItemTitle": "hyperscale campus"}]
         kept = trim_items(items, keep=3)
         self.assertEqual([i["EventItemTitle"] for i in kept], ["item 0", "item 1", "item 2", "hyperscale campus"])
+
+    def test_body_names_match_after_trimming(self):
+        bodies = ["Board of Commissioners Work Session"]
+        self.assertTrue(in_bodies({"EventBodyName": "Board of Commissioners Work Session "}, bodies))
+        self.assertFalse(in_bodies({"EventBodyName": "Board of Commissioners"}, bodies))
+        self.assertFalse(in_bodies({"EventBodyName": None}, bodies))
 
     def test_events_url_filters_by_date(self):
         url = events_url("guilford", date(2026, 10, 1), date(2026, 12, 1))

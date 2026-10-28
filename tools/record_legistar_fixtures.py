@@ -8,6 +8,7 @@ Writes events.json (every body in the window) and eventitems-{EventId}.json (con
 Legistar's field names, types and formats. Scrubbing is an allowlist: a field not listed below is kept only if it
 isn't text. Agenda item titles, matter names and comments are replaced with synthetic text that keeps one signal:
 whether the original matched the keyword classifier (and, for comments, whether it mentioned a cancellation).
+Locations are scrubbed too: rooms can be named after people.
 Each item list keeps its first few items plus every classifier match. Run it where Legistar is reachable (a GitHub
 runner); review the output before committing. Standard library only.
 """
@@ -41,7 +42,7 @@ CASE_NUMBER = re.compile(r"^[A-Za-z0-9-]{1,40}$")
 EVENT_KEEP = {
     "EventId", "EventGuid", "EventLastModifiedUtc", "EventRowVersion", "EventBodyId", "EventBodyName",
     "EventDate", "EventTime", "EventVideoStatus", "EventAgendaStatusId", "EventAgendaStatusName",
-    "EventMinutesStatusId", "EventMinutesStatusName", "EventLocation", "EventAgendaFile", "EventMinutesFile",
+    "EventMinutesStatusId", "EventMinutesStatusName", "EventAgendaFile", "EventMinutesFile",
     "EventAgendaLastPublishedUTC", "EventMinutesLastPublishedUTC", "EventVideoPath", "EventMedia", "EventInSiteURL",
 }
 ITEM_KEEP = {
@@ -102,6 +103,11 @@ def scrub_item(item: dict, number: int) -> dict:
     return scrubbed
 
 
+def in_bodies(event: dict, bodies: list[str]) -> bool:
+    """Legistar body names can carry stray whitespace (a Guilford one ends in a space), so compare trimmed."""
+    return str(event.get("EventBodyName") or "").strip() in bodies
+
+
 def trim_items(items: list[dict], keep: int = ITEMS_KEPT) -> list[dict]:
     """The first `keep` items in agenda order, plus every later item the classifier matches."""
     return [item for index, item in enumerate(items) if index < keep or CLASSIFIER.search(item_text(item))]
@@ -139,7 +145,7 @@ def main(argv: list[str]) -> int:
 
     recorded = 0
     for event in events:
-        if event.get("EventBodyName") not in args.bodies:
+        if not in_bodies(event, args.bodies):
             continue
         items = fetch_json(f"{API}/{urllib.parse.quote(args.client)}/events/{int(event['EventId'])}/eventitems")
         kept = trim_items(items)
