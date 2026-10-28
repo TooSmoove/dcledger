@@ -39,7 +39,7 @@ public sealed class HttpFetcherTests : IDisposable
     }
 
     [Fact]
-    public async Task Requests_identify_us_with_the_user_agent()
+    public async Task Requests_identify_us_and_accept_any_media_type()
     {
         NoRobots();
         _server.Given(Get("/x")).RespondWith(Response.Create().WithStatusCode(200));
@@ -51,6 +51,7 @@ public sealed class HttpFetcherTests : IDisposable
         var userAgent = headers["User-Agent"].ShouldHaveSingleItem();
         userAgent.ShouldStartWith("dc-ledger/");
         userAgent.ShouldContain("(+https://ncdcledger.org/about/)");
+        headers["Accept"].ShouldHaveSingleItem().ShouldBe("*/*");
     }
 
     [Fact]
