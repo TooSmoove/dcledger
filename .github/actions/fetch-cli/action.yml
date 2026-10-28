@@ -1,0 +1,78 @@
+# Gets the dcl CLI from the newest green ci build of main, proves that's what it is, and never takes a pull
+# request's build (ADR-0007).
+# The calling job needs `actions: read`, `contents: read` and `attestations: read`, and a checkout that contains
+# .github/actions and tools/ (a sparse checkout is enough). Then run the CLI at steps.<id>.outputs.cli-path and
+# check out steps.<id>.outputs.head-sha for anything it reads, so code and data come from the same commit.
+name: fetch-cli
+description: Select, download, verify and unpack the dcl linux-x64 CLI from the newest green ci run on main.
+
+inputs:
+  github-token:
+    description: Token that can read Actions runs and artifacts, compare commits and read attestations.
+    default: ${{ github.token }}
+  run-id:
+    description: Use this ci run instead of the newest one (rollback or debugging). Every check still applies.
+    default: ""
+  allow-stale:
+    description: "'true' turns staleness failures into warnings. For incidents only."
+    default: "false"
+  max-ahead-days:
+    description: Fail when main has been ahead of the newest green build for longer than this.
+    default: "7"
+  min-expiry-days:
+    description: Fail when the CLI artifact expires sooner than this.
+    default: "14"
+
+outputs:
+  cli-path:
+    description: The dcl executable.
+    value: ${{ steps.verify.outputs.cli-path }}
+  cli-dir:
+    description: The directory dcl was unpacked into.
+    value: ${{ steps.verify.outputs.cli-dir }}
+  version:
+    description: dcl --version (<version>+<commit>).
+    value: ${{ steps.verify.outputs.version }}
+  head-sha:
+    description: The commit the CLI was built from.
+    value: ${{ steps.select.outputs.head-sha }}
+  run-id:
+    description: The ci run that built and signed it.
+    value: ${{ steps.select.outputs.run-id }}
+
+runs:
+  using: composite
+  steps:
+    - name: Select the ci run and CLI artifact
+      id: select
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        FETCH_CLI_RUN_ID: ${{ inputs.run-id }}
+        FETCH_CLI_ALLOW_STALE: ${{ inputs.allow-stale }}
+        FETCH_CLI_MAX_AHEAD_DAYS: ${{ inputs.max-ahead-days }}
+        FETCH_CLI_MIN_EXPIRY_DAYS: ${{ inputs.min-expiry-days }}
+      run: python3 -I "$GITHUB_ACTION_PATH/../../../tools/cli_artifact.py" select
+
+    - name: Download the CLI artifact
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        github-token: ${{ inputs.github-token }}
+        repository: ${{ github.repository }}
+        run-id: ${{ steps.select.outputs.run-id }}
+        artifact-ids: ${{ steps.select.outputs.artifact-id }}
+        path: ${{ steps.select.outputs.download-dir }}
+        digest-mismatch: error
+
+    - name: Verify the digest and attestation, unpack, smoke-test
+      id: verify
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        RUN_ID: ${{ steps.select.outputs.run-id }}
+        HEAD_SHA: ${{ steps.select.outputs.head-sha }}
+        DIGEST: ${{ steps.select.outputs.digest }}
+        DOWNLOAD_DIR: ${{ steps.select.outputs.download-dir }}
+      run: |
+        python3 -I "$GITHUB_ACTION_PATH/../../../tools/cli_artifact.py" verify \
+          --run-id "$RUN_ID" --head-sha "$HEAD_SHA" --digest "$DIGEST" --download-dir "$DOWNLOAD_DIR"

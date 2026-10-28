@@ -4,8 +4,17 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>dcl</AssemblyName>
     <RootNamespace>DcLedger.Cli</RootNamespace>
-    <!-- Listed so the lock file covers `dotnet publish -r linux-x64` in CI and win-x64 locally. -->
+    <!-- Listed so the lock file covers self-contained publishing for linux-x64 (CI) and win-x64 (locally). -->
     <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
+    <!-- The version option prints <version>+<commit>; scheduled workflows check it names the build they chose (ADR-0007). -->
+    <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+  <!-- Self-contained publish: dotnet publish src/DcLedger.Cli -c Release -p:DclPublishRid=linux-x64 (ci, ADR-0007).
+       Set here, not with -r, because -r also reaches the libraries' locked restore, whose lock files have no runtime
+       sections (NU1004). -->
+  <PropertyGroup Condition="'$(DclPublishRid)' != ''">
+    <RuntimeIdentifier>$(DclPublishRid)</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.CommandLine" />
