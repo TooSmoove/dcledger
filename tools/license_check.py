@@ -31,10 +31,16 @@ class Package:
 
 
 def license_allowed(package: Package, policy: dict) -> bool:
-    """True when the package's SPDX expression is satisfied by the allowed set plus scoped exceptions."""
+    """True when the package's SPDX expression is satisfied by the allowed set plus scoped exceptions.
+
+    An exception's license is either an extra SPDX id for the matching packages, or the exact non-SPDX value a
+    package declares (for example "url:https://..."), recorded after someone read that license text.
+    """
     allowed = set(policy["allowed"])
     for exception in policy.get("exceptions", []):
         if exception["ecosystem"] == package.ecosystem and fnmatch.fnmatchcase(package.name, exception["package"]):
+            if exception["license"] == package.license:
+                return True
             allowed.add(exception["license"])
     return expression_satisfied(package.license, allowed)
 

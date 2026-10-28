@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="WireMock.Net.Minimal" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\DcLedger.Infrastructure\DcLedger.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
