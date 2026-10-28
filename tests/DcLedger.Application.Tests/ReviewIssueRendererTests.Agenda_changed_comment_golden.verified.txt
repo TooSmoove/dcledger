@@ -1,0 +1,29 @@
+﻿<!-- dc-ledger:agenda-changed df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b -->
+The agenda changed: a new copy was retrieved 2026-10-28T12:47:03Z.
+
+| | |
+|---|---|
+| Agenda | [agenda file](<https://guilford.legistar1.com/guilford/meetings/2026/10/1599_A_Board_of_Commissioners_26-10-15_Meeting_Agenda.pdf>) · application/pdf · 123,456 bytes |
+| SHA-256 | `df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b` (was `74d8ceb4183644ba84e94dde7aaff85149190e069241123711fe3fcc89e05b1b`) |
+| Retrieved | 2026-10-28T12:47:03Z |
+
+### Matched items
+
+Original titles are private and never copied here; read them in the agenda.
+
+| Agenda no. | Case | Type | Rules |
+|---|---|---|---|
+| A. | 2026-439 | Public Hearing | data\_center |
+
+If this meeting is already published, add the new document row and list its ID in the event's `document_ids`.
+
+`data/documents/df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b.yaml`
+
+```yaml
+id: df71fb0bd94cb72795bae4dce7bb6bd33efa6f7aa7ad11d78bfd6f734ca30e0b
+url: "https://guilford.legistar1.com/guilford/meetings/2026/10/1599_A_Board_of_Commissioners_26-10-15_Meeting_Agenda.pdf"
+retrieved_at: 2026-10-28T12:47:03Z
+media_type: "application/pdf"
+bytes: 123456
+source_type: official
+```

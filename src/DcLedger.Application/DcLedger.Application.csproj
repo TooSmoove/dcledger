@@ -3,4 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DcLedger.Domain\DcLedger.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DcLedger.Application.Tests" />
+  </ItemGroup>
 </Project>
