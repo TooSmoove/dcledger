@@ -1,0 +1,32 @@
+# TEMPORARY (issue #17): records scrubbed Guilford Legistar fixtures on a GitHub runner (the dev workspace can't reach
+# Legistar) and pushes them to ci/fixtures-17 for review. Removed before the PR is opened.
+name: fixtures-tmp
+
+on:
+  push:
+    branches: [feat/17-legistar-adapter]
+
+permissions:
+  contents: read
+
+jobs:
+  record:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Record
+        run: >
+          python3 tools/record_legistar_fixtures.py --client guilford --from 2026-10-01 --to 2026-12-01
+          --body "Board of Commissioners" --body "Board of Commissioners - Work Session"
+          --body "Board of Commissioners Work Session" --out tests/fixtures/legistar/guilford
+      - name: Push fixtures to ci/fixtures-17
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B ci/fixtures-17
+          git add tests/fixtures/legistar
+          git commit -m "Recorded Legistar fixtures (temporary, #17)" || echo "no changes"
+          git push -f origin ci/fixtures-17
