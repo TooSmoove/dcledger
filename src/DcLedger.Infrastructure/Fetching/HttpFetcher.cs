@@ -109,6 +109,7 @@ internal sealed class HttpFetcher(HttpClient client, FetcherOptions options, Tim
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, uri);
         request.Headers.UserAgent.ParseAdd(options.UserAgent);
+        request.Headers.Accept.ParseAdd("*/*"); // what curl sends; spike S1 got JSON from Legistar this way
         try
         {
             return await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);

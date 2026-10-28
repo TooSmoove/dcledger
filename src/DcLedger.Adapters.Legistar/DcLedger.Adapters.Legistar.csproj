@@ -4,4 +4,7 @@
     <ProjectReference Include="..\DcLedger.Application\DcLedger.Application.csproj" />
     <ProjectReference Include="..\DcLedger.Domain\DcLedger.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DcLedger.Adapters.Legistar.Tests" />
+  </ItemGroup>
 </Project>
