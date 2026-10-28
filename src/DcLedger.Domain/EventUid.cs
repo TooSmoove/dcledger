@@ -10,20 +10,13 @@ public static class EventUid
 {
     private const string Suffix = "@dcledger";
 
-    /// <summary>Returns <c>&lt;64 hex&gt;@dcledger</c>. Platform tokens are fixed strings so renaming the enum can't change UIDs.</summary>
+    /// <summary>Returns <c>&lt;64 hex&gt;@dcledger</c>, using the platform's fixed token (<see cref="PlatformExtensions.ToToken"/>).</summary>
     public static string Create(string jurisdictionId, Platform platform, string platformMeetingId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(jurisdictionId);
         ArgumentException.ThrowIfNullOrWhiteSpace(platformMeetingId);
 
-        var token = platform switch
-        {
-            Platform.Legistar => "legistar",
-            Platform.Manual => "manual",
-            _ => throw new ArgumentOutOfRangeException(nameof(platform), platform, "Unknown platform."),
-        };
-
-        var key = Encoding.UTF8.GetBytes($"{jurisdictionId}\n{token}\n{platformMeetingId}");
+        var key = Encoding.UTF8.GetBytes($"{jurisdictionId}\n{platform.ToToken()}\n{platformMeetingId}");
         return Sha256Hash.Compute(key).Value + Suffix;
     }
 }

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Fetcher, R2 store and ingest state, GitHub review queue, YAML reader (ADR-0001). -->
   <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="YamlDotNet" />
   </ItemGroup>
