@@ -1,36 +1,43 @@
 ---
-// Scaffold (#7): lists every event in events.json. The 30-day window, provenance and labels arrive in #21.
+// The Hearing Radar (SPEC AC1): every reviewed item starting within 30 days of the export, sorted by start, in
+// Eastern time with its zone. "D" is events.json's generated_utc, so the same export always builds the same page.
 import { getCollection } from 'astro:content';
+import EventTable from '../components/EventTable.astro';
+import Freshness from '../components/Freshness.astro';
 import Base from '../layouts/Base.astro';
+import { WINDOW_DAYS, byStart, easternText, inWindow } from '../lib/radar.js';
+import { generatedUtc } from '../lib/site-data-file.js';
 
-const events = (await getCollection('events')).sort((a, b) =>
-  a.data.starts_utc.localeCompare(b.data.starts_utc),
+const generated = await generatedUtc();
+const jurisdictions = (await getCollection('jurisdictions')).sort((a, b) =>
+  a.data.name.localeCompare(b.data.name, 'en'),
+);
+const names = new Map(jurisdictions.map((j) => [j.id, j.data.name]));
+const events = byStart(
+  (await getCollection('events')).filter((event) => inWindow(event.data, generated)),
 );
 ---
 
 <Base title="Hearing Radar">
   <h1>Hearing Radar</h1>
-  <table>
-    <caption>Upcoming meetings and hearings</caption>
-    <thead>
-      <tr>
-        <th scope="col">When (Eastern)</th>
-        <th scope="col">Body</th>
-        <th scope="col">Item</th>
-        <th scope="col">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {events.map(({ data }) => (
-        <tr>
-          <td>
-            <time datetime={data.starts_utc}>{data.starts_local}</time>
-          </td>
-          <td>{data.body}</td>
-          <td>{data.title}</td>
-          <td>{data.status === 'cancelled' ? 'Cancelled' : 'Scheduled'}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
+  <p>
+    Meetings and hearings about data centers in the next {WINDOW_DAYS} days, as of{' '}
+    <time datetime={generated}>{easternText(generated)}</time>. Every item was reviewed by a person
+    and links to its official source.
+  </p>
+  <p class="feeds">
+    Subscribe: <a href="/radar.ics">calendar (iCal)</a> · download: <a href="/events.csv">CSV</a>
+  </p>
+
+  <EventTable caption="Upcoming items, soonest first" events={events} jurisdictions={names} />
+
+  <h2>Jurisdictions</h2>
+  <ul>
+    {jurisdictions.map(({ id, data }) => (
+      <li>
+        <a href={`/jurisdictions/${id}/`}>{data.name}</a>
+        <Freshness lastCheckedUtc={data.last_checked_utc} stale={data.stale} />
+      </li>
+    ))}
+  </ul>
 </Base>

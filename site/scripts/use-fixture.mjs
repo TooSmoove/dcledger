@@ -1,12 +1,16 @@
-// Copies the test fixture to where `dcl export` would write site data, so the site builds
-// without the .NET toolchain. Never used by the publish workflow.
-import { copyFile, mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
+// Copies the test fixtures to where `dcl export` would write them (../out/site-data/events.json and ../out/public/),
+// so the site builds without the .NET toolchain. Never used by the publish workflow.
+import { cp, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-const source = fileURLToPath(new URL('../tests/fixtures/events.json', import.meta.url));
-const target = fileURLToPath(new URL('../../out/site-data/events.json', import.meta.url));
-
-await mkdir(dirname(target), { recursive: true });
-await copyFile(source, target);
-console.log(`Copied fixture to ${target}`);
+const out = new URL('../../out/', import.meta.url);
+await mkdir(new URL('site-data/', out), { recursive: true });
+await cp(
+  new URL('../tests/fixtures/events.json', import.meta.url),
+  new URL('site-data/events.json', out),
+);
+await cp(new URL('../tests/fixtures/public/', import.meta.url), new URL('public/', out), {
+  recursive: true,
+  force: true,
+});
+console.log(`Copied fixtures to ${fileURLToPath(out)}`);

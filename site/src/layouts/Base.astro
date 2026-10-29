@@ -1,4 +1,5 @@
 ---
+// Every page: noindex (SPEC AC11), no script (AC12), a skip link and visible focus (WCAG 2.2 AA).
 interface Props {
   title: string;
 }
@@ -15,8 +16,150 @@ const { title } = Astro.props;
     <title>{title} · NC Data Center Ledger</title>
   </head>
   <body>
-    <main>
+    <a class="skip" href="#main">
+      Skip to content
+    </a>
+    <header>
+      <nav aria-label="Site">
+        <a href="/">NC Data Center Ledger</a>
+        <a href="/radar/">Hearing Radar</a>
+        <a href="/about/">About</a>
+      </nav>
+    </header>
+    <main id="main">
       <slot />
     </main>
+    <footer>
+      <p>
+        Every item links to its official source with the retrieval time and the SHA-256 of the copy
+        we kept. Times are Eastern. <a href="/about/">About this project</a>.
+      </p>
+    </footer>
   </body>
 </html>
+
+<style is:global>
+  :root {
+    color-scheme: light dark;
+    --ink: #1c1c1c;
+    --muted: #595959;
+    --rule: #c9c9c9;
+    --link: #0b5394;
+    --paper: #fff;
+    --flag: #7a3e00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #ededed;
+      --muted: #b3b3b3;
+      --rule: #4a4a4a;
+      --link: #8ab4f8;
+      --paper: #121212;
+      --flag: #ffb86b;
+    }
+  }
+  html {
+    font-family: system-ui, sans-serif;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  body {
+    margin: 0 auto;
+    padding: 0 1rem 3rem;
+    max-width: 68rem;
+  }
+  a {
+    color: var(--link);
+  }
+  a:focus-visible,
+  .skip:focus {
+    outline: 3px solid var(--link);
+    outline-offset: 2px;
+  }
+  .skip {
+    position: absolute;
+    left: -999px;
+  }
+  .skip:focus {
+    position: static;
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+  }
+  header nav {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  footer {
+    margin-top: 3rem;
+    border-top: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  caption {
+    text-align: left;
+    font-weight: 600;
+    padding-block: 0.5rem;
+  }
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.5rem 0.75rem 0.5rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  th {
+    font-weight: 600;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.4rem 1.25rem;
+  }
+  dt {
+    font-weight: 600;
+  }
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  code {
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .flag {
+    color: var(--flag);
+    font-weight: 600;
+  }
+  .cancelled td {
+    color: var(--muted);
+  }
+  .cancelled td a {
+    color: var(--link);
+  }
+  .cancelled td a:first-child {
+    text-decoration: line-through;
+  }
+  .feeds {
+    margin: 1rem 0;
+  }
+  @media (max-width: 40rem) {
+    dl {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+    dd {
+      margin-bottom: 0.6rem;
+    }
+  }
+</style>

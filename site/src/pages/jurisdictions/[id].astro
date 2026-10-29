@@ -1,0 +1,40 @@
+---
+// One page per jurisdiction: freshness (SPEC AC10), its calendar feed, and every one of its items, newest first.
+import { getCollection, getEntry } from 'astro:content';
+import EventTable from '../../components/EventTable.astro';
+import Freshness from '../../components/Freshness.astro';
+import Base from '../../layouts/Base.astro';
+import { byStart } from '../../lib/radar.js';
+
+export async function getStaticPaths() {
+  return (await getCollection('jurisdictions')).map((j) => ({ params: { id: j.id } }));
+}
+
+const { id } = Astro.params;
+const jurisdiction = await getEntry('jurisdictions', id);
+if (!jurisdiction) {
+  throw new Error(`No jurisdiction ${id} in events.json.`);
+}
+const { data } = jurisdiction;
+const events = byStart(
+  (await getCollection('events')).filter((event) => event.data.jurisdiction_id === id),
+).reverse();
+---
+
+<Base title={data.name}>
+  <p>
+    <a href="/radar/">← Hearing Radar</a>
+  </p>
+  <h1>{data.name}</h1>
+  <Freshness lastCheckedUtc={data.last_checked_utc} stale={data.stale} />
+  <p class="feeds">
+    Subscribe: <a href={`/radar/${id}.ics`}>calendar (iCal) for {data.name}</a>
+  </p>
+
+  <EventTable
+    caption={`Every reviewed item for ${data.name}, newest first`}
+    events={events}
+    jurisdictions={new Map([[id, data.name]])}
+    showJurisdiction={false}
+  />
+</Base>

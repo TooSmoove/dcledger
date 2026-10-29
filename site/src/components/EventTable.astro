@@ -1,0 +1,58 @@
+---
+// One table shared by the radar and the jurisdiction page. Status is text (SPEC AC4); titles are the reviewer's
+// neutral titles, escaped by Astro like every other expression; raw HTML is never rendered.
+import type { CollectionEntry } from 'astro:content';
+import { easternIso, easternText, labelText, statusText } from '../lib/radar.js';
+
+interface Props {
+  caption: string;
+  events: CollectionEntry<'events'>[];
+  jurisdictions: Map<string, string>;
+  showJurisdiction?: boolean;
+}
+
+const { caption, events, jurisdictions, showJurisdiction = true } = Astro.props;
+---
+
+<table>
+  <caption>{caption}</caption>
+  <thead>
+    <tr>
+      <th scope="col">When (Eastern)</th>
+      {showJurisdiction && <th scope="col">Jurisdiction</th>}
+      <th scope="col">Body</th>
+      <th scope="col">Item</th>
+      <th scope="col">Sourcing</th>
+      <th scope="col">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {events.length === 0 ? (
+      <tr>
+        <td colspan={showJurisdiction ? 6 : 5}>No items.</td>
+      </tr>
+    ) : (
+      events.map(({ id, data }) => (
+        <tr class={data.status === 'cancelled' ? 'cancelled' : undefined}>
+          <td>
+            <time datetime={easternIso(data.starts_utc)}>{easternText(data.starts_utc)}</time>
+          </td>
+          {showJurisdiction && (
+            <td>
+              <a href={`/jurisdictions/${data.jurisdiction_id}/`}>
+                {jurisdictions.get(data.jurisdiction_id) ?? data.jurisdiction_id}
+              </a>
+            </td>
+          )}
+          <td>{data.body}</td>
+          <td>
+            <a href={`/items/${id}/`}>{data.title}</a>
+            {data.case_number && <span class="muted"> (case {data.case_number})</span>}
+          </td>
+          <td>{labelText(data.label)}</td>
+          <td>{statusText(data.status)}</td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>

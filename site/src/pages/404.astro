@@ -1,0 +1,12 @@
+---
+// With a top-level 404.html, Cloudflare Pages answers unknown paths with 404 instead of serving the home page
+// (spike S16, docs/spikes/2026-10-29-pages-headers.md).
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found">
+  <h1>Not found</h1>
+  <p>
+    There is no page at this address. Try the <a href="/radar/">Hearing Radar</a>.
+  </p>
+</Base>

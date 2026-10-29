@@ -10,7 +10,7 @@
   "scripts": {
     "fixture": "node scripts/use-fixture.mjs",
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/copy-feeds.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "format": "prettier --write .",

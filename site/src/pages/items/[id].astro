@@ -1,0 +1,91 @@
+---
+// One page per reviewed item, with its full provenance (SPEC AC2): every source URL, the retrieval time in Eastern
+// with its zone, and the SHA-256 of the retrieved bytes. Items outside the radar's window still get a page.
+import { getCollection, getEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { easternIso, easternText, labelText, statusText } from '../../lib/radar.js';
+
+export async function getStaticPaths() {
+  return (await getCollection('events')).map((event) => ({ params: { id: event.id } }));
+}
+
+const { id } = Astro.params;
+const event = await getEntry('events', id);
+if (!event) {
+  throw new Error(`No event ${id} in events.json.`);
+}
+const { data } = event;
+const jurisdiction = await getEntry('jurisdictions', data.jurisdiction_id);
+const jurisdictionName = jurisdiction?.data.name ?? data.jurisdiction_id;
+const cancelled = data.status === 'cancelled';
+---
+
+<Base title={data.title}>
+  <p>
+    <a href="/radar/">← Hearing Radar</a>
+  </p>
+  <h1>
+    {cancelled && 'Cancelled: '}
+    {data.title}
+  </h1>
+
+  <dl>
+    <dt>When (Eastern)</dt>
+    <dd>
+      <time datetime={easternIso(data.starts_utc)}>{easternText(data.starts_utc)}</time>
+    </dd>
+    <dt>Jurisdiction</dt>
+    <dd>
+      <a href={`/jurisdictions/${data.jurisdiction_id}/`}>{jurisdictionName}</a>
+    </dd>
+    <dt>Body</dt>
+    <dd>{data.body}</dd>
+    {data.case_number && (
+      <>
+        <dt>Case</dt>
+        <dd>{data.case_number}</dd>
+      </>
+    )}
+    <dt>Status</dt>
+    <dd>
+      {statusText(data.status)}
+      {data.sequence > 0 && ` (revision ${data.sequence})`}
+    </dd>
+    <dt>Sourcing</dt>
+    <dd>{labelText(data.label)}</dd>
+    <dt>Calendar ID</dt>
+    <dd>
+      <code>{data.uid}</code>
+    </dd>
+  </dl>
+
+  <h2>Sources</h2>
+  <p class="muted">
+    Each source is the document we retrieved, when we retrieved it (Eastern), and the SHA-256 of the
+    bytes we kept.
+  </p>
+  <ol>
+    {data.documents.map((document) => (
+      <li>
+        <dl>
+          <dt>URL</dt>
+          <dd>
+            <a href={document.url} rel="external noreferrer">
+              {document.url}
+            </a>
+          </dd>
+          <dt>Retrieved</dt>
+          <dd>
+            <time datetime={easternIso(document.retrieved_utc)}>
+              {easternText(document.retrieved_utc)}
+            </time>
+          </dd>
+          <dt>SHA-256</dt>
+          <dd>
+            <code>{document.sha256}</code>
+          </dd>
+        </dl>
+      </li>
+    ))}
+  </ol>
+</Base>
