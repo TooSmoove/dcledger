@@ -1,0 +1,5 @@
+# Test fixture: fictional jurisdiction, entered by hand.
+id: fixture-city
+name: Fixture City
+platform: manual
+last_manual_check_utc: 2026-11-02T09:00:00Z

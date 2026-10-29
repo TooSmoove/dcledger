@@ -15,7 +15,12 @@ internal static class CliApp
 
     /// <summary>The command tree; <paramref name="composeIngest"/> builds ingest's services (tests pass fakes).</summary>
     internal static RootCommand CreateRootCommand(TextWriter output, TextWriter error, Func<bool, ServiceProvider> composeIngest) =>
-        new(Description) { ValidateCommand.Create(output, error), IngestCommand.Create(output, error, composeIngest) };
+        new(Description)
+        {
+            ValidateCommand.Create(output, error),
+            IngestCommand.Create(output, error, composeIngest),
+            ExportCommand.Create(output, error),
+        };
 
     /// <summary>Runs dcl with the real services.</summary>
     internal static Task<int> RunAsync(string[] args, TextWriter output, TextWriter error, CancellationToken cancellationToken) =>

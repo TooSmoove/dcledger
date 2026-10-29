@@ -1,0 +1,7 @@
+# Test fixture: fictional document.
+id: 89627e98c053f9b60815c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269
+url: https://fixture-city.example.org/council/2026-11-03-agenda.pdf
+retrieved_at: 2026-10-30T14:05:00Z
+media_type: application/pdf
+bytes: 4567
+source_type: official

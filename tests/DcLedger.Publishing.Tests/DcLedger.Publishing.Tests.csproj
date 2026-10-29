@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Verify.XunitV3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DcLedger.Publishing\DcLedger.Publishing.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The fictional export ledger shared with the Application tests. -->
+    <Compile Include="..\Shared\ExportSamples.cs" Link="Shared\ExportSamples.cs" />
+  </ItemGroup>
+</Project>

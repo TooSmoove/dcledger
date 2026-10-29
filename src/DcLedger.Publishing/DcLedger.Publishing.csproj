@@ -1,7 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- DuckDB build and JSON/CSV/ICS/RSS/Parquet exporters (ADR-0001). -->
   <ItemGroup>
+    <PackageReference Include="DuckDB.NET.Data.Full" />
+    <PackageReference Include="Ical.Net" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DcLedger.Application\DcLedger.Application.csproj" />
     <ProjectReference Include="..\DcLedger.Domain\DcLedger.Domain.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The pinned America/New_York VTIMEZONE (spike S6); *.ics is -text in .gitattributes, so its CRLF bytes survive. -->
+    <EmbeddedResource Include="Ics\america-new_york.vtimezone.ics" LogicalName="DcLedger.Publishing.america-new_york.vtimezone.ics" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="DcLedger.Publishing.Tests" />
   </ItemGroup>
 </Project>

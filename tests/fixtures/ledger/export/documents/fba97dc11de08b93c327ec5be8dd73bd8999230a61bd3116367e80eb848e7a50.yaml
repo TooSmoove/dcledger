@@ -1,0 +1,7 @@
+# Test fixture: fictional document.
+id: fba97dc11de08b93c327ec5be8dd73bd8999230a61bd3116367e80eb848e7a50
+url: https://news.example.org/2026/10/fixture-county-hearing
+retrieved_at: 2026-10-11T09:30:00Z
+media_type: text/html
+bytes: 54321
+source_type: news

@@ -13,9 +13,13 @@ public sealed class ValidateLedger(ILedgerReader reader)
     private readonly ILedgerReader _reader = reader ?? throw new ArgumentNullException(nameof(reader));
 
     /// <summary>Validates <paramref name="dataDirectory"/>; <paramref name="previousRecordFiles"/> are record files that must still exist.</summary>
-    public ValidationReport Run(string dataDirectory, IReadOnlyCollection<string> previousRecordFiles)
+    public ValidationReport Run(string dataDirectory, IReadOnlyCollection<string> previousRecordFiles) =>
+        Check(_reader.Load(dataDirectory), previousRecordFiles);
+
+    /// <summary>Runs the quality gate on an already-loaded <paramref name="snapshot"/>; errors are ordered by file, then rule.</summary>
+    public static ValidationReport Check(LedgerSnapshot snapshot, IReadOnlyCollection<string> previousRecordFiles)
     {
-        var snapshot = _reader.Load(dataDirectory);
+        ArgumentNullException.ThrowIfNull(snapshot);
         var errors = LedgerValidator.Validate(snapshot, previousRecordFiles)
             .OrderBy(e => e.File, StringComparer.Ordinal)
             .ThenBy(e => e.Rule, StringComparer.Ordinal)

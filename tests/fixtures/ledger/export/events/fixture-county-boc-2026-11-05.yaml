@@ -1,0 +1,14 @@
+# Test fixture: fictional meeting (EST).
+id: fixture-county-boc-2026-11-05
+jurisdiction_id: fixture-county
+platform: legistar
+platform_meeting_id: "1600"
+body: Board of Commissioners
+title: Data center moratorium decision
+starts_at: 2026-11-05T17:30:00-05:00
+status: scheduled
+sequence: 0
+label: confirmed_official
+document_ids:
+  - 98e5cc1df59b5bffbdd8f02fa81cf65ef97dfc6b7f062cbeec875c6411f25ea9
+first_seen_utc: 2026-10-28T12:47:03Z
