@@ -6,6 +6,10 @@
   </PropertyGroup>
   <ItemGroup Label="Runtime">
     <PackageVersion Include="AWSSDK.S3" Version="4.0.104.7" />
+    <!-- Natives for linux-x64, win-x64 and more; parquet, json and icu statically linked (spike S7). -->
+    <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.6.1" />
+    <!-- 5.x; its own VTIMEZONE output is never used: the pinned block is injected instead (spike S6). -->
+    <PackageVersion Include="Ical.Net" Version="5.2.3" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.14" />

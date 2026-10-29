@@ -14,5 +14,6 @@
     <Project Path="tests/DcLedger.Cli.Tests/DcLedger.Cli.Tests.csproj" />
     <Project Path="tests/DcLedger.Domain.Tests/DcLedger.Domain.Tests.csproj" />
     <Project Path="tests/DcLedger.Infrastructure.Tests/DcLedger.Infrastructure.Tests.csproj" />
+    <Project Path="tests/DcLedger.Publishing.Tests/DcLedger.Publishing.Tests.csproj" />
   </Folder>
 </Solution>

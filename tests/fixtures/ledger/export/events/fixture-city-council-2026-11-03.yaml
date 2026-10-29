@@ -1,0 +1,13 @@
+# Test fixture: fictional meeting entered by hand (EST).
+id: fixture-city-council-2026-11-03
+jurisdiction_id: fixture-city
+platform: manual
+platform_meeting_id: council-2026-11-03
+body: City Council
+title: "Café district text amendment: data centers"
+starts_at: 2026-11-03T18:00:00-05:00
+status: scheduled
+sequence: 0
+label: confirmed_official
+document_ids:
+  - 89627e98c053f9b60815c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269

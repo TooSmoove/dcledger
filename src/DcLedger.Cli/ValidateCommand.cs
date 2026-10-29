@@ -54,15 +54,7 @@ internal static class ValidateCommand
             : File.ReadAllLines(previousFilesPath).Select(line => line.Trim()).Where(YamlLedgerReader.IsRecordPath).ToList();
 
         var report = new ValidateLedger(new YamlLedgerReader()).Run(dataDirectory, previousFiles);
-        foreach (var problem in report.Errors)
-        {
-            var file = Path.Join(dataDirectory, problem.File).Replace('\\', '/');
-            var record = problem.RecordId is null ? string.Empty : $"{problem.RecordId}: ";
-            output.WriteLine(github
-                ? WorkflowCommands.FileError(file, problem.Rule, record + problem.Message)
-                : $"{file}: [{problem.Rule}] {record}{problem.Message}");
-        }
-
+        LedgerProblems.Print(report.Errors, dataDirectory, github, output);
         output.WriteLine($"Checked {report.RecordFiles} record file(s) in {dataDirectory}: {report.Errors.Count} problem(s).");
         return report.IsValid ? ExitCodes.Ok : ExitCodes.DataInvalid;
     }

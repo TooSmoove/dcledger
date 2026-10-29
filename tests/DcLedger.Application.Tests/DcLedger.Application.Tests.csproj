@@ -8,5 +8,7 @@
   <ItemGroup>
     <!-- In-memory ingest ports shared with the other test project that exercises ingest. -->
     <Compile Include="..\Shared\IngestFakes.cs" Link="Shared\IngestFakes.cs" />
+    <!-- The fictional export ledger shared with the Publishing tests. -->
+    <Compile Include="..\Shared\ExportSamples.cs" Link="Shared\ExportSamples.cs" />
   </ItemGroup>
 </Project>

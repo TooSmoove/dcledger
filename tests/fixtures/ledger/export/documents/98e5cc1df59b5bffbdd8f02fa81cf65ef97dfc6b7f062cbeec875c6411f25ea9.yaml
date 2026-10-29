@@ -1,0 +1,7 @@
+# Test fixture: fictional document.
+id: 98e5cc1df59b5bffbdd8f02fa81cf65ef97dfc6b7f062cbeec875c6411f25ea9
+url: https://fixture-county.example.org/agendas/1600.pdf
+retrieved_at: 2026-10-28T12:47:03Z
+media_type: application/pdf
+bytes: 98765
+source_type: official

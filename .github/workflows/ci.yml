@@ -175,6 +175,23 @@ jobs:
         run: |
           dotnet run --project src/DcLedger.Cli -c Release --no-restore -- \
             validate --data data --previous-files "$RUNNER_TEMP/previous-files.txt" --format github
+      - name: Export (data artifacts, WS-AC10)
+        env:
+          TZ: UTC
+        run: |
+          # ci has no ingest run history, so automated jurisdictions show as never checked; publish (#23) builds the
+          # real ingest-status.json. The commit time keeps the files identical across reruns of the same commit.
+          generated="$(git log -1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ)"
+          printf '{"schema_version":1,"generated_utc":"%s","jurisdictions":[]}\n' "$generated" > "$RUNNER_TEMP/ingest-status.json"
+          dotnet run --project src/DcLedger.Cli -c Release --no-build -- \
+            export --data data --status "$RUNNER_TEMP/ingest-status.json" --out "$RUNNER_TEMP/export" --format github
+      - name: Upload the data artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dcledger-data
+          path: ${{ runner.temp }}/export
+          if-no-files-found: error
+          retention-days: 30
 
   package:
     name: package (dcl linux-x64)
@@ -199,7 +216,7 @@ jobs:
         run: |
           dotnet publish src/DcLedger.Cli -c Release -p:DclPublishRid=linux-x64 -p:RestoreLockedMode=true \
             -p:NuGetAudit=false -o "$RUNNER_TEMP/dcl" 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
-      - name: Smoke test (the version names this commit; Eastern-time validation runs)
+      - name: Smoke test (the version names this commit; Eastern-time validation and export run)
         env:
           CLI: ${{ runner.temp }}/dcl/dcl
         run: |
@@ -210,6 +227,10 @@ jobs:
             exit 1
           fi
           "$CLI" validate --data tests/fixtures/ledger/valid 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+          # Export loads DuckDB's native library from the self-contained output (#23 runs this binary).
+          "$CLI" export --data tests/fixtures/ledger/export --status tests/fixtures/ingest-status/valid.json \
+            --out "$RUNNER_TEMP/export-smoke" 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+          test -s "$RUNNER_TEMP/export-smoke/public/events.csv"
       - name: Pack (deterministic tarball; keeps the executable bit)
         id: pack
         run: |

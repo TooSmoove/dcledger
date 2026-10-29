@@ -19,29 +19,11 @@ public sealed class YamlLedgerReader : ILedgerReader
 
     private static readonly string[] Folders = ["jurisdictions", "documents", "events", "actions"];
 
-    private static readonly Dictionary<string, Platform> Platforms = new(StringComparer.Ordinal)
-    {
-        ["legistar"] = Platform.Legistar,
-        ["manual"] = Platform.Manual,
-    };
-
-    private static readonly Dictionary<string, SourceType> SourceTypes = new(StringComparer.Ordinal)
-    {
-        ["official"] = SourceType.Official,
-        ["news"] = SourceType.News,
-    };
-
-    private static readonly Dictionary<string, EventStatus> Statuses = new(StringComparer.Ordinal)
-    {
-        ["scheduled"] = EventStatus.Scheduled,
-        ["cancelled"] = EventStatus.Cancelled,
-    };
-
-    private static readonly Dictionary<string, EvidenceLabel> Labels = new(StringComparer.Ordinal)
-    {
-        ["reported_news"] = EvidenceLabel.ReportedNews,
-        ["confirmed_official"] = EvidenceLabel.ConfirmedOfficial,
-    };
+    // YAML values are the same fixed tokens the exports use (Domain), so the two can't drift apart.
+    private static readonly Dictionary<string, Platform> Platforms = ByToken<Platform>(PlatformExtensions.ToToken);
+    private static readonly Dictionary<string, SourceType> SourceTypes = ByToken<SourceType>(EnumTokens.ToToken);
+    private static readonly Dictionary<string, EventStatus> Statuses = ByToken<EventStatus>(EnumTokens.ToToken);
+    private static readonly Dictionary<string, EvidenceLabel> Labels = ByToken<EvidenceLabel>(EnumTokens.ToToken);
 
     /// <summary>True for paths like <c>events/some-id.yaml</c>: a record file relative to the data directory.</summary>
     public static bool IsRecordPath(string relativePath)
@@ -273,4 +255,8 @@ public sealed class YamlLedgerReader : ILedgerReader
                 DocumentIds = documentIds,
             };
     }
+
+    private static Dictionary<string, T> ByToken<T>(Func<T, string> token)
+        where T : struct, Enum =>
+        Enum.GetValues<T>().ToDictionary(token, StringComparer.Ordinal);
 }

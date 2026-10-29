@@ -1,0 +1,7 @@
+# Test fixture: fictional jurisdiction, automated.
+id: fixture-county
+name: Fixture County
+platform: legistar
+legistar_client: fixture
+bodies:
+  - Board of Commissioners

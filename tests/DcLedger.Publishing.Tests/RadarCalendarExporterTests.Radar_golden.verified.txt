@@ -1,0 +1,62 @@
+﻿BEGIN:VCALENDAR
+PRODID:-//dc-ledger//Hearing Radar//EN
+VERSION:2.0
+X-PUBLISHED-TTL:PT6H
+X-WR-CALNAME:dc-ledger Hearing Radar
+BEGIN:VTIMEZONE
+TZID:America/New_York
+BEGIN:DAYLIGHT
+TZOFFSETFROM:-0500
+TZOFFSETTO:-0400
+TZNAME:EDT
+DTSTART:20070311T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:-0400
+TZOFFSETTO:-0500
+TZNAME:EST
+DTSTART:20071104T020000
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DESCRIPTION:Fixture County\, Board of Commissioners\nCase: Z-26-01\nSource:
+  https://news.example.org/2026/10/fixture-county-hearing (retrieved 2026-1
+ 0-11T05:30:00-04:00\, SHA-256 fba97dc11de08b93c327ec5be8dd73bd8999230a61bd
+ 3116367e80eb848e7a50)\nSource: https://fixture-county.example.org/agendas/
+ 1599.pdf (retrieved 2026-10-10T08:00:00-04:00\, SHA-256 6ed4fc9a22e94cfaa7
+ a43db736257d21fcaf5b9e06320184d00df2f1e576520c)
+DTSTAMP:20261011T093000Z
+DTSTART;TZID=America/New_York:20261015T173000
+SEQUENCE:1
+STATUS:CANCELLED
+SUMMARY:Cancelled: Rezoning hearing\, "Project Example"\; phase 2
+UID:c366773aa8e5ea3400e0f5e92832b29e2b039d072dcb39b0377fafca937ddab6@dcledg
+ er
+END:VEVENT
+BEGIN:VEVENT
+DESCRIPTION:Fixture City\, City Council\nSource: https://fixture-city.examp
+ le.org/council/2026-11-03-agenda.pdf (retrieved 2026-10-30T10:05:00-04:00\
+ , SHA-256 89627e98c053f9b60815c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269
+ )
+DTSTAMP:20261030T140500Z
+DTSTART;TZID=America/New_York:20261103T180000
+SEQUENCE:0
+SUMMARY:Café district text amendment: data centers
+UID:c5cfda1b012cf5d9dd43c49409b0265d5f805a3fa2edd5e26e323b7314d7e9c0@dcledg
+ er
+END:VEVENT
+BEGIN:VEVENT
+DESCRIPTION:Fixture County\, Board of Commissioners\nSource: https://fixtur
+ e-county.example.org/agendas/1600.pdf (retrieved 2026-10-28T08:47:03-04:00
+ \, SHA-256 98e5cc1df59b5bffbdd8f02fa81cf65ef97dfc6b7f062cbeec875c6411f25ea
+ 9)
+DTSTAMP:20261028T124703Z
+DTSTART;TZID=America/New_York:20261105T173000
+SEQUENCE:0
+SUMMARY:Data center moratorium decision
+UID:7c581de9724d225dc55aee93df1a1310f85058e23d3201f485534e06cf47eb4c@dcledg
+ er
+END:VEVENT
+END:VCALENDAR
