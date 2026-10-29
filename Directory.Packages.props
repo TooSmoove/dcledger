@@ -13,7 +13,7 @@
   </ItemGroup>
   <ItemGroup Label="Tests">
     <PackageVersion Include="Shouldly" Version="4.3.0" />
-    <PackageVersion Include="Verify.XunitV3" Version="31.25.0" />
+    <PackageVersion Include="Verify.XunitV3" Version="33.3.4" />
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
     <!-- Minimal: the full package pulls json-everything (OSMF EULA), GraphQL, ProtoBuf and OpenTelemetry (spike S10). -->
     <PackageVersion Include="WireMock.Net.Minimal" Version="2.19.0" />
