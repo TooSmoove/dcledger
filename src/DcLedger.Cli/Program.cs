@@ -1,3 +1,3 @@
 using DcLedger.Cli;
 
-return CliApp.Run(args, Console.Out, Console.Error);
+return await CliApp.RunAsync(args, Console.Out, Console.Error, CancellationToken.None).ConfigureAwait(false);

@@ -2,4 +2,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\DcLedger.Cli\DcLedger.Cli.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- In-memory ingest ports shared with the other test project that exercises ingest. -->
+    <Compile Include="..\Shared\IngestFakes.cs" Link="Shared\IngestFakes.cs" />
+  </ItemGroup>
 </Project>

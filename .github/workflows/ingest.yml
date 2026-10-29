@@ -1,0 +1,177 @@
+# Ingest (issue #19): for each automated jurisdiction, read its agenda platform, keep matching agendas in the private
+# bucket and open review issues (SPEC AC9, WS-AC3, WS-AC10). The only workflow that reads the sources. It runs the dcl
+# that ci built and signed on main (ADR-0007) against the same commit's data/. A failed jurisdiction counts as "not
+# checked" and gets a scraper-broken issue (ADR-0005).
+name: ingest
+
+on:
+  schedule:
+    - cron: "17 */6 * * *" # every 6 h at :17; spike S5 (#4) decides whether this becomes every 4 h
+  workflow_dispatch:
+    inputs:
+      jurisdiction:
+        description: "One jurisdiction ID (blank: every automated one)"
+        default: ""
+      dry-run:
+        description: "Read the source only: store nothing, open no issues"
+        type: boolean
+        default: false
+      allow-stale:
+        description: "Run even if the newest green ci build is stale (incidents only)"
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  plan:
+    name: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      jurisdictions: ${{ steps.list.outputs.jurisdictions }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: data/jurisdictions
+      - name: List automated jurisdictions
+        id: list
+        env:
+          ONLY: ${{ inputs.jurisdiction }}
+        run: |
+          # A new Legistar jurisdiction is a YAML file, not a workflow change (ADR-0001).
+          ids=()
+          for file in data/jurisdictions/*.yaml; do
+            if grep -Eq '^platform:[[:space:]]*"?legistar"?[[:space:]]*(#.*)?$' "$file"; then
+              ids+=("$(basename "$file" .yaml)")
+            fi
+          done
+          if [ -n "$ONLY" ]; then
+            if ! printf '%s\n' "${ids[@]}" | grep -qxF -- "$ONLY"; then
+              echo "::error title=ingest::'$ONLY' isn't an automated jurisdiction"
+              exit 1
+            fi
+            ids=("$ONLY")
+          fi
+          if [ ${#ids[@]} -eq 0 ]; then
+            echo "::error title=ingest::no automated jurisdictions in data/jurisdictions"
+            exit 1
+          fi
+          json="$(printf '%s\n' "${ids[@]}" | jq -R . | jq -cs .)"
+          echo "jurisdictions: $json"
+          echo "jurisdictions=$json" >> "$GITHUB_OUTPUT"
+
+  ingest:
+    # The job name is how "last checked" will be read from run history (#28); keep it stable.
+    name: ingest (${{ matrix.jurisdiction }})
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        jurisdiction: ${{ fromJSON(needs.plan.outputs.jurisdictions) }}
+    concurrency:
+      group: ingest-${{ matrix.jurisdiction }} # one run per jurisdiction at a time: state is read, then written
+      cancel-in-progress: false
+    environment: r2-docs
+    permissions:
+      actions: read # find and download the CLI ci built (ADR-0007)
+      attestations: read # verify it
+      contents: read
+      issues: write # review issues and the scraper-broken issue
+    env:
+      GH_REPO: ${{ github.repository }}
+      JURISDICTION: ${{ matrix.jurisdiction }}
+      DRY_RUN: ${{ inputs.dry-run == true }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            tools
+      - name: Get the CLI from the newest green ci on main
+        id: cli
+        uses: ./.github/actions/fetch-cli
+        with:
+          allow-stale: ${{ inputs.allow-stale == true }}
+      - name: Check out the data at the CLI's commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.cli.outputs.head-sha }}
+          path: build
+          persist-credentials: false
+          sparse-checkout: data
+
+      - name: Make sure the review label exists
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh label create review --color 0E8A16 --description "An agenda item for a person to review" 2>/dev/null || true
+
+      - name: Ingest
+        id: ingest
+        env:
+          CLI: ${{ steps.cli.outputs.cli-path }}
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          SCHEDULE: ${{ github.event.schedule }}
+          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+          R2_PRIVATE_BUCKET: ${{ vars.R2_PRIVATE_BUCKET }}
+          R2_PRIVATE_ACCESS_KEY_ID: ${{ secrets.R2_PRIVATE_ACCESS_KEY_ID }}
+          R2_PRIVATE_SECRET_ACCESS_KEY: ${{ secrets.R2_PRIVATE_SECRET_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          args=(ingest --jurisdiction "$JURISDICTION" --data build/data --run-id "$RUN_ID" --format github)
+          if [ -n "$SCHEDULE" ]; then args+=(--schedule "$SCHEDULE"); fi
+          if [ "$DRY_RUN" = true ]; then args+=(--dry-run); fi
+          set +e
+          "$CLI" "${args[@]}" > "$RUNNER_TEMP/ingest.txt" 2>&1
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/ingest.txt"
+          {
+            echo "### Ingest: $JURISDICTION (exit code $code)"
+            echo '```text'
+            grep -v '^::' "$RUNNER_TEMP/ingest.txt" || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
+
+      - name: Open or update the scraper-broken issue
+        if: failure() && env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OUTCOME: ${{ steps.ingest.outcome }}
+        run: |
+          title="Ingest failing: $JURISDICTION"
+          if [ "$OUTCOME" = failure ]; then
+            what="\`dcl ingest\` failed, so \`$JURISDICTION\` wasn't checked in [this run]($RUN_URL). Its log and summary say why."
+          else
+            what="The ingest job for \`$JURISDICTION\` failed before \`dcl ingest\` ran (for example, no usable CLI build) in [this run]($RUN_URL)."
+          fi
+          gh label create scraper-broken --color B60205 --description "Scheduled ingest is failing" 2>/dev/null || true
+          number="$(gh issue list --label scraper-broken --state all --limit 100 --json number,title \
+            | jq -r --arg title "$title" 'map(select(.title == $title)) | .[0].number // empty')"
+          if [ -z "$number" ]; then
+            gh issue create --title "$title" --label scraper-broken --body "$what It closes itself after the next successful run."
+          else
+            gh issue reopen "$number" 2>/dev/null || true
+            gh issue comment "$number" --body "$what"
+          fi
+
+      - name: Close the scraper-broken issue after a success
+        if: success() && env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Ingest failing: $JURISDICTION"
+          number="$(gh issue list --label scraper-broken --state open --limit 100 --json number,title \
+            | jq -r --arg title "$title" 'map(select(.title == $title)) | .[0].number // empty')"
+          if [ -n "$number" ]; then
+            gh issue close "$number" --comment "Ingest succeeded again in [this run]($RUN_URL)."
+          fi

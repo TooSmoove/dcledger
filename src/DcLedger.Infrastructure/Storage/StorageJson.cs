@@ -76,9 +76,21 @@ internal static class StorageJson
                 RunOutcome.Failed => "failed",
                 _ => throw new ArgumentOutOfRangeException(nameof(run), run.Outcome, "Unknown outcome."),
             },
-            run.Errors);
+            run.Errors,
+            [.. run.Documents.Select(ToJson)]);
         return JsonSerializer.SerializeToUtf8Bytes(json, StorageJsonContext.Default.RunRecordJson);
     }
+
+    private static RetrievedDocumentJson ToJson(RetrievedDocument document) => new(
+        document.Meeting.Platform.ToToken(),
+        document.Meeting.Client,
+        document.Meeting.MeetingId,
+        document.Uri.AbsoluteUri,
+        document.RetrievedAtUtc.ToUniversalTime(),
+        document.Sha256.Value,
+        document.MediaType,
+        document.Bytes,
+        document.Created);
 
     private static StorageFailedException Invalid(string key, string reason, Exception? inner = null) =>
         new(key, $"{key} isn't valid ingest state: {reason}", inner);
@@ -98,7 +110,19 @@ internal sealed record RunRecordJson(
     [property: JsonPropertyName("finished_utc")] DateTimeOffset FinishedUtc,
     [property: JsonPropertyName("start_delay_seconds")] double? StartDelaySeconds,
     [property: JsonPropertyName("outcome")] string Outcome,
-    [property: JsonPropertyName("errors")] IReadOnlyList<string> Errors);
+    [property: JsonPropertyName("errors")] IReadOnlyList<string> Errors,
+    [property: JsonPropertyName("documents")] IReadOnlyList<RetrievedDocumentJson> Documents);
+
+internal sealed record RetrievedDocumentJson(
+    [property: JsonPropertyName("platform")] string Platform,
+    [property: JsonPropertyName("client")] string Client,
+    [property: JsonPropertyName("meeting_id")] string MeetingId,
+    [property: JsonPropertyName("url")] string Url,
+    [property: JsonPropertyName("retrieved_utc")] DateTimeOffset RetrievedUtc,
+    [property: JsonPropertyName("sha256")] string Sha256,
+    [property: JsonPropertyName("media_type")] string MediaType,
+    [property: JsonPropertyName("bytes")] long Bytes,
+    [property: JsonPropertyName("created")] bool Created);
 
 [JsonSourceGenerationOptions(
     UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,

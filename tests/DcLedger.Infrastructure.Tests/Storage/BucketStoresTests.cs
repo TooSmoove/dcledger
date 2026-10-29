@@ -139,7 +139,7 @@ public sealed class BucketIngestStateTests
 public sealed class BucketRunLogTests
 {
     [Fact]
-    public async Task Run_is_filed_by_utc_month_in_the_documented_shape()
+    public async Task Run_is_filed_by_utc_month_and_jurisdiction_in_the_documented_shape()
     {
         var bucket = new InMemoryObjectStore();
         var run = new RunRecord
@@ -155,9 +155,47 @@ public sealed class BucketRunLogTests
 
         await new BucketRunLog(bucket).WriteAsync(run, TestContext.Current.CancellationToken);
 
-        bucket.Objects["runs/2026/11/40623358875-1.json"].Text.ShouldBe(
+        bucket.Objects["runs/2026/11/guilford/40623358875-1.json"].Text.ShouldBe(
             "{\"schema_version\":1,\"run_id\":\"40623358875-1\",\"jurisdiction_id\":\"guilford\","
             + "\"started_utc\":\"2026-11-01T00:30:00+00:00\",\"finished_utc\":\"2026-11-01T00:31:15+00:00\","
-            + "\"start_delay_seconds\":754,\"outcome\":\"failed\",\"errors\":[\"source unreachable\"]}");
+            + "\"start_delay_seconds\":754,\"outcome\":\"failed\",\"errors\":[\"source unreachable\"],\"documents\":[]}");
+    }
+
+    [Fact]
+    public async Task Retrieved_documents_are_the_run_manifest()
+    {
+        var bucket = new InMemoryObjectStore();
+        var started = new DateTimeOffset(2026, 10, 28, 12, 17, 40, TimeSpan.Zero);
+        var run = new RunRecord
+        {
+            RunId = "40623358875-1",
+            JurisdictionId = "guilford",
+            StartedUtc = started,
+            FinishedUtc = started.AddSeconds(20),
+            Outcome = RunOutcome.Succeeded,
+            Documents =
+            [
+                new RetrievedDocument
+                {
+                    Meeting = new MeetingKey(Platform.Legistar, "guilford", "1599"),
+                    Uri = new Uri("https://guilford.legistar1.com/guilford/meetings/2026/10/1599_A_Agenda.pdf"),
+                    RetrievedAtUtc = new DateTimeOffset(2026, 10, 28, 8, 17, 52, TimeSpan.FromHours(-4)),
+                    Sha256 = Sha256Hash.Compute("agenda"u8),
+                    MediaType = "application/pdf",
+                    Bytes = 123_456,
+                    Created = true,
+                },
+            ],
+        };
+
+        await new BucketRunLog(bucket).WriteAsync(run, TestContext.Current.CancellationToken);
+
+        var json = bucket.Objects["runs/2026/10/guilford/40623358875-1.json"].Text;
+        json.ShouldContain("\"start_delay_seconds\":null");
+        json.ShouldEndWith(
+            "\"documents\":[{\"platform\":\"legistar\",\"client\":\"guilford\",\"meeting_id\":\"1599\","
+            + "\"url\":\"https://guilford.legistar1.com/guilford/meetings/2026/10/1599_A_Agenda.pdf\","
+            + "\"retrieved_utc\":\"2026-10-28T12:17:52+00:00\",\"sha256\":\"" + Sha256Hash.Compute("agenda"u8).Value + "\","
+            + "\"media_type\":\"application/pdf\",\"bytes\":123456,\"created\":true}]}");
     }
 }

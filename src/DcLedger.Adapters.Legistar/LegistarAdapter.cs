@@ -8,7 +8,8 @@ namespace DcLedger.Adapters.Legistar;
 
 /// <summary>
 /// Reads meetings and agenda items from the Legistar Web API (open, no token; spike S1). One request for the events
-/// in the window, then one per meeting of a configured body for its items, all through <see cref="IFetcher"/>.
+/// in the window, then one per meeting of a configured body for its items, all through <see cref="IFetcher"/>. Agendas
+/// are downloaded on request through the meeting's public page (<see cref="GetAgendaAsync"/>).
 /// </summary>
 public sealed class LegistarAdapter(IFetcher fetcher) : ISourceAdapter
 {
@@ -60,6 +61,39 @@ public sealed class LegistarAdapter(IFetcher fetcher) : ISourceAdapter
         return [.. meetings.OrderBy(m => m.Meeting.Date).ThenBy(m => m.Meeting.Time).ThenBy(m => m.EventId).Select(m => m.Meeting)];
     }
 
+    /// <summary>
+    /// Downloads the agenda through the meeting's public page on <c>{client}.legistar.com</c>, which links it as
+    /// <c>View.ashx?M=A&amp;ID=…&amp;GUID=…</c>. The API's <c>EventAgendaFile</c> points to Legistar's file host, whose
+    /// robots.txt disallows every crawler (checked Oct 29, 2026; issue #19); the meeting page's host allows it and serves
+    /// the same bytes. Throws <see cref="SourceFailedException"/>: FormatChanged when there is no meeting page on that host,
+    /// the page doesn't link exactly one agenda, or the link doesn't answer with a PDF.
+    /// </summary>
+    public async Task<FetchedResource> GetAgendaAsync(SourceMeeting meeting, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(meeting);
+        var page = meeting.MeetingPageUri;
+        var site = $"{meeting.Key.Client}.legistar.com";
+        if (page is null || page.Scheme != Uri.UriSchemeHttps || !page.Host.Equals(site, StringComparison.OrdinalIgnoreCase))
+        {
+            throw LegistarMapping.FormatChanged(page ?? ApiBase, $"meeting {meeting.Key.MeetingId} has no meeting page on {site} to find its agenda on.");
+        }
+
+        var html = await GetAsync(page, cancellationToken).ConfigureAwait(false);
+        if (html.MediaType is { } pageType && !pageType.Contains("html", StringComparison.OrdinalIgnoreCase))
+        {
+            throw LegistarMapping.FormatChanged(page, $"answered {pageType}, not HTML.");
+        }
+
+        var agendaUri = LegistarMeetingPage.AgendaLink(page, html.Content);
+        var agenda = await GetAsync(agendaUri, cancellationToken).ConfigureAwait(false);
+        if (!agenda.Content.Span.StartsWith("%PDF-"u8))
+        {
+            throw LegistarMapping.FormatChanged(agenda.FinalUri, "didn't answer with a PDF.");
+        }
+
+        return agenda;
+    }
+
     /// <summary><c>/v1/{client}/events?$filter=EventDate ge datetime'{start}' and EventDate lt datetime'{end}'</c>.</summary>
     internal static Uri EventsUri(string client, DateOnly startDate, DateOnly endDate)
     {
@@ -74,16 +108,7 @@ public sealed class LegistarAdapter(IFetcher fetcher) : ISourceAdapter
     private async Task<T[]> ReadAsync<T>(Uri uri, JsonTypeInfo<T[]> type, CancellationToken cancellationToken)
         where T : class
     {
-        FetchedResource resource;
-        try
-        {
-            resource = await fetcher.GetAsync(uri, cancellationToken).ConfigureAwait(false);
-        }
-        catch (FetchFailedException exception)
-        {
-            throw Translate(exception);
-        }
-
+        var resource = await GetAsync(uri, cancellationToken).ConfigureAwait(false);
         if (resource.MediaType is { } mediaType && !IsJson(mediaType))
         {
             throw LegistarMapping.FormatChanged(uri, $"answered {mediaType}, not JSON.");
@@ -105,6 +130,18 @@ public sealed class LegistarAdapter(IFetcher fetcher) : ISourceAdapter
         }
 
         return values;
+    }
+
+    private async Task<FetchedResource> GetAsync(Uri uri, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await fetcher.GetAsync(uri, cancellationToken).ConfigureAwait(false);
+        }
+        catch (FetchFailedException exception)
+        {
+            throw Translate(exception);
+        }
     }
 
     private static bool IsJson(string mediaType) =>

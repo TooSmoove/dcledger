@@ -435,6 +435,7 @@
           "DcLedger.Domain": "[0.1.0, )",
           "DcLedger.Infrastructure": "[0.1.0, )",
           "DcLedger.Publishing": "[0.1.0, )",
+          "Microsoft.Extensions.DependencyInjection": "[10.0.13, )",
           "System.CommandLine": "[2.0.14, )"
         }
       },

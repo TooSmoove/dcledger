@@ -42,12 +42,12 @@ internal sealed class BucketIngestState(IObjectStore bucket) : IIngestState
         bucket.PutAsync(StorageKeys.MeetingState(meeting), StorageJson.Serialize(state), "application/json", cancellationToken);
 }
 
-/// <summary>One JSON object per run, filed by month.</summary>
+/// <summary>One JSON object per run and jurisdiction, filed by month.</summary>
 internal sealed class BucketRunLog(IObjectStore bucket) : IRunLog
 {
     public Task WriteAsync(RunRecord run, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(run);
-        return bucket.PutAsync(StorageKeys.Run(run.StartedUtc, run.RunId), StorageJson.Serialize(run), "application/json", cancellationToken);
+        return bucket.PutAsync(StorageKeys.Run(run.StartedUtc, run.JurisdictionId, run.RunId), StorageJson.Serialize(run), "application/json", cancellationToken);
     }
 }
