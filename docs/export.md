@@ -32,7 +32,7 @@ are CRLF, all UTF-8; nothing depends on the machine's culture or time zone. Test
 
 ## The ingest status (`--status`)
 
-Publish (#23) builds `ingest-status.json` from ingest run history, so export never calls GitHub (ADR-0004):
+Publish builds `ingest-status.json` from ingest run history with `tools/ingest_status.py` ([publish.md](publish.md)), so export never calls GitHub (ADR-0004):
 
 ```json
 {
