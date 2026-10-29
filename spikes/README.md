@@ -1,7 +1,7 @@
 # Week-1 spikes (throwaway)
 
 Proves or disproves the unverified items in `docs/SPEC.md` §I before any production code is written.
-Results go to `docs/spikes/`; then this folder, `.github/workflows/spikes.yml`, `cron-skew.yml`, `spike-cli-handoff.yml` and `spike-pages.yml` are deleted.
+Results go to `docs/spikes/`; then this folder, `.github/workflows/spikes.yml`, `cron-skew.yml`, `spike-cli-handoff.yml` are deleted.
 
 | Spike | Where it runs | What it answers |
 |---|---|---|
@@ -14,6 +14,6 @@ Results go to `docs/spikes/`; then this folder, `.github/workflows/spikes.yml`, 
 | S2 / S3 | `spikes.yml` → `r2` | AWSSDK.S3 4.x against R2 (needs secrets `R2_ACCOUNT_ID`, `R2_PRIVATE_BUCKET`, `R2_PRIVATE_ACCESS_KEY_ID`, `R2_PRIVATE_SECRET_ACCESS_KEY`; variables `R2_PUBLIC_BUCKET`, `BASEMAP_URL`) |
 | S5 | `cron-skew.yml` | How late GitHub starts scheduled runs (14 days, hourly at :17) |
 | S17 | `spike-cli-handoff.yml` (dispatch) | Can a dispatched workflow run `dcl` from the newest green `ci` build on main? Uses `.github/actions/fetch-cli` (ADR-0007), which stays |
-| S16 | `spike-pages.yml` (dispatch, main only) | Does a wrangler direct upload apply `_headers` (`X-Robots-Tag: noindex`) on the dcledger Pages project, and does the Pages: Edit-only token suffice? Creates the project if missing. Scripts in `pages/`; results in `docs/spikes/2026-10-29-pages-headers.md` |
+| S16 | ran once from `spike-pages.yml` (deleted) | `_headers` noindex on direct upload and the Pages: Edit-only token: both passed; results in `docs/spikes/2026-10-29-pages-headers.md` |
 
 `vtimezone/check_against_iana.py` re-checks the pinned block against Python's IANA database: `pip install icalendar` then `python3 -I spikes/vtimezone/check_against_iana.py spikes/vtimezone/america-new_york.vtimezone.ics`.
