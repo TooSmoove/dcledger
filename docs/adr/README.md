@@ -10,3 +10,4 @@ Lightweight ADRs in Michael Nygard's format. To change a decision, add a new ADR
 | [0004](0004-contracts.md) | Contracts between modules, CLI and site | Accepted |
 | [0005](0005-error-handling.md) | Error handling | Accepted |
 | [0006](0006-testing.md) | Testing strategy | Accepted |
+| [0007](0007-cli-artifact-handoff.md) | CLI artifact handoff from ci to scheduled workflows | Accepted |
