@@ -77,6 +77,34 @@ public sealed record RunRecord
 
     /// <summary>What went wrong, if anything.</summary>
     public IReadOnlyList<string> Errors { get; init; } = [];
+
+    /// <summary>Every document the run retrieved, in order: the run's manifest (WS-AC3).</summary>
+    public IReadOnlyList<RetrievedDocument> Documents { get; init; } = [];
+}
+
+/// <summary>A document an ingest run retrieved, and where its bytes are kept (one manifest entry).</summary>
+public sealed record RetrievedDocument
+{
+    /// <summary>The meeting the document belongs to.</summary>
+    public required MeetingKey Meeting { get; init; }
+
+    /// <summary>Where the bytes came from, after redirects.</summary>
+    public required Uri Uri { get; init; }
+
+    /// <summary>When the bytes were read, in UTC.</summary>
+    public required DateTimeOffset RetrievedAtUtc { get; init; }
+
+    /// <summary>SHA-256 of the bytes; also their key in the private bucket.</summary>
+    public required Sha256Hash Sha256 { get; init; }
+
+    /// <summary>The media type the server gave, or <c>application/octet-stream</c>.</summary>
+    public required string MediaType { get; init; }
+
+    /// <summary>Size of the bytes.</summary>
+    public required long Bytes { get; init; }
+
+    /// <summary>True when this run stored the bytes; false when the bucket already had them, or in a dry run.</summary>
+    public required bool Created { get; init; }
 }
 
 /// <summary>Run logs in the private bucket (ADR-0002).</summary>

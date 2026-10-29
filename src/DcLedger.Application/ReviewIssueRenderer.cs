@@ -94,6 +94,13 @@ public static class ReviewIssueRenderer
     {
         Line(body, "### Matched items");
         Line(body);
+        if (candidate.Items.Count == 0)
+        {
+            Line(body, "No agenda item matches the keyword rules any more. Check the agenda before publishing.");
+            Line(body);
+            return;
+        }
+
         Line(body, "Original titles are private and never copied here; read them in the agenda.");
         Line(body);
         Line(body, "| Agenda no. | Case | Type | Rules |");

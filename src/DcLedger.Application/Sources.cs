@@ -14,6 +14,12 @@ public interface ISourceAdapter
     /// <see cref="SourceFailedException"/> when the source can't be read or its data isn't shaped as expected.
     /// </summary>
     Task<IReadOnlyList<SourceMeeting>> GetMeetingsAsync(Jurisdiction jurisdiction, DateOnly startDate, DateOnly endDate, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Downloads <paramref name="meeting"/>'s published agenda by a route the platform's robots.txt allows, which isn't
+    /// necessarily <see cref="SourceMeeting.AgendaUri"/>. Throws <see cref="SourceFailedException"/> when it can't.
+    /// </summary>
+    Task<FetchedResource> GetAgendaAsync(SourceMeeting meeting, CancellationToken cancellationToken);
 }
 
 /// <summary>A meeting as the source reports it. Untrusted input until a reviewer approves the ledger record.</summary>
@@ -37,7 +43,10 @@ public sealed record SourceMeeting
     /// </summary>
     public DateTimeOffset? StartsAt { get; init; }
 
-    /// <summary>The published agenda document, or null until there is one.</summary>
+    /// <summary>
+    /// The published agenda document as the platform lists it, or null until there is one. Its host may forbid fetching
+    /// (Legistar's file host does), so download it with <see cref="ISourceAdapter.GetAgendaAsync"/>.
+    /// </summary>
     public Uri? AgendaUri { get; init; }
 
     /// <summary>The meeting's page on the platform's public site.</summary>

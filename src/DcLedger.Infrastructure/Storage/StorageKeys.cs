@@ -22,11 +22,16 @@ internal static partial class StorageKeys
         return $"state/{meeting.Platform.ToToken()}/{Segment(meeting.Client, nameof(meeting))}/{Segment(meeting.MeetingId, nameof(meeting))}.json";
     }
 
-    /// <summary><c>runs/{yyyy}/{MM}/{runId}.json</c>, by the UTC start date.</summary>
-    public static string Run(DateTimeOffset startedUtc, string runId)
+    /// <summary>
+    /// <c>runs/{yyyy}/{MM}/{jurisdictionId}/{runId}.json</c>, by the UTC start date. The jurisdiction is part of the key
+    /// because one workflow run ingests each jurisdiction in its own job under the same run ID (issue #19).
+    /// </summary>
+    public static string Run(DateTimeOffset startedUtc, string jurisdictionId, string runId)
     {
         var utc = startedUtc.UtcDateTime;
-        return string.Create(CultureInfo.InvariantCulture, $"runs/{utc:yyyy}/{utc:MM}/{Segment(runId, nameof(runId))}.json");
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"runs/{utc:yyyy}/{utc:MM}/{Segment(jurisdictionId, nameof(jurisdictionId))}/{Segment(runId, nameof(runId))}.json");
     }
 
     /// <summary>Segments come from configuration and from platform data (untrusted), so only a plain token is accepted.</summary>

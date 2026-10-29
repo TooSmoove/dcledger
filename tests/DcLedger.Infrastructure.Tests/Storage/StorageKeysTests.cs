@@ -30,11 +30,11 @@ public sealed class StorageKeysTests
     }
 
     [Fact]
-    public void Runs_are_filed_by_their_utc_start_month()
+    public void Runs_are_filed_by_their_utc_start_month_and_jurisdiction()
     {
         var startedEastern = new DateTimeOffset(2026, 10, 31, 20, 30, 0, TimeSpan.FromHours(-4)); // Nov 1, 00:30 UTC
 
-        StorageKeys.Run(startedEastern, "40623358875-1").ShouldBe("runs/2026/11/40623358875-1.json");
+        StorageKeys.Run(startedEastern, "guilford", "40623358875-1").ShouldBe("runs/2026/11/guilford/40623358875-1.json");
     }
 
     [Theory]
@@ -51,7 +51,8 @@ public sealed class StorageKeysTests
     {
         Should.Throw<ArgumentException>(() => StorageKeys.MeetingState(new MeetingKey(Platform.Legistar, segment, "1599")));
         Should.Throw<ArgumentException>(() => StorageKeys.MeetingState(new MeetingKey(Platform.Legistar, "guilford", segment)));
-        Should.Throw<ArgumentException>(() => StorageKeys.Run(DateTimeOffset.UnixEpoch, segment));
+        Should.Throw<ArgumentException>(() => StorageKeys.Run(DateTimeOffset.UnixEpoch, "guilford", segment));
+        Should.Throw<ArgumentException>(() => StorageKeys.Run(DateTimeOffset.UnixEpoch, segment, "40623358875-1"));
     }
 
     [Fact]
@@ -59,6 +60,6 @@ public sealed class StorageKeysTests
     {
         var tooLong = new string('a', 129);
 
-        Should.Throw<ArgumentException>(() => StorageKeys.Run(DateTimeOffset.UnixEpoch, tooLong));
+        Should.Throw<ArgumentException>(() => StorageKeys.Run(DateTimeOffset.UnixEpoch, "guilford", tooLong));
     }
 }

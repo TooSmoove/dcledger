@@ -59,18 +59,11 @@ internal static class ValidateCommand
             var file = Path.Join(dataDirectory, problem.File).Replace('\\', '/');
             var record = problem.RecordId is null ? string.Empty : $"{problem.RecordId}: ";
             output.WriteLine(github
-                ? $"::error file={EscapeProperty(file)},title={EscapeProperty(problem.Rule)}::{EscapeData(record + problem.Message)}"
+                ? WorkflowCommands.FileError(file, problem.Rule, record + problem.Message)
                 : $"{file}: [{problem.Rule}] {record}{problem.Message}");
         }
 
         output.WriteLine($"Checked {report.RecordFiles} record file(s) in {dataDirectory}: {report.Errors.Count} problem(s).");
         return report.IsValid ? ExitCodes.Ok : ExitCodes.DataInvalid;
     }
-
-    // GitHub workflow command escaping: https://github.com/actions/toolkit/blob/main/packages/core/src/command.ts
-    private static string EscapeData(string value) =>
-        value.Replace("%", "%25", StringComparison.Ordinal).Replace("\r", "%0D", StringComparison.Ordinal).Replace("\n", "%0A", StringComparison.Ordinal);
-
-    private static string EscapeProperty(string value) =>
-        EscapeData(value).Replace(":", "%3A", StringComparison.Ordinal).Replace(",", "%2C", StringComparison.Ordinal);
 }

@@ -72,6 +72,17 @@ public sealed class ReviewIssueRendererTests
         first.Body.ShouldNotContain('\r');
     }
 
+    [Fact]
+    public void Agenda_changed_comment_says_so_when_no_item_matches_any_more()
+    {
+        var candidate = ReviewCandidates.Hearing() with { Items = [] };
+
+        var comment = ReviewIssueRenderer.RenderAgendaChanged(candidate, Sha256Hash.Compute("old"u8));
+
+        comment.ShouldContain("No agenda item matches the keyword rules any more. Check the agenda before publishing.");
+        comment.ShouldNotContain("| Agenda no. |");
+    }
+
     [Theory]
     [InlineData("guilford", "Board of Commissioners", "guilford-board-of-commissioners-2026-11-05")]
     [InlineData("guilford", "Board of Commissioners - Work Session", "guilford-board-of-commissioners-work-session-2026-11-05")]
