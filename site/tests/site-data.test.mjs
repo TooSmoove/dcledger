@@ -12,7 +12,12 @@ test('the fixture uses the supported schema version', () => {
 test('events are read from the events array', () => {
   assert.deepEqual(
     eventsFrom(fixture).map((event) => event.id),
-    ['fixture-guilford-boc-2026-11-05', 'fixture-escaping-check'],
+    [
+      'fixture-guilford-boc-2026-10-15',
+      'fixture-guilford-boc-2026-11-05',
+      'fixture-escaping-check',
+      'fixture-guilford-boc-2026-12-17',
+    ],
   );
 });
 

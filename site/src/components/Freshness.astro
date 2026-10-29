@@ -1,0 +1,28 @@
+---
+// "Last checked" in Eastern plus a text-and-icon stale flag after 48 hours (SPEC AC10). The flag is words, not
+// only an icon or a color.
+import { easternText } from '../lib/radar.js';
+
+interface Props {
+  lastCheckedUtc: string | null;
+  stale: boolean;
+}
+
+const { lastCheckedUtc, stale } = Astro.props;
+---
+
+<p>
+  {lastCheckedUtc === null ? (
+    <span>Never checked.</span>
+  ) : (
+    <span>
+      Last checked <time datetime={lastCheckedUtc}>{easternText(lastCheckedUtc)}</time>.
+    </span>
+  )}
+  {stale && (
+    <span class="flag">
+      {' '}
+      <span aria-hidden="true">⚠</span> Stale: no successful check in 48 hours.
+    </span>
+  )}
+</p>

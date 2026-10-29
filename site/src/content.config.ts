@@ -8,6 +8,7 @@ const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
 const events = defineCollection({
   loader: file(SITE_DATA_FILE, { parser: eventsFrom }),
   schema: z.object({
+    id: z.string(),
     uid: z.string(),
     jurisdiction_id: z.string(),
     body: z.string(),
@@ -25,6 +26,7 @@ const events = defineCollection({
 const jurisdictions = defineCollection({
   loader: file(SITE_DATA_FILE, { parser: jurisdictionsFrom }),
   schema: z.object({
+    id: z.string(),
     name: z.string(),
     last_checked_utc: z.iso.datetime().nullable(),
     stale: z.boolean(),
