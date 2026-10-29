@@ -51,7 +51,7 @@ If an agenda can't be downloaded, only that meeting fails, and the run still goe
 
 **In GitHub.** Go to Actions → *ingest* → *Run workflow*. You can:
 - pick one jurisdiction;
-- choose a **dry run**, which reads the source and downloads matching agendas but stores nothing and opens no issue;
+- choose a **dry run**, which reads the source and downloads matching agendas but stores nothing and opens no issue. Its run is named "ingest (dry run)" and doesn't count as a check for "last checked" on the site;
 - allow a stale CLI build, which is for incidents only (ADR-0007).
 
 **Locally**, a dry run needs no credentials:

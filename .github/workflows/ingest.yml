@@ -3,6 +3,9 @@
 # that ci built and signed on main (ADR-0007) against the same commit's data/. A failed jurisdiction counts as "not
 # checked" and gets a scraper-broken issue (ADR-0005).
 name: ingest
+# Dry runs are named apart: publish (#23) reads "last checked" from this history and skips them
+# (tools/ingest_status.py). Keep both names stable.
+run-name: ${{ inputs.dry-run && 'ingest (dry run)' || 'ingest' }}
 
 on:
   schedule:

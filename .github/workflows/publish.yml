@@ -1,0 +1,263 @@
+# Publish (issue #23): builds the site from the reviewed ledger on main and deploys it to Cloudflare Pages
+# (SPEC WS-AC4, WS-AC9, AC8). Runs the dcl that ci built and signed (ADR-0007) against the same commit's data/ and
+# site/, so nothing unreviewed is ever published. Three jobs, so the Cloudflare token never shares a runner with the
+# site's npm dependencies:
+#   build   no secrets: ingest-status.json from ingest history -> dcl validate -> dcl export -> site build
+#   deploy  environment cloudflare-pages: wrangler pages deploy, then checks the live site
+#   report  opens, comments on or closes the "Publish failing" issue
+# See docs/publish.md.
+name: publish
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "47 */6 * * *" # every 6 h at :47, half an hour after ingest (:17), so freshness is current
+  workflow_dispatch:
+    inputs:
+      allow-stale:
+        description: "Run even if the newest green ci build is stale (incidents only)"
+        type: boolean
+        default: false
+
+permissions: {}
+
+# One publish at a time; a newer one waits and replaces any other that is waiting.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SITE_URL: https://dcledger.pages.dev
+  PROJECT: dcledger
+
+jobs:
+  build:
+    name: build
+    # After ci, only for a green run of a push, schedule or dispatch on this repository's main. fetch-cli still picks
+    # and verifies the build on its own; this only decides whether to start.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event != 'pull_request' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: read # ingest run history; find and download the CLI ci built (ADR-0007)
+      attestations: read # verify it
+      contents: read
+    outputs:
+      head-sha: ${{ steps.cli.outputs.head-sha }}
+      generated-utc: ${{ steps.status.outputs.generated-utc }}
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions
+            tools
+      - name: Refuse R2 document credentials (WS-AC9)
+        env:
+          SECRETS_PRESENT: ${{ secrets.R2_PRIVATE_ACCESS_KEY_ID != '' || secrets.R2_PRIVATE_SECRET_ACCESS_KEY != '' }}
+        run: bash tools/refuse_r2_credentials.sh
+
+      - name: Get the CLI from the newest green ci on main
+        id: cli
+        uses: ./.github/actions/fetch-cli
+        with:
+          allow-stale: ${{ inputs.allow-stale == true }}
+      - name: Check out the data and site at the CLI's commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.cli.outputs.head-sha }}
+          path: build
+          persist-credentials: false
+
+      - name: Build ingest-status.json from ingest run history
+        id: status
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 -I tools/ingest_status.py --repo "$GITHUB_REPOSITORY" --data build/data \
+            --out "$RUNNER_TEMP/ingest-status.json"
+          echo "generated-utc=$(jq -r .generated_utc "$RUNNER_TEMP/ingest-status.json")" >> "$GITHUB_OUTPUT"
+      - name: Validate
+        env:
+          CLI: ${{ steps.cli.outputs.cli-path }}
+        run: '"$CLI" validate --data build/data --format github'
+      - name: Export
+        env:
+          CLI: ${{ steps.cli.outputs.cli-path }}
+        run: |
+          "$CLI" export --data build/data --status "$RUNNER_TEMP/ingest-status.json" --out build/out --format github \
+            | tee "$RUNNER_TEMP/export.txt"
+
+      # No npm cache: nothing restored from another run reaches the deployed files.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: build/.nvmrc
+      - name: Build the site
+        working-directory: build/site
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Check the build
+        working-directory: build/site/dist
+        env:
+          GENERATED: ${{ steps.status.outputs.generated-utc }}
+        run: |
+          for file in _headers 404.html index.html radar/index.html radar.ics events.csv; do
+            [ -s "$file" ] || { echo "::error title=publish::dist/$file is missing or empty"; exit 1; }
+          done
+          grep -q '^  X-Robots-Tag: noindex$' _headers || { echo "::error title=publish::_headers lost noindex (AC11)"; exit 1; }
+          if grep -rli --include='*.html' '<script' .; then
+            echo "::error title=publish::a page ships a script tag (AC12)"
+            exit 1
+          fi
+          grep -q "datetime=\"$GENERATED\"" radar/index.html \
+            || { echo "::error title=publish::/radar doesn't show this export's time"; exit 1; }
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site
+          path: build/site/dist
+          if-no-files-found: error
+          retention-days: 7
+      - name: Summary
+        env:
+          HEAD_SHA: ${{ steps.cli.outputs.head-sha }}
+          CI_RUN: ${{ steps.cli.outputs.run-id }}
+        run: |
+          {
+            echo "### Site build"
+            echo
+            echo "- Data and site at \`${HEAD_SHA:0:7}\`, CLI from ci run [$CI_RUN]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$CI_RUN)"
+            echo "- $(grep '^Exported' "$RUNNER_TEMP/export.txt" | cut -d: -f1)"
+            echo "- $(find build/site/dist -type f | wc -l) files in the deploy"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: cloudflare-pages
+      url: https://dcledger.pages.dev/radar/
+    permissions:
+      contents: read
+    env:
+      WRANGLER_SEND_METRICS: "false" # no telemetry (SPEC §E)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            .nvmrc
+            tools
+      - name: Refuse R2 document credentials (WS-AC9)
+        env:
+          SECRETS_PRESENT: ${{ secrets.R2_PRIVATE_ACCESS_KEY_ID != '' || secrets.R2_PRIVATE_SECRET_ACCESS_KEY != '' }}
+        run: bash tools/refuse_r2_credentials.sh
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Install wrangler from its lockfile (no install scripts, no secrets)
+        run: npm ci --prefix tools/deploy --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site
+          path: ${{ runner.temp }}/site
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Same Cloudflare account as R2 unless a CLOUDFLARE_ACCOUNT_ID variable says otherwise (spike S16).
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || vars.R2_ACCOUNT_ID }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.ndjson
+          HEAD_SHA: ${{ needs.build.outputs.head-sha }}
+        run: |
+          set -o pipefail
+          # Actions logs are public; a Cloudflare account's default name contains its owner's email.
+          tools/deploy/node_modules/.bin/wrangler pages deploy "$RUNNER_TEMP/site" --project-name "$PROJECT" \
+            --branch main --commit-hash "$HEAD_SHA" --commit-message "publish ${HEAD_SHA:0:7}, run $GITHUB_RUN_ID" \
+            --commit-dirty=true 2>&1 | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/<email redacted>/g'
+          url="$(jq -r 'select(.type == "pages-deploy-detailed") | .url' "$WRANGLER_OUTPUT_FILE_PATH" | tail -1)"
+          [ -n "$url" ] && [ "$url" != null ] || { echo "::error title=publish::wrangler reported no deployment URL"; exit 1; }
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Check the live site
+        env:
+          GENERATED: ${{ needs.build.outputs.generated-utc }}
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          # The production alias can lag a new deployment by a minute or two.
+          for _ in $(seq 1 36); do
+            if curl -fsS --max-time 20 "$SITE_URL/radar/" | grep -q "datetime=\"$GENERATED\""; then
+              live=true
+              break
+            fi
+            sleep 5
+          done
+          if [ "${live:-}" != true ]; then
+            echo "::error title=publish::$SITE_URL/radar/ didn't serve this build within 3 minutes"
+            exit 1
+          fi
+          for path in / /radar/ /radar.ics; do
+            headers="$(curl -sS -o /dev/null -D - --max-time 20 "$SITE_URL$path" | tr -d '\r')"
+            if ! grep -qi '^x-robots-tag: noindex' <<< "$headers"; then
+              echo "::error title=publish::$SITE_URL$path is missing X-Robots-Tag: noindex (AC11)"
+              exit 1
+            fi
+          done
+          {
+            echo "### Deployed"
+            echo
+            echo "- Live: $SITE_URL/radar/ (as of $GENERATED)"
+            echo "- This deployment: $DEPLOYMENT_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  report:
+    name: report
+    needs: [build, deploy]
+    # Skipped with build (a red or pull-request ci); otherwise reports success or failure, never a cancellation.
+    if: >-
+      always() && needs.build.result != 'skipped' && needs.build.result != 'cancelled' &&
+      needs.deploy.result != 'cancelled'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TITLE: Publish failing
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      FAILED: ${{ needs.build.result == 'failure' || needs.deploy.result == 'failure' }}
+    steps:
+      - name: Open, comment on or close the "Publish failing" issue
+        run: |
+          number="$(gh issue list --label publish-broken --state all --limit 100 --json number,title,state \
+            | jq -r --arg title "$TITLE" 'map(select(.title == $title)) | .[0].number // empty')"
+          if [ "$FAILED" = true ]; then
+            what="Publish failed in [this run]($RUN_URL), so $SITE_URL still shows the previous build and its freshness times aren't advancing. The run's log and summary say why. This issue closes itself after the next successful publish."
+            gh label create publish-broken --color B60205 --description "Publish to the site is failing" 2>/dev/null || true
+            if [ -z "$number" ]; then
+              gh issue create --title "$TITLE" --label publish-broken --body "$what"
+            else
+              gh issue reopen "$number" 2>/dev/null || true
+              gh issue comment "$number" --body "$what"
+            fi
+          elif [ -n "$number" ] && [ "$(gh issue view "$number" --json state -q .state)" = OPEN ]; then
+            gh issue close "$number" --comment "Publish succeeded again in [this run]($RUN_URL)."
+          fi

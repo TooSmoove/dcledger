@@ -1,0 +1,12 @@
+{
+  "name": "dcledger-deploy",
+  "private": true,
+  "description": "Deploy tooling for publish.yml, pinned by this lockfile and installed with npm ci. Not part of the site.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "dependencies": {
+    "wrangler": "4.155.0"
+  }
+}

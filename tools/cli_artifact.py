@@ -536,10 +536,12 @@ class GitHubApi:
         opener: Callable[..., Any] = urllib.request.urlopen,
         sleep: Callable[[float], None] = time.sleep,
         attempts: int = 3,
+        user_agent: str = "dc-ledger-cli-artifact",
     ) -> None:
         if not token:
             raise ConfigError("GH_TOKEN is empty; pass a token with actions: read")
         self._token = token
+        self._user_agent = user_agent
         self._base_url = base_url.rstrip("/")
         self._opener = opener
         self._sleep = sleep
@@ -552,7 +554,7 @@ class GitHubApi:
             headers={
                 "Accept": "application/vnd.github+json",
                 "Authorization": f"Bearer {self._token}",
-                "User-Agent": "dc-ledger-cli-artifact",
+                "User-Agent": self._user_agent,
                 "X-GitHub-Api-Version": "2022-11-28",
             },
         )
