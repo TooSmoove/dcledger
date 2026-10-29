@@ -3,8 +3,9 @@
 **Question (#11):** does a direct upload with wrangler apply `_headers` (`X-Robots-Tag: noindex`) on the dcledger Pages
 project, and does the Pages: Edit-only token in the `cloudflare-pages` environment suffice?
 
-**Status:** workflow ready; **results pending the first dispatch on main** (the environment is restricted to main, so
-the workflow can't run before it merges). The run posts its report on #11; it gets copied into the table below.
+**Answer: yes to both.** Run [40902834931](https://github.com/TooSmoove/dcledger/actions/runs/40902834931)
+(Oct 29, 2026, commit 30e16c3, wrangler 4.155.0) deployed with the Pages: Edit-only token and the production alias
+served `X-Robots-Tag: noindex` from `_headers`. Full report in the [comment on #11](https://github.com/TooSmoove/dcledger/issues/11).
 
 ## What the documentation already says
 
@@ -45,30 +46,32 @@ the owner's email and Actions logs are public.
 **Exit criterion:** the deploy succeeds with the scoped token, and the production alias serves `X-Robots-Tag: noindex`
 together with this run's spike header.
 
-## Running it
-
-After the PR merges: `gh workflow run spike-pages.yml --ref main`, or Actions → *spike-pages* → *Run workflow*.
-It needs the `cloudflare-pages` environment's `CLOUDFLARE_API_TOKEN` secret and the `R2_ACCOUNT_ID` variable.
+The workflow and its scripts were deleted once the result was recorded (this file is what remains).
 
 ## Results
 
-_Pending the first run._
-
 | Check | Result |
 |---|---|
-| Deploy with the Pages: Edit token, account ID set | |
-| Project listing without an account ID | |
-| Project created by the spike / production host | |
-| Production alias: `X-Robots-Tag: noindex` and the spike header on `/` | |
-| Production alias: headers on a 404 | |
-| Deployment URL: headers | |
-| `/sitemap.xml`, `/_headers` | |
-| Content-Type of `.ics`, `.csv`, `.json` | |
+| Deploy with the Pages: Edit-only token, `CLOUDFLARE_ACCOUNT_ID` set | **Passed.** Wrangler reported environment `production`. |
+| `wrangler pages project list` with the same token and **no** account ID | **Succeeded.** The token can look its account up on its own (the Memberships: Read reports didn't reproduce with wrangler 4.155.0). |
+| Project `dcledger` | Didn't exist; the spike created it as direct upload (Git provider: No), production branch `main`. The name `dcledger.pages.dev` was free. |
+| Production alias `/` | 200, `X-Robots-Tag: noindex`, spike header present, robots meta tag in the HTML |
+| Production alias 404 (`/does-not-exist`, `/sitemap.xml`, `/sitemap-index.xml`) | 404 with both headers: `_headers` applies to the 404 page too |
+| `/_headers` itself | 404: not served |
+| Unique deployment URL (`e4a8fcef.dcledger.pages.dev`) | Same results on every path |
+| Content-Type | `.ics` → `text/calendar; charset=utf-8`, `.csv` → `text/csv; charset=utf-8`, `.json` → `application/json`, HTML `text/html; charset=utf-8` |
 
-## Decisions (to confirm from the results)
+Because the spike header appeared on the production alias, the `noindex` there came from `_headers`, not from the
+platform default that preview URLs get.
 
-- **Token:** if the deploy passes, `cloudflare-pages` keeps the Pages: Edit-only token, and `publish.yml` (#23) always
-  sets `CLOUDFLARE_ACCOUNT_ID`.
-- **Production `_headers` (#21):** `site/public/_headers` with `/*` → `X-Robots-Tag: noindex` (AC11). Add explicit
-  `Content-Type` rules only for the sample types that came back wrong.
-- **Cleanup:** delete `spike-pages.yml` and `spikes/pages/` with the other spike files (#4).
+## Decisions
+
+- **Token:** the `cloudflare-pages` environment keeps the Pages: Edit-only token. `publish.yml` (#23) still sets
+  `CLOUDFLARE_ACCOUNT_ID` (from the `R2_ACCOUNT_ID` variable), so a future wrangler that needs it can't break publish.
+- **Production `_headers` (#21):** `site/public/_headers` with `/*` → `X-Robots-Tag: noindex` (AC11). No
+  `Content-Type` rules are needed; Pages gets `.ics`, `.csv` and `.json` right.
+- **404 page:** keep a top-level `404.html` in the site build so unknown paths return 404 instead of the single-page-app
+  fallback.
+- **publish.yml:** after the deploy, curl the production alias and fail when `X-Robots-Tag: noindex` is missing, the
+  same check this spike ran.
+- **Dashboard:** the `dcledger` project exists now; #23 deploys over the spike's hello-world page.
