@@ -54,6 +54,7 @@ DESCRIPTION:Fixture County\, Board of Commissioners\nSource: https://fixtur
  9)
 DTSTAMP:20261028T124703Z
 DTSTART;TZID=America/New_York:20261105T173000
+GEO:36.072600;-79.792000
 SEQUENCE:0
 SUMMARY:Data center moratorium decision
 UID:7c581de9724d225dc55aee93df1a1310f85058e23d3201f485534e06cf47eb4c@dcledg

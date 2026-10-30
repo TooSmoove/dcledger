@@ -108,7 +108,11 @@ jobs:
           node-version-file: build/.nvmrc
       - name: Build the site
         working-directory: build/site
+        env:
+          # The basemap's nc.pmtiles in the public bucket (repository variable); fonts and sprite sit beside it.
+          PUBLIC_BASEMAP_URL: ${{ vars.BASEMAP_URL }}
         run: |
+          [ -n "$PUBLIC_BASEMAP_URL" ] || { echo "::error title=publish::repository variable BASEMAP_URL is empty"; exit 1; }
           npm ci --no-audit --no-fund
           npm run build
       - name: Check the build
@@ -116,14 +120,15 @@ jobs:
         env:
           GENERATED: ${{ steps.status.outputs.generated-utc }}
         run: |
-          for file in _headers 404.html index.html radar/index.html radar.ics events.csv; do
+          for file in _headers 404.html index.html radar/index.html map/index.html map-style.json radar.ics events.csv; do
             [ -s "$file" ] || { echo "::error title=publish::dist/$file is missing or empty"; exit 1; }
           done
           grep -q '^  X-Robots-Tag: noindex$' _headers || { echo "::error title=publish::_headers lost noindex (AC11)"; exit 1; }
-          if grep -rli --include='*.html' '<script' .; then
-            echo "::error title=publish::a page ships a script tag (AC12)"
+          if grep -rli --include='*.html' '<script' . | grep -v '^\./map/index\.html$'; then
+            echo "::error title=publish::a page other than /map ships a script tag (AC12)"
             exit 1
           fi
+          grep -q 'id="show-map"' map/index.html || { echo "::error title=publish::/map has no map button"; exit 1; }
           grep -q "datetime=\"$GENERATED\"" radar/index.html \
             || { echo "::error title=publish::/radar doesn't show this export's time"; exit 1; }
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -19,6 +19,9 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 - Every event and action lists at least one document, and every listed document exists (`DOC_MISSING`); its jurisdiction exists (`FK_MISSING`).
 - `confirmed_official` needs at least one document with `source_type: official` (`LABEL_INVALID`).
 - `starts_at` carries the Eastern offset in effect that day (`-04:00` or `-05:00`); times skipped or repeated by daylight saving are rejected.
+- `location` is optional: the proposed project's site, as decimal degrees with at most 6 decimals, inside North
+  Carolina (`LOCATION_OUT_OF_RANGE` otherwise; usually a swapped pair or a missing minus sign). Only `lat` and `lon`:
+  never a name, address or owner. It puts the item on the map.
 - Files are UTF-8, at most 64 KB, one YAML mapping, no anchors or aliases. Quote values that start with a special character or look like numbers you want kept as text.
 
 ## Shapes
@@ -54,6 +57,9 @@ sequence: 0                   # +1 on every published change
 label: confirmed_official     # confirmed_official | reported_news
 document_ids: [<sha256>]
 first_seen_utc: 2026-10-27T14:00:00Z   # set by ingest, optional
+location:                     # optional: the proposed project's site
+  lat: 36.0726
+  lon: -79.792
 
 # actions/<id>.yaml  (example values)
 id: fixture-county-moratorium-2026-01-15

@@ -27,6 +27,8 @@ internal static class LedgerTables
             e.status,
             e.sequence,
             e.label,
+            e.location_lat,
+            e.location_lon,
             string_agg(d.url, ' ' ORDER BY ed.position) AS document_urls,
             string_agg(strftime(d.retrieved_utc, '%Y-%m-%dT%H:%M:%SZ'), ' ' ORDER BY ed.position) AS document_retrieved_utc,
             string_agg(d.sha256, ' ' ORDER BY ed.position) AS document_sha256
@@ -34,7 +36,7 @@ internal static class LedgerTables
         JOIN event_documents AS ed ON ed.event_id = e.id
         JOIN documents AS d ON d.sha256 = ed.sha256
         GROUP BY e.id, e.uid, e.jurisdiction_id, e.body, e.title, e.case_number, e.starts_utc, e.starts_local, e.status,
-            e.sequence, e.label
+            e.sequence, e.label, e.location_lat, e.location_lon
         ORDER BY e.starts_utc, e.id
         """;
 
@@ -81,7 +83,9 @@ internal static class LedgerTables
             starts_local VARCHAR NOT NULL,
             status VARCHAR NOT NULL,
             sequence INTEGER NOT NULL,
-            label VARCHAR NOT NULL
+            label VARCHAR NOT NULL,
+            location_lat DOUBLE,
+            location_lon DOUBLE
         )
         """,
         """
@@ -185,6 +189,8 @@ internal static class LedgerTables
                     .AppendValue(ledgerEvent.Status.ToToken())
                     .AppendValue(ledgerEvent.Sequence)
                     .AppendValue(ledgerEvent.Label.ToToken())
+                    .AppendValue(ledgerEvent.Location?.Latitude)
+                    .AppendValue(ledgerEvent.Location?.Longitude)
                     .EndRow();
             }
         }

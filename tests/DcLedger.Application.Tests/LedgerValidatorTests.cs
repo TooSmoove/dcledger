@@ -110,6 +110,28 @@ public sealed class LedgerValidatorTests
         LedgerValidator.Validate(Snapshot(), previous).ShouldBeEmpty();
     }
 
+    [Fact]
+    public void A_location_inside_north_carolina_is_valid()
+    {
+        var located = Event() with { Location = new Location { Latitude = 36.0726, Longitude = -79.792 } };
+
+        Validate(Snapshot(ledgerEvent: located)).ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(-79.792, 36.0726)] // lat and lon swapped
+    [InlineData(36.0726, 79.792)] // minus sign missing
+    [InlineData(37.0, -79.792)] // Virginia
+    [InlineData(33.8, -79.0)] // South Carolina
+    public void A_location_outside_north_carolina_is_reported(double latitude, double longitude)
+    {
+        var located = Event() with { Location = new Location { Latitude = latitude, Longitude = longitude } };
+
+        var problem = Validate(Snapshot(ledgerEvent: located)).ShouldHaveSingleItem();
+        problem.Rule.ShouldBe(ValidationRule.LocationOutOfRange);
+        problem.Message.ShouldContain("outside North Carolina");
+    }
+
     private static IReadOnlyList<ValidationError> Validate(LedgerSnapshot snapshot) => LedgerValidator.Validate(snapshot, []);
 
     private static string Rule(LedgerSnapshot snapshot) => Validate(snapshot).ShouldHaveSingleItem().Rule;

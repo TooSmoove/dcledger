@@ -78,6 +78,7 @@ public sealed class SiteDataExporter : IExporter
         json.WriteString("status", ledgerEvent.Status.ToToken());
         json.WriteNumber("sequence", ledgerEvent.Sequence);
         json.WriteString("label", ledgerEvent.Label.ToToken());
+        WriteLocation(json, ledgerEvent.Location);
 
         json.WriteStartArray("documents");
         foreach (var document in item.Documents)
@@ -90,6 +91,21 @@ public sealed class SiteDataExporter : IExporter
         }
 
         json.WriteEndArray();
+        json.WriteEndObject();
+    }
+
+    /// <summary><c>"location": {"lat": 36.0726, "lon": -79.792}</c>, or null. Numbers use the shortest exact form.</summary>
+    private static void WriteLocation(Utf8JsonWriter json, Location? location)
+    {
+        if (location is null)
+        {
+            json.WriteNull("location");
+            return;
+        }
+
+        json.WriteStartObject("location");
+        json.WriteNumber("lat", location.Latitude);
+        json.WriteNumber("lon", location.Longitude);
         json.WriteEndObject();
     }
 

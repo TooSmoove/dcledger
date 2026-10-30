@@ -13,7 +13,7 @@ namespace DcLedger.Publishing.Tests;
 /// </summary>
 public sealed class SiteContractTests
 {
-    private static readonly HashSet<string> Nullable = new(StringComparer.Ordinal) { "case_number", "last_checked_utc" };
+    private static readonly HashSet<string> Nullable = new(StringComparer.Ordinal) { "case_number", "last_checked_utc", "location" };
 
     [Fact]
     public void Exported_events_json_has_the_shape_of_the_site_fixture()

@@ -19,6 +19,7 @@ const events = defineCollection({
     status: z.enum(['scheduled', 'cancelled']),
     sequence: z.number().int().nonnegative(),
     label: z.enum(['reported_news', 'confirmed_official']),
+    location: z.object({ lat: z.number(), lon: z.number() }).nullable(),
     documents: z.array(z.object({ url: z.url(), retrieved_utc: z.iso.datetime(), sha256 })).min(1),
   }),
 });

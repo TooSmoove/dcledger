@@ -121,6 +121,19 @@ public sealed class RadarCalendarExporterTests
     }
 
     [Fact]
+    public void A_located_event_carries_geo_and_others_do_not()
+    {
+        var lines = UnfoldedLines(Ics(ExportPaths.Radar));
+        lines.ShouldContain("GEO:36.072600;-79.792000");
+        lines.Count(line => line.StartsWith("GEO:", StringComparison.Ordinal)).ShouldBe(1);
+
+        var located = Events(Ics(ExportPaths.Radar)).Single(e => e.Uid == ExportSamples.November5.Uid);
+        located.GeographicLocation.ShouldNotBeNull();
+        located.GeographicLocation.Latitude.ShouldBe(36.0726);
+        located.GeographicLocation.Longitude.ShouldBe(-79.792);
+    }
+
+    [Fact]
     public void Calendar_properties_are_fixed()
     {
         var radar = UnfoldedLines(Ics(ExportPaths.Radar));

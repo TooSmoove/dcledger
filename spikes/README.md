@@ -15,5 +15,6 @@ Results go to `docs/spikes/`; then this folder, `.github/workflows/spikes.yml`, 
 | S5 | `cron-skew.yml` | How late GitHub starts scheduled runs (14 days, hourly at :17) |
 | S17 | `spike-cli-handoff.yml` (dispatch) | Can a dispatched workflow run `dcl` from the newest green `ci` build on main? Uses `.github/actions/fetch-cli` (ADR-0007), which stays |
 | S16 | ran once from `spike-pages.yml` (deleted) | `_headers` noindex on direct upload and the Pages: Edit-only token: both passed; results in `docs/spikes/2026-10-29-pages-headers.md` |
+| S18 | the real `/map` page, `npm run lighthouse` in ci | Lighthouse mobile ≥ 90 with MapLibre on demand: 100/100; results in `docs/spikes/2026-10-29-map-lighthouse.md` |
 
 `vtimezone/check_against_iana.py` re-checks the pinned block against Python's IANA database: `pip install icalendar` then `python3 -I spikes/vtimezone/check_against_iana.py spikes/vtimezone/america-new_york.vtimezone.ics`.

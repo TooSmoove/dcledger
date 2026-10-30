@@ -23,6 +23,7 @@ const { title } = Astro.props;
       <nav aria-label="Site">
         <a href="/">NC Data Center Ledger</a>
         <a href="/radar/">Hearing Radar</a>
+        <a href="/map/">Map</a>
         <a href="/about/">About</a>
       </nav>
     </header>
@@ -147,7 +148,7 @@ const { title } = Astro.props;
   .cancelled td a {
     color: var(--link);
   }
-  .cancelled td a:first-child {
+  .cancelled .item {
     text-decoration: line-through;
   }
   .feeds {

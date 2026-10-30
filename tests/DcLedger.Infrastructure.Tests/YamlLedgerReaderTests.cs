@@ -122,6 +122,50 @@ public sealed class YamlLedgerReaderTests
         RuleFor("events/fixture-boc-2026-11-05.yaml", yaml).ShouldBe(ValidationRule.OffsetMissing);
     }
 
+    [Theory]
+    [InlineData("location:\n  lat: 36.0726\n  lon: -79.792", 36.0726, -79.792)]
+    [InlineData("location: { lat: 36.072611, lon: -79.79 }", 36.072611, -79.79)]
+    [InlineData("location: { lat: \"36\", lon: \"-80\" }", 36.0, -80.0)]
+    public void Location_is_read_as_decimal_degrees(string location, double latitude, double longitude)
+    {
+        var loaded = Load("events/fixture-boc-2026-11-05.yaml", ValidEvent + "\n" + location).Events.ShouldHaveSingleItem().Record;
+
+        loaded.Location.ShouldBe(new Location { Latitude = latitude, Longitude = longitude });
+    }
+
+    [Fact]
+    public void Location_is_optional()
+    {
+        Load("events/fixture-boc-2026-11-05.yaml", ValidEvent).Events.ShouldHaveSingleItem().Record.Location.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("location: 36.0726, -79.792", "not a mapping")]
+    [InlineData("location: { lat: 36.0726 }", "lon missing")]
+    [InlineData("location: { lat: 3.6e1, lon: -79.792 }", "exponent")]
+    [InlineData("location: { lat: 36.0726123, lon: -79.792 }", "more than 6 decimals")]
+    [InlineData("location: { lat: +36.07, lon: -79.792 }", "plus sign")]
+    [InlineData("location: { lat: '', lon: -79.792 }", "blank")]
+    public void Malformed_location_is_reported(string location, string because)
+    {
+        var errors = Load("events/fixture-boc-2026-11-05.yaml", ValidEvent + "\n" + location).LoadErrors;
+
+        errors.ShouldNotBeEmpty(because);
+        errors.ShouldAllBe(error => error.Rule == ValidationRule.InvalidValue || error.Rule == ValidationRule.RequiredField || error.Rule == ValidationRule.UnknownField, because);
+        errors.ShouldAllBe(error => error.RecordId == "fixture-boc-2026-11-05", because);
+    }
+
+    [Theory]
+    [InlineData("name: Example Road site", ValidationRule.UnknownField)]
+    [InlineData("address: 123 Example Rd", ValidationRule.UnknownField)]
+    [InlineData("owner: Jane Resident", ValidationRule.ForbiddenField)]
+    public void Location_holds_only_a_point(string extra, string rule)
+    {
+        var yaml = ValidEvent + "\nlocation:\n  lat: 36.0726\n  lon: -79.792\n  " + extra;
+
+        RuleFor("events/fixture-boc-2026-11-05.yaml", yaml).ShouldBe(rule);
+    }
+
     [Fact]
     public void Document_url_must_be_http_or_https()
     {

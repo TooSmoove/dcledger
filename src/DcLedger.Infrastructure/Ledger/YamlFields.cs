@@ -232,6 +232,49 @@ internal sealed partial class YamlFields
         return null;
     }
 
+    /// <summary>
+    /// A nested mapping as its own fields, sharing this file's error list and record ID; null when absent, or when it
+    /// isn't a mapping (reported).
+    /// </summary>
+    public YamlFields? Mapping(string key)
+    {
+        _read.Add(key);
+        if (!_values.TryGetValue(key, out var node))
+        {
+            return null;
+        }
+
+        if (node is YamlMappingNode mapping)
+        {
+            return new YamlFields(mapping, _file, _errors) { RecordId = RecordId };
+        }
+
+        Add(ValidationRule.InvalidValue, $"'{key}' must be a mapping.");
+        return null;
+    }
+
+    /// <summary>
+    /// A required decimal number such as <c>36.0726</c> or <c>-79.792</c>: an optional minus sign, 1 to 3 digits, and at
+    /// most 6 decimals (about 10 cm). No exponents, thousands separators or plus signs.
+    /// </summary>
+    public double? Decimal(string key)
+    {
+        var value = Required(key);
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (DecimalPattern().IsMatch(value)
+            && double.TryParse(value, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number))
+        {
+            return number;
+        }
+
+        Add(ValidationRule.InvalidValue, $"'{key}' must be a decimal number like 36.0726, with at most 6 decimals.");
+        return null;
+    }
+
     /// <summary>Reports every key no reader asked for: forbidden ones by name, the rest as unknown.</summary>
     public void RejectUnreadKeys()
     {
@@ -263,4 +306,7 @@ internal sealed partial class YamlFields
 
     [GeneratedRegex("^[a-z0-9]+(?:-[a-z0-9]+)*$", RegexOptions.CultureInvariant, 250)]
     private static partial Regex SlugPattern();
+
+    [GeneratedRegex(@"^-?[0-9]{1,3}(?:\.[0-9]{1,6})?$", RegexOptions.CultureInvariant, 250)]
+    private static partial Regex DecimalPattern();
 }
