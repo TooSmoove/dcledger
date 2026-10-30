@@ -2,6 +2,7 @@
 // One table shared by the radar and the jurisdiction page. Status is text (SPEC AC4); titles are the reviewer's
 // neutral titles, escaped by Astro like every other expression; raw HTML is never rendered.
 import type { CollectionEntry } from 'astro:content';
+import { coordinatesText } from '../lib/basemap.js';
 import { easternIso, easternText, labelText, statusText } from '../lib/radar.js';
 
 interface Props {
@@ -9,9 +10,12 @@ interface Props {
   events: CollectionEntry<'events'>[];
   jurisdictions: Map<string, string>;
   showJurisdiction?: boolean;
+  /** Adds a "Site" column with each item's coordinates: the map page's text equivalent of its markers. */
+  showSite?: boolean;
 }
 
-const { caption, events, jurisdictions, showJurisdiction = true } = Astro.props;
+const { caption, events, jurisdictions, showJurisdiction = true, showSite = false } = Astro.props;
+const columns = 5 + (showJurisdiction ? 1 : 0) + (showSite ? 1 : 0);
 ---
 
 <table>
@@ -24,16 +28,21 @@ const { caption, events, jurisdictions, showJurisdiction = true } = Astro.props;
       <th scope="col">Item</th>
       <th scope="col">Sourcing</th>
       <th scope="col">Status</th>
+      {showSite && <th scope="col">Site</th>}
     </tr>
   </thead>
   <tbody>
     {events.length === 0 ? (
       <tr>
-        <td colspan={showJurisdiction ? 6 : 5}>No items.</td>
+        <td colspan={columns}>No items.</td>
       </tr>
     ) : (
       events.map(({ id, data }) => (
-        <tr class={data.status === 'cancelled' ? 'cancelled' : undefined}>
+        <tr
+          class={data.status === 'cancelled' ? 'cancelled' : undefined}
+          data-lat={data.location?.lat}
+          data-lon={data.location?.lon}
+        >
           <td>
             <time datetime={easternIso(data.starts_utc)}>{easternText(data.starts_utc)}</time>
           </td>
@@ -46,11 +55,14 @@ const { caption, events, jurisdictions, showJurisdiction = true } = Astro.props;
           )}
           <td>{data.body}</td>
           <td>
-            <a href={`/items/${id}/`}>{data.title}</a>
+            <a class="item" href={`/items/${id}/`}>
+              {data.title}
+            </a>
             {data.case_number && <span class="muted"> (case {data.case_number})</span>}
           </td>
           <td>{labelText(data.label)}</td>
           <td>{statusText(data.status)}</td>
+          {showSite && <td>{data.location ? coordinatesText(data.location) : 'Not recorded'}</td>}
         </tr>
       ))
     )}

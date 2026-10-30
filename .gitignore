@@ -10,3 +10,4 @@ dist/
 *.user
 __pycache__/
 *.pyc
+.lighthouseci/

@@ -9,6 +9,8 @@ namespace DcLedger.Publishing.Tests;
 
 public sealed class SiteDataExporterTests
 {
+    private static readonly string[] LatLon = ["lat", "lon"];
+
     private static string EventsJson() =>
         TestFiles.Text(TestFiles.Single(new SiteDataExporter().Export(ExportSamples.Model()), ExportPaths.SiteData));
 
@@ -60,6 +62,19 @@ public sealed class SiteDataExporterTests
             [ExportSamples.NewsStory.Id.Value, ExportSamples.CountyAgenda1599.Id.Value]);
         documents[0].GetProperty("retrieved_utc").GetString().ShouldBe("2026-10-11T09:30:00Z");
         documents[0].GetProperty("url").GetString().ShouldBe("https://news.example.org/2026/10/fixture-county-hearing");
+    }
+
+    [Fact]
+    public void Location_is_a_point_or_null()
+    {
+        using var document = JsonDocument.Parse(EventsJson());
+        var events = document.RootElement.GetProperty("events");
+
+        events[0].GetProperty("location").ValueKind.ShouldBe(JsonValueKind.Null);
+        var location = events[2].GetProperty("location");
+        location.GetProperty("lat").GetDouble().ShouldBe(36.0726);
+        location.GetProperty("lon").GetDouble().ShouldBe(-79.792);
+        location.EnumerateObject().Select(p => p.Name).ShouldBe(LatLon);
     }
 
     [Fact]

@@ -11,7 +11,7 @@ public sealed class TabularExporterTests
     private static readonly string[] Header =
     [
         "id", "uid", "jurisdiction_id", "body", "title", "case_number", "starts_utc", "starts_local", "status", "sequence",
-        "label", "document_urls", "document_retrieved_utc", "document_sha256",
+        "label", "location_lat", "location_lon", "document_urls", "document_retrieved_utc", "document_sha256",
     ];
 
     private static string EventsCsv() =>
@@ -47,12 +47,14 @@ public sealed class TabularExporterTests
         october15[5].ShouldBe("Z-26-01");
         october15[8].ShouldBe("cancelled");
         october15[9].ShouldBe("1");
-        october15[11].ShouldBe("https://news.example.org/2026/10/fixture-county-hearing https://fixture-county.example.org/agendas/1599.pdf");
-        october15[12].ShouldBe("2026-10-11T09:30:00Z 2026-10-10T12:00:00Z");
-        october15[13].ShouldBe($"{ExportSamples.NewsStory.Id.Value} {ExportSamples.CountyAgenda1599.Id.Value}");
+        october15[13].ShouldBe("https://news.example.org/2026/10/fixture-county-hearing https://fixture-county.example.org/agendas/1599.pdf");
+        october15[14].ShouldBe("2026-10-11T09:30:00Z 2026-10-10T12:00:00Z");
+        october15[15].ShouldBe($"{ExportSamples.NewsStory.Id.Value} {ExportSamples.CountyAgenda1599.Id.Value}");
 
         rows[2][4].ShouldBe(ExportSamples.November3.Title);
         rows[3][5].ShouldBe(string.Empty);
+        (october15[11], october15[12]).ShouldBe((string.Empty, string.Empty));
+        (rows[3][11], rows[3][12]).ShouldBe(("36.0726", "-79.792"));
     }
 
     [Fact]

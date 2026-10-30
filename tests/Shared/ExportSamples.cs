@@ -9,7 +9,8 @@ namespace DcLedger.Testing;
 /// <summary>
 /// Two jurisdictions (one automated, one manual and stale), four documents and three events: a cancelled one on
 /// Oct 15, 2026 (EDT) with a title full of CSV and iCalendar specials, one on Nov 3 with non-ASCII text, and the
-/// Nov 5, 2026 decision (EST), so every export crosses the Nov 1 daylight-saving change (SPEC AC3).
+/// Nov 5, 2026 decision (EST), so every export crosses the Nov 1 daylight-saving change (SPEC AC3). Only the Nov 5
+/// item has a location, so exports show both a point and its absence.
 /// </summary>
 internal static class ExportSamples
 {
@@ -89,6 +90,7 @@ internal static class ExportSamples
         Label = EvidenceLabel.ConfirmedOfficial,
         DocumentIds = [CountyAgenda1600.Id],
         FirstSeenUtc = Utc(2026, 10, 28, 12, 47, 3),
+        Location = new Location { Latitude = 36.0726, Longitude = -79.792 },
     };
 
     /// <summary>The ledger as the YAML reader would load it, records deliberately out of order.</summary>

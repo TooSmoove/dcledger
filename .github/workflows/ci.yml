@@ -65,7 +65,7 @@ jobs:
 
   site:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     defaults:
       run:
         shell: bash
@@ -83,8 +83,21 @@ jobs:
       - run: npm run format:check 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
       - run: npm run fixture 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
       - run: npm run check 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
-      - run: npm run build 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: npm run build (with a stand-in basemap, so the map's code path is built and tested)
+        env:
+          PUBLIC_BASEMAP_URL: https://basemap.example.org/basemap/nc.pmtiles
+        run: npm run build 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
       - run: npm test 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Lighthouse mobile on /map and /radar (SPEC AC12, spike S18)
+        run: npm run lighthouse 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Keep the Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lighthouse
+          path: site/.lighthouseci/reports
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Annotate failure
         if: failure()
         working-directory: .

@@ -1,4 +1,5 @@
-# Builds the North Carolina basemap extract and uploads it to the public R2 bucket.
+# Builds the North Carolina basemap extract and uploads it to the public R2 bucket, with the fonts and sprite the map's
+# labels and icons need (issue #22), so the map never calls a third party.
 # Manual only. The only job that holds the public-bucket token (docs/SPEC.md §C).
 name: basemap
 
@@ -9,6 +10,10 @@ on:
         description: "Max zoom (14 recommended; 15 is ~2x the size)"
         required: true
         default: "14"
+      tiles:
+        description: "Rebuild and upload nc.pmtiles (off: fonts and sprite only)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -28,6 +33,13 @@ jobs:
       PMTILES_VERSION: "1.31.2"
       NC_BBOX: "-84.33,33.84,-75.46,36.59"
       OBJECT_KEY: basemap/nc.pmtiles
+      PREFIX: basemap
+      TILES: ${{ inputs.tiles }}
+      # protomaps/basemaps-assets, pinned: Noto Sans glyphs (SIL OFL 1.1) and the v4 sprites (from MIT-licensed
+      # tangrams/icons). Bump together with @protomaps/basemaps in site/package.json.
+      ASSETS_COMMIT: 028c18f713baecad011301ff7a69acc39bcc2ae7
+      FONTS: "Noto Sans Regular|Noto Sans Medium|Noto Sans Italic"
+      SPRITE: light
       BUCKET: ${{ vars.R2_PUBLIC_BUCKET }}
       ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
       AWS_ACCESS_KEY_ID: ${{ secrets.R2_PUBLIC_ACCESS_KEY_ID }}
@@ -48,12 +60,14 @@ jobs:
           [ -n "$AWS_SECRET_ACCESS_KEY" ] || missing+=("r2-basemap secret R2_PUBLIC_SECRET_ACCESS_KEY")
           if [ ${#missing[@]} -gt 0 ]; then echo "::error::Missing: ${missing[*]}"; exit 1; fi
       - name: Fetch go-pmtiles ${{ env.PMTILES_VERSION }}
+        if: env.TILES == 'true'
         run: |
           gh release download "v$PMTILES_VERSION" --repo protomaps/go-pmtiles \
             --pattern "go-pmtiles_${PMTILES_VERSION}_Linux_x86_64.tar.gz" --output pmtiles.tgz
           mkdir -p pm && tar -xzf pmtiles.tgz -C pm
           install -m 0755 "$(find pm -type f -name pmtiles | head -1)" ./pmtiles
       - name: Extract North Carolina from the latest daily build
+        if: env.TILES == 'true'
         run: |
           build=""
           for i in $(seq 1 10); do
@@ -71,9 +85,49 @@ jobs:
             echo "- license: OpenStreetMap data, ODbL — attribution \"© OpenStreetMap contributors\" required"
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload to R2
+        if: env.TILES == 'true'
         run: |
           aws s3 cp nc.pmtiles "s3://$BUCKET/$OBJECT_KEY" --endpoint-url "$ENDPOINT" \
             --content-type application/octet-stream --cache-control "public, max-age=86400" --only-show-errors
           aws s3api head-object --bucket "$BUCKET" --key "$OBJECT_KEY" --endpoint-url "$ENDPOINT" \
             --query '{bytes: ContentLength, modified: LastModified}' --output text
           echo "- uploaded: s3://$BUCKET/$OBJECT_KEY" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fetch the pinned fonts and sprite
+        run: |
+          mkdir assets
+          curl -sSfL --retry 3 "https://codeload.github.com/protomaps/basemaps-assets/tar.gz/$ASSETS_COMMIT" \
+            | tar -xz -C assets --strip-components=1
+          IFS='|' read -r -a fonts <<< "$FONTS"
+          for font in "${fonts[@]}"; do
+            count=$(find "assets/fonts/$font" -name '*.pbf' | wc -l)
+            [ "$count" -eq 256 ] || { echo "::error::$font has $count glyph ranges, expected 256"; exit 1; }
+          done
+          for file in "$SPRITE.json" "$SPRITE.png" "$SPRITE@2x.json" "$SPRITE@2x.png"; do
+            [ -s "assets/sprites/v4/$file" ] || { echo "::error::sprites/v4/$file is missing"; exit 1; }
+          done
+          [ -s assets/fonts/OFL.txt ] || { echo "::error::fonts/OFL.txt is missing"; exit 1; }
+      - name: Upload fonts and sprite to R2
+        run: |
+          cache="public, max-age=604800"
+          IFS='|' read -r -a fonts <<< "$FONTS"
+          for font in "${fonts[@]}"; do
+            aws s3 cp "assets/fonts/$font" "s3://$BUCKET/$PREFIX/fonts/$font" --recursive --endpoint-url "$ENDPOINT" \
+              --exclude '*' --include '*.pbf' --content-type application/x-protobuf --cache-control "$cache" --only-show-errors
+          done
+          # The SIL Open Font License travels with the fonts it covers.
+          aws s3 cp assets/fonts/OFL.txt "s3://$BUCKET/$PREFIX/fonts/OFL.txt" --endpoint-url "$ENDPOINT" \
+            --content-type "text/plain; charset=utf-8" --cache-control "$cache" --only-show-errors
+          for file in "$SPRITE.json" "$SPRITE@2x.json"; do
+            aws s3 cp "assets/sprites/v4/$file" "s3://$BUCKET/$PREFIX/sprites/v4/$file" --endpoint-url "$ENDPOINT" \
+              --content-type application/json --cache-control "$cache" --only-show-errors
+          done
+          for file in "$SPRITE.png" "$SPRITE@2x.png"; do
+            aws s3 cp "assets/sprites/v4/$file" "s3://$BUCKET/$PREFIX/sprites/v4/$file" --endpoint-url "$ENDPOINT" \
+              --content-type image/png --cache-control "$cache" --only-show-errors
+          done
+          {
+            echo "## Fonts and sprite"
+            echo "- protomaps/basemaps-assets@${ASSETS_COMMIT:0:7}: $FONTS (SIL OFL 1.1, OFL.txt uploaded beside them); sprites/v4/$SPRITE"
+            echo "- uploaded under s3://$BUCKET/$PREFIX/fonts/ and s3://$BUCKET/$PREFIX/sprites/v4/"
+          } >> "$GITHUB_STEP_SUMMARY"

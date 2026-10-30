@@ -20,9 +20,10 @@ One publish runs at a time; a newer one waits and replaces any other that is wai
      commit's `data/` and `site/` (ADR-0007), so code and data always match.
    - Builds `ingest-status.json` from ingest run history (`tools/ingest_status.py`, below).
    - Runs `dcl validate`, then `dcl export --out build/out` ([export.md](export.md)).
-   - Builds the site (`npm ci`, `npm run build`), which copies the calendars and CSV into `dist/`.
-   - Checks `dist/`: the pages and feeds exist, `_headers` keeps `X-Robots-Tag: noindex`, no page has a `<script>`,
-     and /radar shows this export's time. Uploads `dist/` as the `site` artifact (7 days).
+   - Builds the site (`npm ci`, `npm run build`) with `PUBLIC_BASEMAP_URL` from the `BASEMAP_URL` variable; the build
+     copies the calendars and CSV into `dist/`.
+   - Checks `dist/`: the pages and feeds exist, `_headers` keeps `X-Robots-Tag: noindex`, no page but /map has a
+     `<script>`, /map has its button, and /radar shows this export's time. Uploads `dist/` as the `site` artifact (7 days).
 2. **deploy** (environment `cloudflare-pages`, `contents: read`)
    - Fails if it can see an R2 document credential.
    - Installs wrangler from `tools/deploy/package-lock.json` with `npm ci --ignore-scripts`, so every package is
@@ -52,6 +53,7 @@ SPEC AC10) is measured against it.
 |---|---|---|
 | `CLOUDFLARE_API_TOKEN` | secret in environment `cloudflare-pages` | Account → Cloudflare Pages → Edit only (enough, spike S16) |
 | `R2_ACCOUNT_ID` | repository variable | The Cloudflare account ID; add `CLOUDFLARE_ACCOUNT_ID` if Pages is in another account |
+| `BASEMAP_URL` | repository variable | The public `nc.pmtiles` URL; the map's fonts and sprite must sit beside it (run *basemap* once). Publish fails when it's empty |
 | `cloudflare-pages` | environment | Deployment branches: main only |
 | `R2_PRIVATE_ACCESS_KEY_ID`, `R2_PRIVATE_SECRET_ACCESS_KEY` | environment `r2-docs` **only** | As repository secrets or in `cloudflare-pages`, publish refuses to run (WS-AC9) |
 

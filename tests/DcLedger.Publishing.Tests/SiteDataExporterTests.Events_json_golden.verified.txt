@@ -28,6 +28,7 @@
       "status": "cancelled",
       "sequence": 1,
       "label": "confirmed_official",
+      "location": null,
       "documents": [
         {
           "url": "https://news.example.org/2026/10/fixture-county-hearing",
@@ -53,6 +54,7 @@
       "status": "scheduled",
       "sequence": 0,
       "label": "confirmed_official",
+      "location": null,
       "documents": [
         {
           "url": "https://fixture-city.example.org/council/2026-11-03-agenda.pdf",
@@ -73,6 +75,10 @@
       "status": "scheduled",
       "sequence": 0,
       "label": "confirmed_official",
+      "location": {
+        "lat": 36.0726,
+        "lon": -79.792
+      },
       "documents": [
         {
           "url": "https://fixture-county.example.org/agendas/1600.pdf",

@@ -47,4 +47,7 @@ public static class ValidationRule
 
     /// <summary>A record that existed before was removed or renamed; published IDs are permanent.</summary>
     public const string SlugChanged = "SLUG_CHANGED";
+
+    /// <summary>A location outside North Carolina's bounding box, which is as far as the basemap goes.</summary>
+    public const string LocationOutOfRange = "LOCATION_OUT_OF_RANGE";
 }

@@ -60,6 +60,12 @@ internal static class IcsCalendarWriter
             vevent.Status = IcalEventStatus.Cancelled;
         }
 
+        if (ledgerEvent.Location is { } location)
+        {
+            // GEO (RFC 5545 §3.8.1.6); Ical.Net writes it with 6 decimals, culture-invariant.
+            vevent.GeographicLocation = new GeographicLocation(location.Latitude, location.Longitude);
+        }
+
         return vevent;
     }
 

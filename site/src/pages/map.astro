@@ -1,0 +1,95 @@
+---
+// The map page (issue #22, SPEC WS-AC7): the radar's items as a table first, which works with JavaScript off, and a
+// "Show map" button that loads MapLibre and pmtiles on demand. Markers mark proposed project sites; the table's Site
+// column is their text equivalent. The only page with a script (SPEC AC12).
+import { getCollection } from 'astro:content';
+import EventTable from '../components/EventTable.astro';
+import Base from '../layouts/Base.astro';
+import { basemapAssets } from '../lib/basemap.js';
+import { WINDOW_DAYS, byStart, easternText, inWindow } from '../lib/radar.js';
+import { generatedUtc } from '../lib/site-data-file.js';
+
+const generated = await generatedUtc();
+const names = new Map(
+  (await getCollection('jurisdictions')).map((j) => [j.id, j.data.name] as [string, string]),
+);
+const events = byStart(
+  (await getCollection('events')).filter((event) => inWindow(event.data, generated)),
+);
+const located = events.filter((event) => event.data.location !== null).length;
+const summary = `${located} of ${events.length} ${events.length === 1 ? 'item has' : 'items have'} a recorded site; the table lists them all.`;
+const hasBasemap = basemapAssets(import.meta.env.PUBLIC_BASEMAP_URL) !== null;
+---
+
+<Base title="Map">
+  <h1>Map</h1>
+  <p>
+    Proposed project sites for the items on the <a href="/radar/">Hearing Radar</a> (the next{' '}
+    {WINDOW_DAYS} days, as of <time datetime={generated}>{easternText(generated)}</time>). {summary}
+  </p>
+
+  {hasBasemap ? (
+    <section class="map-panel" aria-label="Map">
+      <button type="button" id="show-map" data-style="/map-style.json">
+        Show map
+      </button>
+      <p id="map-status" role="status" />
+      <div id="map" class="map" role="region" aria-label="Map of proposed project sites" hidden />
+      <p class="muted">
+        Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>{' '}
+        (ODbL), tiles by <a href="https://protomaps.com">Protomaps</a>.
+      </p>
+    </section>
+  ) : (
+    <p class="muted">The map isn't available in this build; the table lists every item.</p>
+  )}
+
+  <EventTable
+    caption="Upcoming items, soonest first"
+    events={events}
+    jurisdictions={names}
+    showSite={true}
+  />
+</Base>
+
+<script>
+  import { wireMapButton } from '../scripts/map-button';
+
+  wireMapButton();
+</script>
+
+<style is:global>
+  .map-panel button {
+    font: inherit;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--link);
+    border-radius: 4px;
+    color: var(--link);
+    background: var(--paper);
+    cursor: pointer;
+  }
+  .map-panel button:focus-visible {
+    outline: 3px solid var(--link);
+    outline-offset: 2px;
+  }
+  .map {
+    height: min(70vh, 36rem);
+    min-height: 20rem;
+    margin-top: 0.5rem;
+    border: 1px solid var(--rule);
+  }
+  .map-marker {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border: 3px solid #fff;
+    border-radius: 50% 50% 50% 0;
+    background: #b3261e;
+    transform: rotate(-45deg);
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+  }
+  .map-marker:focus-visible {
+    outline: 3px solid #0b5394;
+    outline-offset: 3px;
+  }
+</style>

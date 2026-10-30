@@ -43,6 +43,7 @@ public static class LedgerValidator
             CheckJurisdiction(errors, file, ledgerEvent.Id, ledgerEvent.JurisdictionId, jurisdictionIds);
             CheckEvidence(errors, file, ledgerEvent.Id, ledgerEvent.DocumentIds, ledgerEvent.Label, documents);
             CheckStartTime(errors, file, ledgerEvent);
+            CheckLocation(errors, file, ledgerEvent);
         }
 
         foreach (var (file, action) in snapshot.Actions)
@@ -145,6 +146,16 @@ public static class LedgerValidator
         {
             errors.Add(new ValidationError(file, ledgerEvent.Id, ValidationRule.DstGapOrOverlap,
                 string.Create(CultureInfo.InvariantCulture, $"starts_at wall time {ledgerEvent.StartsAt:yyyy-MM-dd HH:mm} is {Describe(issue)} by daylight saving; calendar feeds can't represent it unambiguously.")));
+        }
+    }
+
+    private static void CheckLocation(List<ValidationError> errors, string file, LedgerEvent ledgerEvent)
+    {
+        if (ledgerEvent.Location is { IsInNorthCarolina: false } location)
+        {
+            errors.Add(new ValidationError(file, ledgerEvent.Id, ValidationRule.LocationOutOfRange,
+                string.Create(CultureInfo.InvariantCulture,
+                    $"location {location.Latitude}, {location.Longitude} is outside North Carolina (latitude {Location.MinLatitude} to {Location.MaxLatitude}, longitude {Location.MinLongitude} to {Location.MaxLongitude}). Is lat/lon swapped, or the longitude's minus sign missing?")));
         }
     }
 

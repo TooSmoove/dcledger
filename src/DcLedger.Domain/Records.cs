@@ -86,6 +86,9 @@ public sealed record LedgerEvent
     /// <summary>When ingest first saw the published agenda (SPEC AC9); null for manual entries.</summary>
     public DateTimeOffset? FirstSeenUtc { get; init; }
 
+    /// <summary>Where the proposed project is, when the reviewer recorded it; its marker on the map (issue #22).</summary>
+    public Location? Location { get; init; }
+
     /// <summary>The stable iCalendar UID.</summary>
     public string Uid => EventUid.Create(JurisdictionId, Platform, PlatformMeetingId);
 }

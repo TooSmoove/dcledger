@@ -34,6 +34,10 @@
       "status": "scheduled",
       "sequence": 0,
       "label": "confirmed_official",
+      "location": {
+        "lat": 36.0726,
+        "lon": -79.792
+      },
       "documents": [
         {
           "url": "https://guilford.legistar.com/",
@@ -54,6 +58,10 @@
       "status": "scheduled",
       "sequence": 0,
       "label": "confirmed_official",
+      "location": {
+        "lat": 36.1495,
+        "lon": -79.8711
+      },
       "documents": [
         {
           "url": "https://guilford.legistar.com/",
@@ -74,6 +82,7 @@
       "status": "cancelled",
       "sequence": 1,
       "label": "reported_news",
+      "location": null,
       "documents": [
         {
           "url": "https://news.example.org/fixture-story?a=1&b=<2>",
@@ -99,6 +108,10 @@
       "status": "scheduled",
       "sequence": 0,
       "label": "confirmed_official",
+      "location": {
+        "lat": 35.9557,
+        "lon": -80.0053
+      },
       "documents": [
         {
           "url": "https://guilford.legistar.com/",

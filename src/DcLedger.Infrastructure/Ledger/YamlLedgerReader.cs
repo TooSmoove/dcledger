@@ -208,6 +208,7 @@ public sealed class YamlLedgerReader : ILedgerReader
         var label = f.Choice("label", Labels);
         var documentIds = f.Hashes("document_ids");
         var firstSeen = f.UtcTimestamp("first_seen_utc", required: false);
+        var location = ReadLocation(f);
 
         return id is null || jurisdictionId is null || platform is null || meetingId is null || body is null || title is null
             || startsAt is null || status is null || sequence is null || label is null
@@ -227,7 +228,26 @@ public sealed class YamlLedgerReader : ILedgerReader
                 Label = label.Value,
                 DocumentIds = documentIds,
                 FirstSeenUtc = firstSeen,
+                Location = location,
             };
+    }
+
+    /// <summary>
+    /// The optional <c>location</c> mapping: exactly <c>lat</c> and <c>lon</c>. Any other key inside it (a name, an
+    /// address, an owner) is rejected like an unknown or forbidden top-level key.
+    /// </summary>
+    private static Location? ReadLocation(YamlFields f)
+    {
+        var fields = f.Mapping("location");
+        if (fields is null)
+        {
+            return null;
+        }
+
+        var latitude = fields.Decimal("lat");
+        var longitude = fields.Decimal("lon");
+        fields.RejectUnreadKeys();
+        return latitude is null || longitude is null ? null : new Location { Latitude = latitude.Value, Longitude = longitude.Value };
     }
 
     private static LocalAction? ReadAction(YamlFields f)

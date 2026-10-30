@@ -13,17 +13,17 @@ With `--out out` from the repository root, the site build finds its data at `out
 
 | File | Contents |
 |---|---|
-| `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance. Mirrored by `site/src/content.config.ts`. |
+| `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance and `location` (`{"lat", "lon"}` or null). Mirrored by `site/src/content.config.ts`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per jurisdiction, even before it has events. |
-| `public/events.csv` | One row per event; documents as space-separated lists in the record's order. BOM, formula guard and data dictionary come in #31. |
+| `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order. BOM, formula guard and data dictionary come in #31. |
 
 Files under `public/` are served as they are, at the same paths under the site's root. Existing files of the same name
 are replaced; nothing is deleted, so use a fresh `--out` for a clean set.
 
 **Calendars:** `DTSTART;TZID=America/New_York` with the pinned VTIMEZONE (2007+ rules) inserted before the first event;
 the UID is the hash of jurisdiction, platform and meeting ID and never changes; `SEQUENCE` comes from the record; a
-cancelled meeting gets `STATUS:CANCELLED` and "Cancelled: " in front of its title. `DTSTAMP` is the newest retrieval
+cancelled meeting gets `STATUS:CANCELLED` and "Cancelled: " in front of its title; a located one gets `GEO` (6 decimals). `DTSTAMP` is the newest retrieval
 time of the event's documents, so an unchanged event keeps the same bytes on every publish. The description lists each
 source with its retrieval time (Eastern) and SHA-256 (SPEC AC2).
 
