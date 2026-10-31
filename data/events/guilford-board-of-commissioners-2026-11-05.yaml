@@ -1,0 +1,14 @@
+id: guilford-board-of-commissioners-2026-11-05
+jurisdiction_id: guilford
+platform: legistar
+platform_meeting_id: "1600"
+body: "Board of Commissioners"
+title: "" # REQUIRED: a neutral title in your own words
+case_number: "2026-452"
+starts_at: 2026-11-05T17:30:00-05:00
+status: scheduled
+sequence: 0
+label: confirmed_official
+document_ids:
+  - 5ca91fec29ccd081808c3cc17782fe54258badbbf6b4b18dd2c64e8f1e227101
+first_seen_utc: 2026-10-30T22:24:55Z
