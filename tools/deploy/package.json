@@ -7,6 +7,6 @@
     "node": ">=22.23.4"
   },
   "dependencies": {
-    "wrangler": "4.155.0"
+    "wrangler": "4.156.0"
   }
 }
