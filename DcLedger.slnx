@@ -1,11 +1,41 @@
 <Solution>
+  <Folder Name="/data/" />
+  <Folder Name="/data/documents/">
+    <File Path="5ca91fec29ccd081808c3cc17782fe54258badbbf6b4b18dd2c64e8f1e227101.yaml" />
+  </Folder>
+  <Folder Name="/data/events/">
+    <File Path="guilford-board-of-commissioners-2026-11-05.yaml" />
+  </Folder>
+  <Folder Name="/site/">
+    <File Path="site/.prettierignore" />
+    <File Path="site/.prettierrc.json" />
+    <File Path="site/astro.config.mjs" />
+    <File Path="site/package-lock.json" />
+    <File Path="site/package.json" />
+    <File Path="site/README.md" />
+    <File Path="site/tsconfig.json" />
+  </Folder>
+  <Folder Name="/site/public/">
+    <File Path="site/public/_headers" />
+  </Folder>
+  <Folder Name="/site/scripts/">
+    <File Path="site/scripts/copy-feeds.mjs" />
+    <File Path="site/scripts/use-fixture.mjs" />
+  </Folder>
+  <Folder Name="/site/src/">
+    <File Path="site/src/pages/404.astro" />
+    <File Path="site/src/pages/about.astro" />
+    <File Path="site/src/pages/index.astro" />
+    <File Path="site/src/pages/radar.astro" />
+  </Folder>
+  <Folder Name="/site/tests/" />
   <Folder Name="/src/">
-    <Project Path="src/DcLedger.Domain/DcLedger.Domain.csproj" />
-    <Project Path="src/DcLedger.Application/DcLedger.Application.csproj" />
     <Project Path="src/DcLedger.Adapters.Legistar/DcLedger.Adapters.Legistar.csproj" />
+    <Project Path="src/DcLedger.Application/DcLedger.Application.csproj" />
+    <Project Path="src/DcLedger.Cli/DcLedger.Cli.csproj" />
+    <Project Path="src/DcLedger.Domain/DcLedger.Domain.csproj" />
     <Project Path="src/DcLedger.Infrastructure/DcLedger.Infrastructure.csproj" />
     <Project Path="src/DcLedger.Publishing/DcLedger.Publishing.csproj" />
-    <Project Path="src/DcLedger.Cli/DcLedger.Cli.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/DcLedger.Adapters.Legistar.Tests/DcLedger.Adapters.Legistar.Tests.csproj" />
@@ -14,6 +44,8 @@
     <Project Path="tests/DcLedger.Cli.Tests/DcLedger.Cli.Tests.csproj" />
     <Project Path="tests/DcLedger.Domain.Tests/DcLedger.Domain.Tests.csproj" />
     <Project Path="tests/DcLedger.Infrastructure.Tests/DcLedger.Infrastructure.Tests.csproj" />
-    <Project Path="tests/DcLedger.Publishing.Tests/DcLedger.Publishing.Tests.csproj" />
+    <Project Path="tests/DcLedger.Publishing.Tests/DcLedger.Publishing.Tests.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
   </Folder>
 </Solution>
