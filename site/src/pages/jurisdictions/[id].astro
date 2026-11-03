@@ -1,10 +1,12 @@
 ---
-// One page per jurisdiction: freshness (SPEC AC10), its calendar feed, and every one of its items, newest first.
+// One page per jurisdiction: freshness (SPEC AC10), its calendar feed, its decisions (issue #25) and every one of its
+// items, newest first.
 import { getCollection, getEntry } from 'astro:content';
+import Decisions from '../../components/Decisions.astro';
 import EventTable from '../../components/EventTable.astro';
 import Freshness from '../../components/Freshness.astro';
 import Base from '../../layouts/Base.astro';
-import { byStart } from '../../lib/radar.js';
+import { byDecisionNewestFirst, byStart } from '../../lib/radar.js';
 
 export async function getStaticPaths() {
   return (await getCollection('jurisdictions')).map((j) => ({ params: { id: j.id } }));
@@ -19,6 +21,9 @@ const { data } = jurisdiction;
 const events = byStart(
   (await getCollection('events')).filter((event) => event.data.jurisdiction_id === id),
 ).reverse();
+const decisions = byDecisionNewestFirst(
+  (await getCollection('actions')).filter((action) => action.data.jurisdiction_id === id),
+);
 ---
 
 <Base title={data.name}>
@@ -37,4 +42,6 @@ const events = byStart(
     jurisdictions={new Map([[id, data.name]])}
     showJurisdiction={false}
   />
+
+  <Decisions actions={decisions} heading="Decisions, newest first" linkMeetings={true} />
 </Base>

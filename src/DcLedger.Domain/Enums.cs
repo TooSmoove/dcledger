@@ -29,3 +29,38 @@ public enum SourceType
     /// <summary>A news organization.</summary>
     News,
 }
+
+/// <summary>What kind of decision a local action is. Extend by adding members; the YAML tokens are fixed in <see cref="EnumTokens"/>.</summary>
+public enum ActionType
+{
+    /// <summary>A temporary pause on accepting or approving applications.</summary>
+    Moratorium,
+
+    /// <summary>A change to a parcel's zoning district.</summary>
+    Rezoning,
+
+    /// <summary>A change to the text of a development or zoning ordinance.</summary>
+    TextAmendment,
+
+    /// <summary>A resolution of the governing body.</summary>
+    Resolution,
+}
+
+/// <summary>What the body did with an item, as recorded on its official platform. Applied mechanically, never editorially.</summary>
+public enum ActionOutcome
+{
+    /// <summary>Approved as presented.</summary>
+    Adopted,
+
+    /// <summary>Approved after an amendment.</summary>
+    AdoptedAmended,
+
+    /// <summary>A motion to approve failed, or the item was denied.</summary>
+    Failed,
+
+    /// <summary>Moved to a later meeting.</summary>
+    Continued,
+
+    /// <summary>Set aside without a date.</summary>
+    Tabled,
+}

@@ -6,6 +6,8 @@
 
 **Options considered:** (A) hand-mirrored types plus a shared golden `events.json` fixture tested on both sides; (B) generate TypeScript types from C# — adds a code generator dependency; (C) the site reads `data/` YAML directly — bypasses the quality gate, rejected.
 
-**Decision:** A. Exported `events.json` carries `schema_version: 1`; any breaking change bumps it and the minor version. Ports are defined in Application (`ISourceAdapter`, `IFetcher`, `IDocumentStore`, `IIngestState`, `IReviewQueue`, `IRunLog`, `ILedgerReader`). CLI commands: `dcl ingest --jurisdiction <id> [--dry-run]`, `dcl validate --data <dir>`, `dcl export --data <dir> --status <file> --out <dir>`. Exit codes: 0 OK, 1 data invalid, 2 usage or configuration error, 3 external failure after retries, 4 bug.
+**Decision:** A. Exported `events.json` carries `schema_version: 1`; any breaking change bumps it and the minor version. Ports are defined in Application (`ISourceAdapter`, `IFetcher`, `IDocumentStore`, `IIngestState`, `IReviewQueue`, `IRunLog`, `ILedgerReader`). CLI commands: `dcl ingest --jurisdiction <id> [--dry-run]`, `dcl validate --data <dir>`, `dcl export --data <dir> --status <file> --out <dir>`, and (amended Nov 3, 2026, issue #25) `dcl archive-document --url <https url> --source-type official|news [--dry-run]`, which keeps one hand-picked document in the private bucket and prints its ledger record. Exit codes: 0 OK, 1 data invalid, 2 usage or configuration error, 3 external failure after retries, 4 bug.
+
+**Amendment (Nov 3, 2026, issue #25):** `events.json` gained a top-level `actions` array within schema version 1. Adding a key that an older reader can ignore isn't a breaking change; renaming, removing or retyping one is.
 
 **Consequences:** A drift fails one contract test in .NET or Node instead of breaking the site silently. Publish feeds the CLI an `ingest-status.json` built from ingest run history, so the CLI never calls the GitHub API to learn freshness.

@@ -120,5 +120,41 @@
         }
       ]
     }
+  ],
+  "actions": [
+    {
+      "id": "fixture-guilford-moratorium-2026-11-05",
+      "jurisdiction_id": "guilford",
+      "event_id": "fixture-guilford-boc-2026-11-05",
+      "action_type": "moratorium",
+      "outcome": "adopted_amended",
+      "decided_on": "2026-11-05",
+      "votes": "8-1",
+      "label": "confirmed_official",
+      "documents": [
+        {
+          "url": "https://guilford.legistar.com/fixture-action?ID=7&b=<3>",
+          "retrieved_utc": "2026-11-06T13:00:00Z",
+          "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        }
+      ]
+    },
+    {
+      "id": "fixture-city-text-amendment-2026-10-20",
+      "jurisdiction_id": "fixture-city",
+      "event_id": null,
+      "action_type": "text_amendment",
+      "outcome": "continued",
+      "decided_on": "2026-10-20",
+      "votes": null,
+      "label": "reported_news",
+      "documents": [
+        {
+          "url": "https://news.example.org/fixture-continued",
+          "retrieved_utc": "2026-10-21T12:00:00Z",
+          "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        }
+      ]
+    }
   ]
 }

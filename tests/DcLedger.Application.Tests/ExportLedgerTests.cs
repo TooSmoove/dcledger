@@ -34,7 +34,7 @@ public sealed class ExportLedgerTests
         var report = new ExportLedger(new FakeReader(invalid), [exporter], _sink).Run("data", ExportSamples.Status());
 
         report.Exported.ShouldBeFalse();
-        report.Validation.Errors.Count(error => error.Rule == ValidationRule.DocMissing).ShouldBe(4);
+        report.Validation.Errors.Count(error => error.Rule == ValidationRule.DocMissing).ShouldBe(5); // four event references, one action reference
         exporter.Calls.ShouldBe(0);
         _sink.Written.ShouldBeEmpty();
         report.Files.ShouldBeEmpty();

@@ -48,6 +48,9 @@ public static class ValidationRule
     /// <summary>A record that existed before was removed or renamed; published IDs are permanent.</summary>
     public const string SlugChanged = "SLUG_CHANGED";
 
+    /// <summary>An action's <c>event_id</c> names a meeting in another jurisdiction or on another date.</summary>
+    public const string EventMismatch = "EVENT_MISMATCH";
+
     /// <summary>A location outside North Carolina's bounding box, which is as far as the basemap goes.</summary>
     public const string LocationOutOfRange = "LOCATION_OUT_OF_RANGE";
 }

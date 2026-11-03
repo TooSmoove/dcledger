@@ -17,10 +17,7 @@ internal static class IngestComposition
     /// <summary>The variables a real run needs. Values are never printed.</summary>
     internal static readonly IReadOnlyList<string> RequiredVariables =
     [
-        "R2_ACCOUNT_ID",
-        "R2_PRIVATE_BUCKET",
-        "R2_PRIVATE_ACCESS_KEY_ID",
-        "R2_PRIVATE_SECRET_ACCESS_KEY",
+        .. R2Environment.Variables,
         "GITHUB_REPOSITORY",
         "GITHUB_TOKEN",
     ];
@@ -47,19 +44,8 @@ internal static class IngestComposition
         }
         else
         {
-            var missing = RequiredVariables.Where(name => string.IsNullOrWhiteSpace(environment(name))).ToList();
-            if (missing.Count > 0)
-            {
-                throw new ArgumentException($"Missing environment variables: {string.Join(", ", missing)}.", nameof(environment));
-            }
-
-            services.AddDcLedgerR2Storage(new R2Options
-            {
-                AccountId = environment("R2_ACCOUNT_ID")!.Trim(),
-                Bucket = environment("R2_PRIVATE_BUCKET")!.Trim(),
-                AccessKeyId = environment("R2_PRIVATE_ACCESS_KEY_ID")!.Trim(),
-                SecretAccessKey = environment("R2_PRIVATE_SECRET_ACCESS_KEY")!.Trim(),
-            });
+            R2Environment.RequireAll(RequiredVariables, environment);
+            services.AddDcLedgerR2Storage(R2Environment.Options(environment));
             services.AddDcLedgerGitHubReviewQueue(new GitHubOptions
             {
                 Repository = environment("GITHUB_REPOSITORY")!.Trim(),

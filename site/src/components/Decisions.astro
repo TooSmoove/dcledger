@@ -1,0 +1,53 @@
+---
+// Decisions such as a moratorium vote (issue #25, WS-AC8): what was decided, the recorded outcome and vote, how it is
+// sourced (SPEC AC6), and its sources (AC2). Outcome words come from a fixed table, never from the source's text.
+import type { CollectionEntry } from 'astro:content';
+import { actionTypeText, dateText, labelText, outcomeText, votesText } from '../lib/radar.js';
+import Sources from './Sources.astro';
+
+interface Props {
+  actions: CollectionEntry<'actions'>[];
+  heading: string;
+  /** Link each decision to its meeting's page; off on the meeting's own page. */
+  linkMeetings: boolean;
+}
+
+const { actions, heading, linkMeetings } = Astro.props;
+---
+
+{actions.length > 0 && (
+  <section aria-labelledby="decisions-heading" class="decisions">
+    <h2 id="decisions-heading">{heading}</h2>
+    {actions.map(({ id, data }) => (
+      <article id={`decision-${id}`}>
+        <h3>
+          {actionTypeText(data.action_type)}: {outcomeText(data.outcome)}
+        </h3>
+        <dl>
+          <dt>Decided</dt>
+          <dd>
+            <time datetime={data.decided_on}>{dateText(data.decided_on)}</time>
+          </dd>
+          {data.votes !== null && (
+            <>
+              <dt>Vote</dt>
+              <dd>{votesText(data.votes)}</dd>
+            </>
+          )}
+          {linkMeetings && data.event_id !== null && (
+            <>
+              <dt>Meeting</dt>
+              <dd>
+                <a href={`/items/${data.event_id}/`}>Meeting page</a>
+              </dd>
+            </>
+          )}
+          <dt>Sourcing</dt>
+          <dd>{labelText(data.label)}</dd>
+        </dl>
+        <h4>Sources</h4>
+        <Sources documents={data.documents} />
+      </article>
+    ))}
+  </section>
+)}

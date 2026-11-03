@@ -29,4 +29,25 @@ public static class EnumTokens
         SourceType.News => "news",
         _ => throw new ArgumentOutOfRangeException(nameof(sourceType), sourceType, "Unknown source type."),
     };
+
+    /// <summary>Returns <c>moratorium</c>, <c>rezoning</c>, <c>text_amendment</c> or <c>resolution</c>.</summary>
+    public static string ToToken(this ActionType actionType) => actionType switch
+    {
+        ActionType.Moratorium => "moratorium",
+        ActionType.Rezoning => "rezoning",
+        ActionType.TextAmendment => "text_amendment",
+        ActionType.Resolution => "resolution",
+        _ => throw new ArgumentOutOfRangeException(nameof(actionType), actionType, "Unknown action type."),
+    };
+
+    /// <summary>Returns <c>adopted</c>, <c>adopted_amended</c>, <c>failed</c>, <c>continued</c> or <c>tabled</c>.</summary>
+    public static string ToToken(this ActionOutcome outcome) => outcome switch
+    {
+        ActionOutcome.Adopted => "adopted",
+        ActionOutcome.AdoptedAmended => "adopted_amended",
+        ActionOutcome.Failed => "failed",
+        ActionOutcome.Continued => "continued",
+        ActionOutcome.Tabled => "tabled",
+        _ => throw new ArgumentOutOfRangeException(nameof(outcome), outcome, "Unknown action outcome."),
+    };
 }

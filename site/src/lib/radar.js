@@ -83,6 +83,72 @@ export function labelText(label) {
   return label === 'confirmed_official' ? 'Confirmed (official record)' : 'Reported (news)';
 }
 
+const ACTION_TYPES = {
+  moratorium: 'Moratorium',
+  rezoning: 'Rezoning',
+  text_amendment: 'Ordinance text amendment',
+  resolution: 'Resolution',
+};
+
+const OUTCOMES = {
+  adopted: 'Adopted',
+  adopted_amended: 'Adopted with amendments',
+  failed: 'Failed',
+  continued: 'Continued to a later meeting',
+  tabled: 'Tabled',
+};
+
+/** What kind of decision, in words (issue #25). Throws on a token the site doesn't know, so a new one can't render blank. */
+export function actionTypeText(actionType) {
+  return lookup(ACTION_TYPES, actionType, 'action type');
+}
+
+/** The recorded outcome, in plain words; the same wording for every jurisdiction (SPEC §E Neutrality). */
+export function outcomeText(outcome) {
+  return lookup(OUTCOMES, outcome, 'outcome');
+}
+
+/** "8 in favor, 1 against" from "8-1", or null when no vote was recorded. */
+export function votesText(votes) {
+  if (votes === null) {
+    return null;
+  }
+  const match = /^(\d{1,2})-(\d{1,2})$/.exec(votes);
+  if (!match) {
+    throw new Error(`Expected votes like "9-0", got ${JSON.stringify(votes)}.`);
+  }
+  return `${match[1]} in favor, ${match[2]} against`;
+}
+
+/**
+ * A calendar date such as "Thu, Nov 5, 2026". Decisions are dated, not timed, so there is no zone to show.
+ * @param {string} isoDate YYYY-MM-DD
+ */
+export function dateText(isoDate) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+    throw new Error(`Expected a date like 2026-11-05, got ${JSON.stringify(isoDate)}.`);
+  }
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC',
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(`${isoDate}T12:00:00Z`));
+}
+
+/**
+ * Entries sorted newest decision first, then ID, so ties are stable.
+ * @template {{ id: string, data: { decided_on: string } }} T
+ * @param {readonly T[]} entries
+ * @returns {T[]}
+ */
+export function byDecisionNewestFirst(entries) {
+  return [...entries].sort(
+    (a, b) => b.data.decided_on.localeCompare(a.data.decided_on) || a.id.localeCompare(b.id),
+  );
+}
+
 /**
  * What a jurisdiction's freshness line says (SPEC AC10): "last checked" in Eastern, and a text flag after 48 hours.
  * @param {{ last_checked_utc: string | null, stale: boolean }} jurisdiction
@@ -93,6 +159,18 @@ export function freshnessText(jurisdiction) {
       ? 'Never checked'
       : `Last checked ${easternText(jurisdiction.last_checked_utc)}`;
   return jurisdiction.stale ? `${checked} ⚠ Stale: no successful check in 48 hours` : checked;
+}
+
+/**
+ * @param {Record<string, string>} table
+ * @param {string} token
+ * @param {string} what
+ */
+function lookup(table, token, what) {
+  if (!Object.hasOwn(table, token)) {
+    throw new Error(`Unknown ${what} ${JSON.stringify(token)}.`);
+  }
+  return table[token];
 }
 
 /** @param {string} utc */

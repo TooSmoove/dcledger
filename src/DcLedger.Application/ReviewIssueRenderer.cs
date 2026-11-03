@@ -137,15 +137,14 @@ public static class ReviewIssueRenderer
 
     private static void DocumentFile(StringBuilder body, AgendaDocument agenda)
     {
-        Line(body, $"`data/documents/{agenda.Sha256.Value}.yaml`");
+        Line(body, $"`{DocumentRecordYaml.PathFor(agenda.Sha256)}`");
         Line(body);
         Line(body, "```yaml");
-        Line(body, $"id: {agenda.Sha256.Value}");
-        Line(body, $"url: {IssueText.YamlQuoted(agenda.Uri.AbsoluteUri)}");
-        Line(body, $"retrieved_at: {agenda.RetrievedAtUtc.UtcDateTime.ToString(Utc, Invariant)}");
-        Line(body, $"media_type: {IssueText.YamlQuoted(agenda.MediaType)}");
-        Line(body, $"bytes: {agenda.Bytes.ToString(Invariant)}");
-        Line(body, "source_type: official");
+        foreach (var line in DocumentRecordYaml.Lines(agenda.Sha256, agenda.Uri, agenda.RetrievedAtUtc, agenda.MediaType, agenda.Bytes, SourceType.Official))
+        {
+            Line(body, line);
+        }
+
         Line(body, "```");
     }
 

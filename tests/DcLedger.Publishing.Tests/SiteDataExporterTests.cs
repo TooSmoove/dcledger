@@ -89,4 +89,42 @@ public sealed class SiteDataExporterTests
         document.RootElement.GetProperty("jurisdictions")[0].GetProperty("last_checked_utc").ValueKind.ShouldBe(JsonValueKind.Null);
         document.RootElement.GetProperty("events")[2].GetProperty("case_number").ValueKind.ShouldBe(JsonValueKind.Null);
     }
+
+    [Fact]
+    public void Actions_carry_their_decision_meeting_and_provenance()
+    {
+        using var document = JsonDocument.Parse(EventsJson());
+
+        var action = document.RootElement.GetProperty("actions").EnumerateArray().ShouldHaveSingleItem();
+        action.GetProperty("id").GetString().ShouldBe(ExportSamples.November5Moratorium.Id);
+        action.GetProperty("event_id").GetString().ShouldBe(ExportSamples.November5.Id);
+        action.GetProperty("action_type").GetString().ShouldBe("moratorium");
+        action.GetProperty("outcome").GetString().ShouldBe("adopted_amended");
+        action.GetProperty("decided_on").GetString().ShouldBe("2026-11-05");
+        action.GetProperty("votes").GetString().ShouldBe("8-1");
+        action.GetProperty("label").GetString().ShouldBe("confirmed_official");
+        var source = action.GetProperty("documents").EnumerateArray().ShouldHaveSingleItem();
+        source.GetProperty("sha256").GetString().ShouldBe(ExportSamples.CountyActionDetail1600.Id.Value);
+        source.GetProperty("retrieved_utc").GetString().ShouldBe("2026-11-06T13:00:00Z");
+    }
+
+    [Fact]
+    public void An_action_without_a_meeting_or_vote_writes_nulls()
+    {
+        var model = ExportSamples.Model();
+        var bare = model.Actions[0] with { Action = ExportSamples.November5Moratorium with { EventId = null, Votes = null } };
+        using var document = JsonDocument.Parse(TestFiles.Text(new SiteDataExporter().Export(model with { Actions = [bare] })[0]));
+
+        var action = document.RootElement.GetProperty("actions")[0];
+        action.GetProperty("event_id").ValueKind.ShouldBe(JsonValueKind.Null);
+        action.GetProperty("votes").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public void A_ledger_without_actions_writes_an_empty_array()
+    {
+        using var document = JsonDocument.Parse(TestFiles.Text(new SiteDataExporter().Export(ExportSamples.Model() with { Actions = [] })[0]));
+
+        document.RootElement.GetProperty("actions").GetArrayLength().ShouldBe(0);
+    }
 }

@@ -28,11 +28,32 @@ public sealed class EnumTokensTests
     }
 
     [Fact]
+    public void Action_type_tokens_are_fixed()
+    {
+        ActionType.Moratorium.ToToken().ShouldBe("moratorium");
+        ActionType.Rezoning.ToToken().ShouldBe("rezoning");
+        ActionType.TextAmendment.ToToken().ShouldBe("text_amendment");
+        ActionType.Resolution.ToToken().ShouldBe("resolution");
+    }
+
+    [Fact]
+    public void Action_outcome_tokens_are_fixed()
+    {
+        ActionOutcome.Adopted.ToToken().ShouldBe("adopted");
+        ActionOutcome.AdoptedAmended.ToToken().ShouldBe("adopted_amended");
+        ActionOutcome.Failed.ToToken().ShouldBe("failed");
+        ActionOutcome.Continued.ToToken().ShouldBe("continued");
+        ActionOutcome.Tabled.ToToken().ShouldBe("tabled");
+    }
+
+    [Fact]
     public void Every_member_has_a_distinct_token()
     {
         Enum.GetValues<EventStatus>().Select(value => value.ToToken()).ShouldBeUnique();
         Enum.GetValues<EvidenceLabel>().Select(value => value.ToToken()).ShouldBeUnique();
         Enum.GetValues<SourceType>().Select(value => value.ToToken()).ShouldBeUnique();
+        Enum.GetValues<ActionType>().Select(value => value.ToToken()).ShouldBeUnique();
+        Enum.GetValues<ActionOutcome>().Select(value => value.ToToken()).ShouldBeUnique();
     }
 
     [Fact]
@@ -41,5 +62,7 @@ public sealed class EnumTokensTests
         Should.Throw<ArgumentOutOfRangeException>(() => ((EventStatus)99).ToToken());
         Should.Throw<ArgumentOutOfRangeException>(() => ((EvidenceLabel)99).ToToken());
         Should.Throw<ArgumentOutOfRangeException>(() => ((SourceType)99).ToToken());
+        Should.Throw<ArgumentOutOfRangeException>(() => ((ActionType)99).ToToken());
+        Should.Throw<ArgumentOutOfRangeException>(() => ((ActionOutcome)99).ToToken());
     }
 }

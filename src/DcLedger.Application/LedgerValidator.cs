@@ -20,6 +20,12 @@ public static class LedgerValidator
 
         var errors = new List<ValidationError>(snapshot.LoadErrors);
         var jurisdictionIds = snapshot.Jurisdictions.Select(j => j.Record.Id).ToHashSet(StringComparer.Ordinal);
+        var events = new Dictionary<string, LedgerEvent>(StringComparer.Ordinal);
+        foreach (var (_, ledgerEvent) in snapshot.Events)
+        {
+            events.TryAdd(ledgerEvent.Id, ledgerEvent); // a duplicate also fails ID_MISMATCH below
+        }
+
         var documents = new Dictionary<Sha256Hash, Document>();
         foreach (var (_, document) in snapshot.Documents)
         {
@@ -51,6 +57,7 @@ public static class LedgerValidator
             CheckId(errors, file, action.Id);
             CheckJurisdiction(errors, file, action.Id, action.JurisdictionId, jurisdictionIds);
             CheckEvidence(errors, file, action.Id, action.DocumentIds, action.Label, documents);
+            CheckActionEvent(errors, file, action, events);
         }
 
         var present = snapshot.RecordFiles.ToHashSet(StringComparer.Ordinal);
@@ -129,6 +136,38 @@ public static class LedgerValidator
         {
             errors.Add(new ValidationError(file, id, ValidationRule.LabelInvalid,
                 "confirmed_official needs at least one document whose source_type is official (SPEC AC6)."));
+        }
+    }
+
+    /// <summary>
+    /// An action's meeting must be in the ledger, in the same jurisdiction, and on the decision's date in Eastern time,
+    /// so the decision appears on the right item page.
+    /// </summary>
+    private static void CheckActionEvent(List<ValidationError> errors, string file, LocalAction action, Dictionary<string, LedgerEvent> events)
+    {
+        if (action.EventId is null)
+        {
+            return;
+        }
+
+        if (!events.TryGetValue(action.EventId, out var ledgerEvent))
+        {
+            errors.Add(new ValidationError(file, action.Id, ValidationRule.FkMissing,
+                $"event '{action.EventId}' is missing or failed to load."));
+            return;
+        }
+
+        if (!string.Equals(ledgerEvent.JurisdictionId, action.JurisdictionId, StringComparison.Ordinal))
+        {
+            errors.Add(new ValidationError(file, action.Id, ValidationRule.EventMismatch,
+                $"event '{ledgerEvent.Id}' belongs to jurisdiction '{ledgerEvent.JurisdictionId}', not '{action.JurisdictionId}'."));
+        }
+
+        var meetingDate = DateOnly.FromDateTime(EasternTime.ToEastern(ledgerEvent.StartsAt).DateTime);
+        if (meetingDate != action.DecidedOn)
+        {
+            errors.Add(new ValidationError(file, action.Id, ValidationRule.EventMismatch,
+                string.Create(CultureInfo.InvariantCulture, $"decided_on {action.DecidedOn:yyyy-MM-dd} isn't the date of event '{ledgerEvent.Id}' ({meetingDate:yyyy-MM-dd}, Eastern).")));
         }
     }
 
