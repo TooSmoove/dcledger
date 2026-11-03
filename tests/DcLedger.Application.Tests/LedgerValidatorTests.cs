@@ -132,13 +132,90 @@ public sealed class LedgerValidatorTests
         problem.Message.ShouldContain("outside North Carolina");
     }
 
+    [Fact]
+    public void Action_linked_to_its_meeting_is_valid()
+    {
+        Validate(Snapshot(action: Action())).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Action_without_a_meeting_is_valid()
+    {
+        Validate(Snapshot(action: Action() with { EventId = null })).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Action_reported_from_the_news_is_valid()
+    {
+        var reported = Action() with { Label = EvidenceLabel.ReportedNews, DocumentIds = [NewsDoc] };
+
+        Validate(Snapshot(action: reported)).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Action_confirmed_only_by_the_news_is_reported()
+    {
+        var newsOnly = Action() with { Label = EvidenceLabel.ConfirmedOfficial, DocumentIds = [NewsDoc] };
+
+        Rule(Snapshot(action: newsOnly)).ShouldBe(ValidationRule.LabelInvalid);
+    }
+
+    [Fact]
+    public void Action_without_documents_is_reported()
+    {
+        Rule(Snapshot(action: Action() with { DocumentIds = [] })).ShouldBe(ValidationRule.DocMissing);
+    }
+
+    [Fact]
+    public void Action_naming_a_missing_meeting_is_reported()
+    {
+        var problem = Validate(Snapshot(action: Action() with { EventId = "fixture-boc-2026-12-03" })).ShouldHaveSingleItem();
+
+        problem.Rule.ShouldBe(ValidationRule.FkMissing);
+        problem.Message.ShouldContain("fixture-boc-2026-12-03");
+    }
+
+    [Fact]
+    public void Action_dated_other_than_its_meeting_is_reported()
+    {
+        var problem = Validate(Snapshot(action: Action() with { DecidedOn = new DateOnly(2026, 11, 6) })).ShouldHaveSingleItem();
+
+        problem.Rule.ShouldBe(ValidationRule.EventMismatch);
+        problem.Message.ShouldContain("2026-11-05");
+    }
+
+    [Fact]
+    public void Action_at_a_late_evening_meeting_keeps_the_eastern_date()
+    {
+        // 11:00 p.m. Eastern on Nov 5 is already Nov 6 in UTC.
+        var late = Event() with { StartsAt = new DateTimeOffset(2026, 11, 5, 23, 0, 0, TimeSpan.FromHours(-5)) };
+
+        Validate(Snapshot(ledgerEvent: late, action: Action())).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Action_in_another_jurisdiction_than_its_meeting_is_reported()
+    {
+        var other = Jurisdiction() with { Id = "other", LegistarClient = "other" };
+        var snapshot = Snapshot(action: Action() with { JurisdictionId = "other" }) with
+        {
+            Jurisdictions = [new("jurisdictions/fixture.yaml", Jurisdiction()), new("jurisdictions/other.yaml", other)],
+        };
+
+        var problem = Validate(snapshot).ShouldHaveSingleItem();
+
+        problem.Rule.ShouldBe(ValidationRule.EventMismatch);
+        problem.Message.ShouldContain("'fixture'");
+    }
+
     private static IReadOnlyList<ValidationError> Validate(LedgerSnapshot snapshot) => LedgerValidator.Validate(snapshot, []);
 
     private static string Rule(LedgerSnapshot snapshot) => Validate(snapshot).ShouldHaveSingleItem().Rule;
 
-    private static LedgerSnapshot Snapshot(Jurisdiction? jurisdiction = null, LedgerEvent? ledgerEvent = null)
+    private static LedgerSnapshot Snapshot(Jurisdiction? jurisdiction = null, LedgerEvent? ledgerEvent = null, LocalAction? action = null)
     {
         const string eventFile = "events/fixture-boc-2026-11-05.yaml";
+        const string actionFile = "actions/fixture-moratorium-2026-11-05.yaml";
         return new LedgerSnapshot
         {
             Jurisdictions = [new("jurisdictions/fixture.yaml", jurisdiction ?? Jurisdiction())],
@@ -148,7 +225,10 @@ public sealed class LedgerValidatorTests
                 new($"documents/{NewsDoc}.yaml", Document(NewsDoc, SourceType.News)),
             ],
             Events = [new(eventFile, ledgerEvent ?? Event())],
-            RecordFiles = ["jurisdictions/fixture.yaml", eventFile, $"documents/{OfficialDoc}.yaml", $"documents/{NewsDoc}.yaml"],
+            Actions = action is null ? [] : [new(actionFile, action)],
+            RecordFiles = action is null
+                ? ["jurisdictions/fixture.yaml", eventFile, $"documents/{OfficialDoc}.yaml", $"documents/{NewsDoc}.yaml"]
+                : ["jurisdictions/fixture.yaml", eventFile, $"documents/{OfficialDoc}.yaml", $"documents/{NewsDoc}.yaml", actionFile],
         };
     }
 
@@ -182,6 +262,19 @@ public sealed class LedgerValidatorTests
         StartsAt = new DateTimeOffset(2026, 11, 5, 17, 30, 0, TimeSpan.FromHours(-5)),
         Status = EventStatus.Scheduled,
         Sequence = 0,
+        Label = EvidenceLabel.ConfirmedOfficial,
+        DocumentIds = [OfficialDoc],
+    };
+
+    private static LocalAction Action() => new()
+    {
+        Id = "fixture-moratorium-2026-11-05",
+        JurisdictionId = "fixture",
+        EventId = "fixture-boc-2026-11-05",
+        ActionType = ActionType.Moratorium,
+        Outcome = ActionOutcome.Adopted,
+        DecidedOn = new DateOnly(2026, 11, 5),
+        Votes = "9-0",
         Label = EvidenceLabel.ConfirmedOfficial,
         DocumentIds = [OfficialDoc],
     };

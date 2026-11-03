@@ -13,7 +13,7 @@ With `--out out` from the repository root, the site build finds its data at `out
 
 | File | Contents |
 |---|---|
-| `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance and `location` (`{"lat", "lon"}` or null). Mirrored by `site/src/content.config.ts`. |
+| `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance and `location` (`{"lat", "lon"}` or null), and every local action (see below). Mirrored by `site/src/content.config.ts`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per jurisdiction, even before it has events. |
 | `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order. BOM, formula guard and data dictionary come in #31. |
@@ -29,6 +29,26 @@ source with its retrieval time (Eastern) and SHA-256 (SPEC AC2).
 
 **Same input, same bytes:** every file depends only on the ledger and the ingest status. JSON is LF, calendars and CSV
 are CRLF, all UTF-8; nothing depends on the machine's culture or time zone. Tests check this under several cultures.
+
+**Actions** (issue #25): `events.json` lists every local action, ordered by decision date then ID, after the events.
+The key was added without bumping `schema_version`, because a reader that ignores it loses nothing (ADR-0004):
+
+```json
+{
+  "id": "fixture-county-moratorium-2026-11-05",
+  "jurisdiction_id": "fixture-county",
+  "event_id": "fixture-county-boc-2026-11-05",
+  "action_type": "moratorium",
+  "outcome": "adopted_amended",
+  "decided_on": "2026-11-05",
+  "votes": "8-1",
+  "label": "confirmed_official",
+  "documents": [{ "url": "…", "retrieved_utc": "…", "sha256": "…" }]
+}
+```
+
+`event_id` and `votes` may be null. `decided_on` is a date, not a time, so it carries no offset. The calendars and the
+CSV list meetings only; a decision shows on the site, on its meeting's page and its jurisdiction's page.
 
 ## The ingest status (`--status`)
 

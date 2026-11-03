@@ -11,15 +11,27 @@ internal static class CliApp
 
     /// <summary>The command tree with the real services, configured from the environment.</summary>
     internal static RootCommand CreateRootCommand(TextWriter output, TextWriter error) =>
-        CreateRootCommand(output, error, dryRun => IngestComposition.Build(Environment.GetEnvironmentVariable, dryRun));
+        CreateRootCommand(
+            output,
+            error,
+            dryRun => IngestComposition.Build(Environment.GetEnvironmentVariable, dryRun),
+            dryRun => ArchiveComposition.Build(Environment.GetEnvironmentVariable, dryRun));
 
-    /// <summary>The command tree; <paramref name="composeIngest"/> builds ingest's services (tests pass fakes).</summary>
-    internal static RootCommand CreateRootCommand(TextWriter output, TextWriter error, Func<bool, ServiceProvider> composeIngest) =>
+    /// <summary>
+    /// The command tree; <paramref name="composeIngest"/> and <paramref name="composeArchive"/> build the services of
+    /// the commands that reach the network (tests pass fakes).
+    /// </summary>
+    internal static RootCommand CreateRootCommand(
+        TextWriter output,
+        TextWriter error,
+        Func<bool, ServiceProvider> composeIngest,
+        Func<bool, ServiceProvider>? composeArchive = null) =>
         new(Description)
         {
             ValidateCommand.Create(output, error),
             IngestCommand.Create(output, error, composeIngest),
             ExportCommand.Create(output, error),
+            ArchiveDocumentCommand.Create(output, error, composeArchive ?? (dryRun => ArchiveComposition.Build(Environment.GetEnvironmentVariable, dryRun))),
         };
 
     /// <summary>Runs dcl with the real services.</summary>

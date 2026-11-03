@@ -102,16 +102,22 @@ public sealed record LocalAction
     /// <summary>The jurisdiction's <see cref="Jurisdiction.Id"/>.</summary>
     public required string JurisdictionId { get; init; }
 
-    /// <summary>What kind of action, for example <c>moratorium</c>.</summary>
-    public required string ActionType { get; init; }
+    /// <summary>
+    /// The meeting where the action was taken (<see cref="LedgerEvent.Id"/>), when it is in the ledger; its item page
+    /// shows the decision.
+    /// </summary>
+    public string? EventId { get; init; }
 
-    /// <summary>The outcome as recorded, for example <c>adopted</c>.</summary>
-    public required string Outcome { get; init; }
+    /// <summary>What kind of action.</summary>
+    public required ActionType ActionType { get; init; }
+
+    /// <summary>The outcome as recorded on the official platform.</summary>
+    public required ActionOutcome Outcome { get; init; }
 
     /// <summary>The date of the decision.</summary>
     public required DateOnly DecidedOn { get; init; }
 
-    /// <summary>The recorded vote, when available, for example "7-2".</summary>
+    /// <summary>The recorded vote as ayes-noes, when available, for example "7-2".</summary>
     public string? Votes { get; init; }
 
     /// <summary>How the action is sourced.</summary>

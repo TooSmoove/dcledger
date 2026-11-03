@@ -24,6 +24,8 @@ public sealed class YamlLedgerReader : ILedgerReader
     private static readonly Dictionary<string, SourceType> SourceTypes = ByToken<SourceType>(EnumTokens.ToToken);
     private static readonly Dictionary<string, EventStatus> Statuses = ByToken<EventStatus>(EnumTokens.ToToken);
     private static readonly Dictionary<string, EvidenceLabel> Labels = ByToken<EvidenceLabel>(EnumTokens.ToToken);
+    private static readonly Dictionary<string, ActionType> ActionTypes = ByToken<ActionType>(EnumTokens.ToToken);
+    private static readonly Dictionary<string, ActionOutcome> Outcomes = ByToken<ActionOutcome>(EnumTokens.ToToken);
 
     /// <summary>True for paths like <c>events/some-id.yaml</c>: a record file relative to the data directory.</summary>
     public static bool IsRecordPath(string relativePath)
@@ -254,10 +256,11 @@ public sealed class YamlLedgerReader : ILedgerReader
     {
         var id = f.RecordId = f.Slug("id");
         var jurisdictionId = f.Slug("jurisdiction_id");
-        var actionType = f.Required("action_type");
-        var outcome = f.Required("outcome");
+        var eventId = f.OptionalSlug("event_id");
+        var actionType = f.Choice("action_type", ActionTypes);
+        var outcome = f.Choice("outcome", Outcomes);
         var decidedOn = f.Date("decided_on");
-        var votes = f.Optional("votes");
+        var votes = f.Votes("votes");
         var label = f.Choice("label", Labels);
         var documentIds = f.Hashes("document_ids");
 
@@ -267,8 +270,9 @@ public sealed class YamlLedgerReader : ILedgerReader
             {
                 Id = id,
                 JurisdictionId = jurisdictionId,
-                ActionType = actionType,
-                Outcome = outcome,
+                EventId = eventId,
+                ActionType = actionType.Value,
+                Outcome = outcome.Value,
                 DecidedOn = decidedOn.Value,
                 Votes = votes,
                 Label = label.Value,

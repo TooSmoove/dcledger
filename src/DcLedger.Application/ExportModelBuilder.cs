@@ -39,7 +39,19 @@ public static class ExportModelBuilder
             })
             .ToList();
 
-        var model = new ExportModel { GeneratedUtc = status.GeneratedUtc, Jurisdictions = jurisdictions, Events = events };
+        var actions = snapshot.Actions
+            .Select(loaded => loaded.Record)
+            .OrderBy(action => action.DecidedOn)
+            .ThenBy(action => action.Id, StringComparer.Ordinal)
+            .Select(action => new ExportAction
+            {
+                Action = action,
+                Jurisdiction = Lookup(byId, action.JurisdictionId, action.Id),
+                Documents = [.. action.DocumentIds.Select(id => Lookup(documents, id, action.Id))],
+            })
+            .ToList();
+
+        var model = new ExportModel { GeneratedUtc = status.GeneratedUtc, Jurisdictions = jurisdictions, Events = events, Actions = actions };
         return new ExportModelResult(model, Warnings(jurisdictions, status));
     }
 
@@ -71,9 +83,9 @@ public static class ExportModelBuilder
         ];
     }
 
-    private static TValue Lookup<TKey, TValue>(Dictionary<TKey, TValue> values, TKey key, string eventId)
+    private static TValue Lookup<TKey, TValue>(Dictionary<TKey, TValue> values, TKey key, string recordId)
         where TKey : notnull =>
         values.TryGetValue(key, out var value)
             ? value
-            : throw new InvalidOperationException($"Event '{eventId}' references '{key}', which isn't loaded. Validate the ledger before exporting.");
+            : throw new InvalidOperationException($"Record '{recordId}' references '{key}', which isn't loaded. Validate the ledger before exporting.");
 }

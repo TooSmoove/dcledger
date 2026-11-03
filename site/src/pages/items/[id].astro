@@ -1,9 +1,18 @@
 ---
 // One page per reviewed item, with its full provenance (SPEC AC2): every source URL, the retrieval time in Eastern
-// with its zone, and the SHA-256 of the retrieved bytes. Items outside the radar's window still get a page.
+// with its zone, and the SHA-256 of the retrieved bytes. Items outside the radar's window still get a page. A decision
+// taken at the meeting is shown above its sources (issue #25).
 import { getCollection, getEntry } from 'astro:content';
+import Decisions from '../../components/Decisions.astro';
+import Sources from '../../components/Sources.astro';
 import Base from '../../layouts/Base.astro';
-import { easternIso, easternText, labelText, statusText } from '../../lib/radar.js';
+import {
+  byDecisionNewestFirst,
+  easternIso,
+  easternText,
+  labelText,
+  statusText,
+} from '../../lib/radar.js';
 
 export async function getStaticPaths() {
   return (await getCollection('events')).map((event) => ({ params: { id: event.id } }));
@@ -18,6 +27,9 @@ const { data } = event;
 const jurisdiction = await getEntry('jurisdictions', data.jurisdiction_id);
 const jurisdictionName = jurisdiction?.data.name ?? data.jurisdiction_id;
 const cancelled = data.status === 'cancelled';
+const decisions = byDecisionNewestFirst(
+  (await getCollection('actions')).filter((action) => action.data.event_id === id),
+);
 ---
 
 <Base title={data.title}>
@@ -59,33 +71,16 @@ const cancelled = data.status === 'cancelled';
     </dd>
   </dl>
 
+  <Decisions
+    actions={decisions}
+    heading={decisions.length === 1 ? 'Decision' : 'Decisions'}
+    linkMeetings={false}
+  />
+
   <h2>Sources</h2>
   <p class="muted">
     Each source is the document we retrieved, when we retrieved it (Eastern), and the SHA-256 of the
     bytes we kept.
   </p>
-  <ol>
-    {data.documents.map((document) => (
-      <li>
-        <dl>
-          <dt>URL</dt>
-          <dd>
-            <a href={document.url} rel="external noreferrer">
-              {document.url}
-            </a>
-          </dd>
-          <dt>Retrieved</dt>
-          <dd>
-            <time datetime={easternIso(document.retrieved_utc)}>
-              {easternText(document.retrieved_utc)}
-            </time>
-          </dd>
-          <dt>SHA-256</dt>
-          <dd>
-            <code>{document.sha256}</code>
-          </dd>
-        </dl>
-      </li>
-    ))}
-  </ol>
+  <Sources documents={data.documents} />
 </Base>

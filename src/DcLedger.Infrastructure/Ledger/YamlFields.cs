@@ -110,6 +110,35 @@ internal sealed partial class YamlFields
         return value;
     }
 
+    /// <summary>An optional slug: absent is fine, present must be a valid slug.</summary>
+    public string? OptionalSlug(string key)
+    {
+        var value = Optional(key);
+        if (value is not null && (value.Length > 100 || !SlugPattern().IsMatch(value)))
+        {
+            Add(ValidationRule.InvalidValue, $"'{key}' must be lowercase letters, digits and single hyphens.");
+            return null;
+        }
+
+        return value;
+    }
+
+    /// <summary>
+    /// An optional recorded vote as ayes-noes, such as <c>"9-0"</c>. Quote it in YAML; abstentions and absences are
+    /// left out, so the value stays a mechanical count rather than a description.
+    /// </summary>
+    public string? Votes(string key)
+    {
+        var value = Optional(key);
+        if (value is not null && !VotesPattern().IsMatch(value))
+        {
+            Add(ValidationRule.InvalidValue, $"'{key}' must be ayes-noes like \"9-0\".");
+            return null;
+        }
+
+        return value;
+    }
+
     public TEnum? Choice<TEnum>(string key, IReadOnlyDictionary<string, TEnum> allowed)
         where TEnum : struct, Enum
     {
@@ -306,6 +335,9 @@ internal sealed partial class YamlFields
 
     [GeneratedRegex("^[a-z0-9]+(?:-[a-z0-9]+)*$", RegexOptions.CultureInvariant, 250)]
     private static partial Regex SlugPattern();
+
+    [GeneratedRegex("^[0-9]{1,2}-[0-9]{1,2}$", RegexOptions.CultureInvariant, 250)]
+    private static partial Regex VotesPattern();
 
     [GeneratedRegex(@"^-?[0-9]{1,3}(?:\.[0-9]{1,6})?$", RegexOptions.CultureInvariant, 250)]
     private static partial Regex DecimalPattern();

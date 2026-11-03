@@ -32,6 +32,36 @@ public sealed class ExportModelBuilderTests
     }
 
     [Fact]
+    public void Actions_are_ordered_by_decision_date_then_id_with_documents_and_jurisdiction_resolved()
+    {
+        var earlier = ExportSamples.November5Moratorium with { Id = "z-fixture-earlier", EventId = null, DecidedOn = new DateOnly(2026, 10, 15) };
+        var sameDay = ExportSamples.November5Moratorium with { Id = "a-fixture-same-day" };
+        var snapshot = ExportSamples.Snapshot() with
+        {
+            Actions =
+            [
+                .. ExportSamples.Snapshot().Actions,
+                new LoadedRecord<LocalAction>("actions/a-fixture-same-day.yaml", sameDay),
+                new LoadedRecord<LocalAction>("actions/z-fixture-earlier.yaml", earlier),
+            ],
+        };
+
+        var actions = ExportModelBuilder.Build(snapshot, ExportSamples.Status()).Model.Actions;
+
+        actions.Select(a => a.Action.Id).ShouldBe(["z-fixture-earlier", "a-fixture-same-day", ExportSamples.November5Moratorium.Id]);
+        actions[2].Documents.ShouldBe([ExportSamples.CountyActionDetail1600]);
+        actions[2].Jurisdiction.ShouldBe(ExportSamples.County);
+    }
+
+    [Fact]
+    public void A_ledger_without_actions_exports_none()
+    {
+        var model = ExportModelBuilder.Build(ExportSamples.Snapshot() with { Actions = [] }, ExportSamples.Status()).Model;
+
+        model.Actions.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Each_event_keeps_its_documents_in_record_order_and_its_jurisdiction()
     {
         var october15 = ExportSamples.Model().Events[0];

@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { SUPPORTED_SCHEMA_VERSION, eventsFrom, parseSiteData } from '../src/lib/site-data.js';
+import {
+  SUPPORTED_SCHEMA_VERSION,
+  actionsFrom,
+  eventsFrom,
+  parseSiteData,
+} from '../src/lib/site-data.js';
 
 const fixture = await readFile(new URL('./fixtures/events.json', import.meta.url), 'utf8');
 
@@ -28,4 +33,16 @@ test('an unsupported schema version is rejected with a clear message', () => {
 
 test('a file without a schema version is rejected', () => {
   assert.throws(() => parseSiteData('{"events": []}'), /schema_version undefined/);
+});
+
+test('actions are read from the actions array', () => {
+  assert.deepEqual(
+    actionsFrom(fixture).map((action) => action.id),
+    ['fixture-guilford-moratorium-2026-11-05', 'fixture-city-text-amendment-2026-10-20'],
+  );
+});
+
+test('a schema 1 file written before actions existed has none', () => {
+  const { actions: _ignored, ...older } = JSON.parse(fixture);
+  assert.deepEqual(actionsFrom(JSON.stringify(older)), []);
 });

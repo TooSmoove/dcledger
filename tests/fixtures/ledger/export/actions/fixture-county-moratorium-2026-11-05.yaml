@@ -1,0 +1,11 @@
+# Test fixture: fictional decision at the Nov 5 meeting.
+id: fixture-county-moratorium-2026-11-05
+jurisdiction_id: fixture-county
+event_id: fixture-county-boc-2026-11-05
+action_type: moratorium
+outcome: adopted_amended
+decided_on: 2026-11-05
+votes: "8-1"
+label: confirmed_official
+document_ids:
+  - de7880f9f6f1a7ad5eb2807c6960856ee17f04ea2d117706fb1425cd9c1cacb4

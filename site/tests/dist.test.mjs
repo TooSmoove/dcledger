@@ -244,6 +244,61 @@ test(
   },
 );
 
+test('a meeting page shows its decision: outcome, vote, date, label and sources (#25, WS-AC8)', () => {
+  const meeting = page('items/fixture-guilford-boc-2026-11-05/index.html');
+  assert.match(meeting, /<h2 id="decisions-heading">Decision<\/h2>/);
+  assert.match(meeting, /Moratorium: Adopted with amendments/);
+  assert.match(meeting, /<time datetime="2026-11-05">Thu, Nov 5, 2026<\/time>/);
+  assert.match(meeting, /8 in favor, 1 against/);
+  assert.match(meeting, /<code>4{64}<\/code>/, "the decision's own source");
+  assert.match(
+    meeting,
+    /<time datetime="2026-11-06T08:00:00-05:00">Fri, Nov 6, 2026, 8:00 AM EST<\/time>/,
+  );
+  assert.match(
+    meeting,
+    /href="https:\/\/guilford.legistar.com\/fixture-action\?ID=7&amp;b=<3>"/,
+    'attribute escaping',
+  );
+  assert.match(meeting, /&amp;b=&lt;3&gt;<\/a>/, 'text escaping');
+  assert.doesNotMatch(meeting, /Meeting page/, 'no link from a meeting to itself');
+  assert.ok(
+    meeting.indexOf('Decision</h2>') < meeting.indexOf('<h2>Sources</h2>'),
+    "the decision comes before the meeting's sources",
+  );
+});
+
+test('meetings without a decision show none', () => {
+  for (const name of [
+    'items/fixture-guilford-boc-2026-10-15/index.html',
+    'items/fixture-escaping-check/index.html',
+  ]) {
+    assert.doesNotMatch(page(name), /decisions-heading/, name);
+  }
+});
+
+test('jurisdiction pages list their decisions with sourcing and link the meeting (#25)', () => {
+  const guilford = page('jurisdictions/guilford/index.html');
+  assert.match(guilford, /Decisions, newest first/);
+  assert.match(guilford, /Moratorium: Adopted with amendments/);
+  assert.match(guilford, /href="\/items\/fixture-guilford-boc-2026-11-05\/"[^>]*>Meeting page/);
+  assert.match(guilford, /Confirmed \(official record\)/);
+  assert.doesNotMatch(guilford, /Continued to a later meeting/, 'only its own decisions');
+
+  const city = page('jurisdictions/fixture-city/index.html');
+  assert.match(city, /Ordinance text amendment: Continued to a later meeting/);
+  assert.match(city, /Reported \(news\)/);
+  assert.match(
+    city,
+    /<code>5{64}<\/code>/,
+    'a decision without a meeting page carries its sources here',
+  );
+  assert.doesNotMatch(city, /<dt>Vote<\/dt>/, 'no vote recorded, no vote shown');
+  assert.doesNotMatch(city, /Meeting page/, 'no meeting to link');
+
+  assert.doesNotMatch(page('jurisdictions/never-checked/index.html'), /decisions-heading/);
+});
+
 test('source-derived text is escaped everywhere it appears', () => {
   for (const name of [
     'radar/index.html',

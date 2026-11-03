@@ -10,7 +10,8 @@ namespace DcLedger.Testing;
 /// Two jurisdictions (one automated, one manual and stale), four documents and three events: a cancelled one on
 /// Oct 15, 2026 (EDT) with a title full of CSV and iCalendar specials, one on Nov 3 with non-ASCII text, and the
 /// Nov 5, 2026 decision (EST), so every export crosses the Nov 1 daylight-saving change (SPEC AC3). Only the Nov 5
-/// item has a location, so exports show both a point and its absence.
+/// item has a location, so exports show both a point and its absence. One action records the Nov 5 decision, backed by
+/// a document that no event lists.
 /// </summary>
 internal static class ExportSamples
 {
@@ -40,6 +41,8 @@ internal static class ExportSamples
     public static readonly Document CountyAgenda1600 = Doc("fixture county agenda 1600", "https://fixture-county.example.org/agendas/1600.pdf", Utc(2026, 10, 28, 12, 47, 3), "application/pdf", 98765, SourceType.Official);
 
     public static readonly Document CityAgenda = Doc("fixture city agenda 2026-11-03", "https://fixture-city.example.org/council/2026-11-03-agenda.pdf", Utc(2026, 10, 30, 14, 5, 0), "application/pdf", 4567, SourceType.Official);
+
+    public static readonly Document CountyActionDetail1600 = Doc("fixture county action detail 1600", "https://fixture-county.example.org/meetings/1600/actions/7", Utc(2026, 11, 6, 13, 0, 0), "text/html", 8765, SourceType.Official);
 
     /// <summary>Oct 15, 2026 5:30 PM EDT (21:30Z); cancelled, so SEQUENCE is 1. News story listed first, on purpose.</summary>
     public static readonly LedgerEvent October15 = new()
@@ -93,6 +96,20 @@ internal static class ExportSamples
         Location = new Location { Latitude = 36.0726, Longitude = -79.792 },
     };
 
+    /// <summary>The Nov 5 decision: adopted as amended, 8-1, confirmed by the platform's action detail.</summary>
+    public static readonly LocalAction November5Moratorium = new()
+    {
+        Id = "fixture-county-moratorium-2026-11-05",
+        JurisdictionId = County.Id,
+        EventId = November5.Id,
+        ActionType = ActionType.Moratorium,
+        Outcome = ActionOutcome.AdoptedAmended,
+        DecidedOn = new DateOnly(2026, 11, 5),
+        Votes = "8-1",
+        Label = EvidenceLabel.ConfirmedOfficial,
+        DocumentIds = [CountyActionDetail1600.Id],
+    };
+
     /// <summary>The ledger as the YAML reader would load it, records deliberately out of order.</summary>
     public static LedgerSnapshot Snapshot() => new()
     {
@@ -100,6 +117,7 @@ internal static class ExportSamples
         Documents =
         [
             Loaded("documents", CityAgenda.Id.Value, CityAgenda),
+            Loaded("documents", CountyActionDetail1600.Id.Value, CountyActionDetail1600),
             Loaded("documents", CountyAgenda1599.Id.Value, CountyAgenda1599),
             Loaded("documents", CountyAgenda1600.Id.Value, CountyAgenda1600),
             Loaded("documents", NewsStory.Id.Value, NewsStory),
@@ -110,17 +128,20 @@ internal static class ExportSamples
             Loaded("events", October15.Id, October15),
             Loaded("events", November3.Id, November3),
         ],
+        Actions = [Loaded("actions", November5Moratorium.Id, November5Moratorium)],
         RecordFiles =
         [
             $"jurisdictions/{County.Id}.yaml",
             $"jurisdictions/{City.Id}.yaml",
             $"documents/{CityAgenda.Id.Value}.yaml",
+            $"documents/{CountyActionDetail1600.Id.Value}.yaml",
             $"documents/{CountyAgenda1599.Id.Value}.yaml",
             $"documents/{CountyAgenda1600.Id.Value}.yaml",
             $"documents/{NewsStory.Id.Value}.yaml",
             $"events/{November5.Id}.yaml",
             $"events/{October15.Id}.yaml",
             $"events/{November3.Id}.yaml",
+            $"actions/{November5Moratorium.Id}.yaml",
         ],
     };
 

@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using DcLedger.Application;
@@ -9,6 +10,7 @@ namespace DcLedger.Publishing.SiteData;
 /// <summary>
 /// Writes <c>site-data/events.json</c>, the site's only input (ADR-0001, ADR-0004). Field names and order are spelled
 /// out here and mirrored by <c>site/src/content.config.ts</c>; a breaking change bumps <see cref="SchemaVersion"/>.
+/// Adding a key the site can ignore, such as <c>actions</c> (issue #25), isn't breaking.
 /// The output is LF-terminated UTF-8 without a BOM, the same on every operating system.
 /// </summary>
 public sealed class SiteDataExporter : IExporter
@@ -46,6 +48,14 @@ public sealed class SiteDataExporter : IExporter
             }
 
             json.WriteEndArray();
+
+            json.WriteStartArray("actions");
+            foreach (var exportAction in model.Actions)
+            {
+                WriteAction(json, exportAction);
+            }
+
+            json.WriteEndArray();
             json.WriteEndObject();
         }
 
@@ -79,9 +89,31 @@ public sealed class SiteDataExporter : IExporter
         json.WriteNumber("sequence", ledgerEvent.Sequence);
         json.WriteString("label", ledgerEvent.Label.ToToken());
         WriteLocation(json, ledgerEvent.Location);
+        WriteDocuments(json, item.Documents);
+        json.WriteEndObject();
+    }
 
+    private static void WriteAction(Utf8JsonWriter json, ExportAction item)
+    {
+        var action = item.Action;
+        json.WriteStartObject();
+        json.WriteString("id", action.Id);
+        json.WriteString("jurisdiction_id", action.JurisdictionId);
+        WriteStringOrNull(json, "event_id", action.EventId);
+        json.WriteString("action_type", action.ActionType.ToToken());
+        json.WriteString("outcome", action.Outcome.ToToken());
+        json.WriteString("decided_on", action.DecidedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+        WriteStringOrNull(json, "votes", action.Votes);
+        json.WriteString("label", action.Label.ToToken());
+        WriteDocuments(json, item.Documents);
+        json.WriteEndObject();
+    }
+
+    /// <summary>Provenance for one item (SPEC AC2): URL, retrieval time and SHA-256 of each document.</summary>
+    private static void WriteDocuments(Utf8JsonWriter json, IReadOnlyList<Document> documents)
+    {
         json.WriteStartArray("documents");
-        foreach (var document in item.Documents)
+        foreach (var document in documents)
         {
             json.WriteStartObject();
             json.WriteString("url", document.Url.AbsoluteUri);
@@ -91,7 +123,6 @@ public sealed class SiteDataExporter : IExporter
         }
 
         json.WriteEndArray();
-        json.WriteEndObject();
     }
 
     /// <summary><c>"location": {"lat": 36.0726, "lon": -79.792}</c>, or null. Numbers use the shortest exact form.</summary>

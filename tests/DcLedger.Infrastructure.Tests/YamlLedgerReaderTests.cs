@@ -25,6 +25,19 @@ public sealed class YamlLedgerReaderTests
           - bf771d2f48e40c8ff1c60d5b2a63fc3680ba510fb30d8e9fa1e4fb069d163811
         """;
 
+    private const string ValidAction = """
+        id: fixture-moratorium-2026-11-05
+        jurisdiction_id: fixture
+        event_id: fixture-boc-2026-11-05
+        action_type: moratorium
+        outcome: adopted_amended
+        decided_on: 2026-11-05
+        votes: "9-0"
+        label: confirmed_official
+        document_ids:
+          - bf771d2f48e40c8ff1c60d5b2a63fc3680ba510fb30d8e9fa1e4fb069d163811
+        """;
+
     [Fact]
     public void Valid_fixture_ledger_loads_every_record_type()
     {
@@ -194,6 +207,54 @@ public sealed class YamlLedgerReaderTests
             """;
 
         RuleFor($"documents/{Doc}.yaml", yaml).ShouldBe(ValidationRule.InvalidValue);
+    }
+
+    [Fact]
+    public void Action_reads_its_meeting_type_outcome_and_vote()
+    {
+        var action = Load("actions/fixture-moratorium-2026-11-05.yaml", ValidAction).Actions.ShouldHaveSingleItem().Record;
+
+        action.EventId.ShouldBe("fixture-boc-2026-11-05");
+        action.ActionType.ShouldBe(ActionType.Moratorium);
+        action.Outcome.ShouldBe(ActionOutcome.AdoptedAmended);
+        action.DecidedOn.ShouldBe(new DateOnly(2026, 11, 5));
+        action.Votes.ShouldBe("9-0");
+    }
+
+    [Fact]
+    public void Action_without_a_meeting_or_vote_is_valid()
+    {
+        var yaml = ValidAction
+            .Replace("event_id: fixture-boc-2026-11-05\n", string.Empty, StringComparison.Ordinal)
+            .Replace("votes: \"9-0\"\n", string.Empty, StringComparison.Ordinal);
+
+        var action = Load("actions/fixture-moratorium-2026-11-05.yaml", yaml).Actions.ShouldHaveSingleItem().Record;
+
+        action.EventId.ShouldBeNull();
+        action.Votes.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("action_type: moratorium", "action_type: pause", "unknown action type")]
+    [InlineData("outcome: adopted_amended", "outcome: approved", "unknown outcome")]
+    [InlineData("outcome: adopted_amended", "outcome: Adopted", "tokens are lowercase")]
+    [InlineData("votes: \"9-0\"", "votes: unanimous", "a description instead of a count")]
+    [InlineData("votes: \"9-0\"", "votes: \"9 to 0\"", "words instead of a hyphen")]
+    [InlineData("votes: \"9-0\"", "votes: \"9-0-1\"", "abstentions are left out")]
+    [InlineData("event_id: fixture-boc-2026-11-05", "event_id: Fixture_BOC", "event_id isn't a slug")]
+    public void Action_values_outside_the_vocabulary_are_rejected(string valid, string invalid, string because)
+    {
+        var yaml = ValidAction.Replace(valid, invalid, StringComparison.Ordinal);
+
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", yaml).ShouldBe(ValidationRule.InvalidValue, because);
+    }
+
+    [Fact]
+    public void Action_needs_an_outcome()
+    {
+        var yaml = ValidAction.Replace("outcome: adopted_amended\n", string.Empty, StringComparison.Ordinal);
+
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", yaml).ShouldBe(ValidationRule.RequiredField);
     }
 
     [Fact]

@@ -9,7 +9,7 @@ export const SITE_DATA_FILE = '../out/site-data/events.json';
 /**
  * Parses events.json and rejects any schema version the site wasn't built for.
  * @param {string} text
- * @returns {{ schema_version: number, generated_utc: string, jurisdictions: Record<string, unknown>[], events: Record<string, unknown>[] }}
+ * @returns {{ schema_version: number, generated_utc: string, jurisdictions: Record<string, unknown>[], events: Record<string, unknown>[], actions?: Record<string, unknown>[] }}
  */
 export function parseSiteData(text) {
   const data = JSON.parse(text);
@@ -27,3 +27,9 @@ export const eventsFrom = (text) => parseSiteData(text).events;
 
 /** @param {string} text */
 export const jurisdictionsFrom = (text) => parseSiteData(text).jurisdictions;
+
+/**
+ * Local actions (issue #25). The key was added within schema version 1, so a file written before it has none.
+ * @param {string} text
+ */
+export const actionsFrom = (text) => parseSiteData(text).actions ?? [];

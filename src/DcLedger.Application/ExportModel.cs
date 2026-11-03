@@ -4,7 +4,8 @@ namespace DcLedger.Application;
 
 /// <summary>
 /// Everything the exporters publish, resolved and ordered once so every output agrees: jurisdictions by ID, events by
-/// start time then ID, each event's documents in the order its record lists them. Built only from validated data.
+/// start time then ID, actions by decision date then ID, and each item's documents in the order its record lists them.
+/// Built only from validated data.
 /// </summary>
 public sealed record ExportModel
 {
@@ -16,6 +17,9 @@ public sealed record ExportModel
 
     /// <summary>Every event, ordered by start time, then ID.</summary>
     public required IReadOnlyList<ExportEvent> Events { get; init; }
+
+    /// <summary>Every local action, ordered by decision date, then ID.</summary>
+    public IReadOnlyList<ExportAction> Actions { get; init; } = [];
 }
 
 /// <summary>A jurisdiction with its freshness (SPEC AC10).</summary>
@@ -44,5 +48,18 @@ public sealed record ExportEvent
     public required Jurisdiction Jurisdiction { get; init; }
 
     /// <summary>The event's documents, in the order its record lists them; never empty (SPEC AC2).</summary>
+    public required IReadOnlyList<Document> Documents { get; init; }
+}
+
+/// <summary>A local action with its jurisdiction and documents resolved.</summary>
+public sealed record ExportAction
+{
+    /// <summary>The action record.</summary>
+    public required LocalAction Action { get; init; }
+
+    /// <summary>The action's jurisdiction.</summary>
+    public required Jurisdiction Jurisdiction { get; init; }
+
+    /// <summary>The action's documents, in the order its record lists them; never empty (SPEC AC2).</summary>
     public required IReadOnlyList<Document> Documents { get; init; }
 }

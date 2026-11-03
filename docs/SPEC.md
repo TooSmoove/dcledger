@@ -44,7 +44,7 @@ Modules follow ADR-0001; contracts follow ADR-0004.
 | DcLedger.Adapters.Legistar | Web API events and event items (API verified open, no token). EventDate + EventTime → America/New_York → UTC. |
 | DcLedger.Infrastructure | Fetcher (IHttpClientFactory, standard resilience, rate limit, robots.txt, identifying user agent, size caps); R2 store and ingest state (AWSSDK.S3 4.0.104.6, both checksum modes WHEN_REQUIRED, DisablePayloadSigning); GitHub review queue; YAML reader |
 | DcLedger.Publishing | DuckDB (DuckDB.NET.Data.Full 1.5.6.1, built in CI, never committed); JSON, CSV, ICS (Ical.Net 5.2.3 + pinned VTIMEZONE), RSS (System.ServiceModel.Syndication), Parquet |
-| DcLedger.Cli | System.CommandLine 2.0.13: `ingest`, `validate`, `export`. Published as linux-x64. Only composition root. |
+| DcLedger.Cli | System.CommandLine 2.0.13: `ingest`, `validate`, `export`, `archive-document`. Published as linux-x64. Only composition root. |
 | Review queue | GitHub Issue with neutral placeholder title, case number, hash, retrieval and first-seen times, ready-to-paste YAML (incl. document row). Never the original title. |
 | `data/` YAML | Canonical records, one file each |
 | `site/` (Astro 7.4.2) | /radar, item pages, map page (MapLibre GL JS 6.16 + pmtiles 4.5, loaded on demand) |
@@ -141,3 +141,8 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - Publish runs on green CI on main and every 6 h; "last checked" comes from ingest run history.
   - DCO enforced by a CI check; Pages project `dcledger`.
   - Pins and constraints updated from spikes: WireMock.Net.Minimal, basemap z14, on-demand map, DST gap/overlap rejection, Node ≥ 22.23.4, AWSSDK.S3 4.0.104.6, exact SDK pin, pinned runner images, no HTML/iCal fallback.
+- **Nov 3, 2026 — Recording decisions (issue #25, WS-AC8):**
+  - Local actions reach the site: `events.json` gains an `actions` array (schema version 1, additive; ADR-0004 amended) and decisions render on the meeting and jurisdiction pages.
+  - Actions gain an optional `event_id`; `action_type` and `outcome` become fixed vocabularies; `votes` is ayes-noes.
+  - "Confirmed (official record)" for a decision means the platform's action-detail page is archived; approved minutes may be added later as a second document. Every recorded vote is an action, including continuances and tablings.
+  - New `dcl archive-document` command and `archive-document` workflow (r2-docs, dispatch only) keep hand-picked sources in the private bucket.
