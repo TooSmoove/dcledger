@@ -48,8 +48,8 @@ Modules follow ADR-0001; contracts follow ADR-0004.
 | Review queue | GitHub Issue with neutral placeholder title, case number, hash, retrieval and first-seen times, ready-to-paste YAML (incl. document row). Never the original title. |
 | `data/` YAML | Canonical records, one file each |
 | `site/` (Astro 7.4.2) | /radar, item pages, map page (MapLibre GL JS 6.16 + pmtiles 4.5, loaded on demand) |
-| Public R2 basemap | Protomaps NC extract at z14 (370 MB). r2.dev allowed for the skeleton only. |
-| Cloudflare Pages | Static deploy (project `dcledger`) |
+| Public R2 basemap | Protomaps NC extract at z14 (370 MB), served from `tiles.ncdcledger.org`; r2.dev is off (AC13). |
+| Cloudflare Pages | Static deploy (project `dcledger`) at `ncdcledger.org`; `www` redirects to the apex |
 | Workflows | `ci` (ubuntu-24.04 + windows-2025), `ingest` (cron 6 h), `publish` (green CI on main + every 6 h), `basemap` (manual; only job holding the public-bucket token) |
 
 - **WS-AC1:** `dotnet build`/`test` green on ubuntu-24.04 and windows-2025; Astro build green on Linux.
@@ -109,15 +109,15 @@ Data: CC BY 4.0. Basemap: ODbL Produced Work in a separate bucket with OSM attri
 | Tests | xunit.v3 4.0.2, Verify.XunitV3 31.25.0, Shouldly 4.3.0, WireMock.Net.Minimal 2.19.0 | S10 (`dotnet run` and `dotnet test` in MTP mode) |
 | Site | Astro 7.4.2 | S14: escaping verified, zero script off-map |
 | Map | MapLibre GL JS 6.16.0 + pmtiles 4.5.0; go-pmtiles 1.31.2 | S14, S4 |
-| Basemap | Protomaps NC extract, z14, `basemap/nc.pmtiles` | S4, S3: 206 + CORS on r2.dev |
-| Hosting | Cloudflare Pages (Workers after the domain exists) | — |
+| Basemap | Protomaps NC extract, z14, `basemap/nc.pmtiles` on `tiles.ncdcledger.org` | S4, S3; AC13 checked by every publish |
+| Hosting | Cloudflare Pages, custom domain `ncdcledger.org` (Workers deferred, §D) | AC11 headers verified on the domain |
 | CI | GitHub Actions, pinned images and SHAs | Cron delay under measurement (S5) |
 | Ingest source | Legistar Web API, open, no robots.txt | S1 |
 | Greensboro | Manual YAML; eSCRIBE robots.txt blocks only PetalBot | S9 |
 
 ## H. Name check
 
-Repo `TooSmoove/dcledger`, namespace `DcLedger.*`, Pages project `dcledger`. npm and PyPI names free (S11). Domain best guess ncdcledger.org (alternatives: ncdatacenterledger.org, triaddatacenters.org, triadhearingradar.org); register on Cloudflare by Nov 15. "Ledger" is a Ledger SAS trademark in crypto; "DC" commonly reads as District of Columbia.
+Repo `TooSmoove/dcledger`, namespace `DcLedger.*`, Pages project `dcledger`. npm and PyPI names free (S11). Domain **ncdcledger.org**, registered on Cloudflare (Oct 27) and live Nov 3: the site at the apex, `www` 301-redirects to it, the basemap at `tiles.ncdcledger.org`. The domain sends no mail (null MX, SPF `-all`, DMARC `p=reject`). "Ledger" is a Ledger SAS trademark in crypto; "DC" commonly reads as District of Columbia.
 
 ## I. Remaining risks & spikes (riskiest first)
 
@@ -127,7 +127,7 @@ Repo `TooSmoove/dcledger`, namespace `DcLedger.*`, Pages project `dcledger`. npm
 4. **S17 artifact handoff** (#12): scheduled workflows run the CLI from the latest green `ci`.
 5. **S18 map Lighthouse** (#3): ≥ 90 with on-demand MapLibre.
 6. **S5 cron delay** (#4): p95 by Nov 8; decides 6 h vs 4 h ingest.
-7. **S11 domain / S12 settings / S12b statute** (#10): owner tasks.
+7. **S12 settings / S12b statute** (#10): owner tasks. S11 domain done (§H).
 
 Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7, S9, S10, S13, S14.
 
@@ -146,3 +146,8 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - Actions gain an optional `event_id`; `action_type` and `outcome` become fixed vocabularies; `votes` is ayes-noes.
   - "Confirmed (official record)" for a decision means the platform's action-detail page is archived; approved minutes may be added later as a second document. Every recorded vote is an action, including continuances and tablings.
   - New `dcl archive-document` command and `archive-document` workflow (r2-docs, dispatch only) keep hand-picked sources in the private bucket.
+- **Nov 3, 2026 — Domain ncdcledger.org (S11, AC13):**
+  - The site is served at `https://ncdcledger.org` (Pages custom domain; `www` 301-redirects to the apex by a zone Redirect Rule). `dcledger.pages.dev` keeps serving the same build with noindex. Publish checks the live site on the domain.
+  - The basemap moved from r2.dev to `tiles.ncdcledger.org` (R2 custom domain; CORS allows `https://ncdcledger.org` and `https://dcledger.pages.dev`, GET and HEAD, `Range`). Publish fails before deploying if the build or `BASEMAP_URL` mentions r2.dev, or a ranged GET with `Origin` doesn't return 206 plus `Access-Control-Allow-Origin` (`tools/check_basemap.py`, PR #80). r2.dev access on the bucket is off.
+  - Cloudflare's edge-injected analytics beacon (zone Real User Monitoring) is off, per §E privacy and AC12; Pages Web Analytics stays disabled.
+  - The domain is locked against spoofing: null MX, SPF `v=spf1 -all`, DMARC `v=DMARC1; p=reject`.
