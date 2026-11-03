@@ -1,0 +1,21 @@
+bodies (repr):
+   'City Council' active
+   'Public Safety Committee' active
+   'Finance Committee' active
+   'Public Works Committee' active
+   'General Government Committee ' active
+   'Committee of the Whole of the City Council' active
+   'FInance Committee Budget Workshop' active
+   'Finance Committee Budget Public Hearing' active
+   'Historical Special' active
+   'Special Meeting of the City Council' active
+   'Emergency Meeting of the City Council' active
+   'Committee of the Whole of the City Council Budget Workshop' active
+robots.txt winston-salem.legistar.com: HTTP 404 
+robots.txt winston-salem.legistar1.com: HTTP 200 User-agent: *  | Disallow: / 
+event 2804: page host ok=True HTTP 200 text/html; charset=utf-8 agenda links=1
+  agenda: HTTP 200 application/pdf pdf=True bytes=153685
+event 2809: page host ok=True HTTP 200 text/html; charset=utf-8 agenda links=1
+  agenda: HTTP 200 application/pdf pdf=True bytes=149217
+event 2810: page host ok=True HTTP 200 text/html; charset=utf-8 agenda links=1
+  agenda: HTTP 200 application/pdf pdf=True bytes=141638
