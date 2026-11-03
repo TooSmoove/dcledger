@@ -11,10 +11,23 @@ npm ci
 npm run fixture       # copy tests/fixtures/ to ../out/ (no .NET needed)
 npm run build         # static output in dist/, feeds copied from ../out/public/
 npm test              # node:test over the built site and the data contract
+npm run test:e2e      # the end-to-end smoke test's site half (after the .NET half wrote ../out/, see below)
 npm run check         # astro check (types)
 npm run lighthouse    # Lighthouse mobile on /map and /radar; fails below 90 (run after build)
 npm run format:check  # prettier
 npm run dev           # local preview at http://localhost:4321
+```
+
+## The end-to-end smoke test
+
+`tests/DcLedger.Cli.Tests/EndToEndSmokeTests.cs` runs recorded Legistar responses through `dcl ingest` (in-memory
+bucket and review queue), pastes the review issue's YAML with a neutral title, then runs `dcl validate` and
+`dcl export`. `e2e/smoke.mjs` then checks the built site: the event is on `/radar` and the feeds in `dist/` are the
+exported ones. ci's e2e job runs both halves; to run them locally from the repository root:
+
+```sh
+DCL_E2E_OUT=out dotnet run --project tests/DcLedger.Cli.Tests -- -class DcLedger.Cli.Tests.EndToEndSmokeTests
+cd site && npm run build && npm run test:e2e
 ```
 
 Astro collects anonymous CLI usage telemetry by default. To opt out on your machine: `npx astro telemetry disable` (CI sets `ASTRO_TELEMETRY_DISABLED=1`).
