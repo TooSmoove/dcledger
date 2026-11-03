@@ -5,5 +5,7 @@
   <ItemGroup>
     <!-- In-memory ingest ports shared with the other test project that exercises ingest. -->
     <Compile Include="..\Shared\IngestFakes.cs" Link="Shared\IngestFakes.cs" />
+    <!-- Reads the files a review issue offers; shared with the rendered-YAML test. -->
+    <Compile Include="..\Shared\OfferedFiles.cs" Link="Shared\OfferedFiles.cs" />
   </ItemGroup>
 </Project>

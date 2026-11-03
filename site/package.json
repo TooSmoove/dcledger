@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "node --test",
+    "test:e2e": "node --test e2e/smoke.mjs",
     "lighthouse": "lhci autorun"
   },
   "dependencies": {

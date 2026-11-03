@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using DcLedger.Application;
 using DcLedger.Domain;
 using DcLedger.Infrastructure.Ledger;
+using DcLedger.Testing;
 using Shouldly;
 using Xunit;
 
@@ -44,7 +45,7 @@ public sealed partial class RenderedIssueYamlTests
     private static TempLedger Ledger(ReviewCandidate candidate, string? title)
     {
         var body = ReviewIssueRenderer.Render(candidate).Body;
-        var files = OfferedFile().Matches(body).ToDictionary(match => match.Groups["path"].Value, match => match.Groups["yaml"].Value);
+        var files = OfferedFiles.Parse(body);
         files.Count.ShouldBe(2);
 
         var ledger = new TempLedger().Write("jurisdictions/guilford.yaml", """
@@ -57,7 +58,7 @@ public sealed partial class RenderedIssueYamlTests
             """);
         foreach (var (path, yaml) in files)
         {
-            var content = title is null ? yaml : yaml.Replace("title: \"\"", $"title: \"{title}\"", StringComparison.Ordinal);
+            var content = title is null || !path.StartsWith("data/events/", StringComparison.Ordinal) ? yaml : OfferedFiles.WithTitle(yaml, title);
             ledger.Write(path["data/".Length..], content);
         }
 
@@ -82,9 +83,6 @@ public sealed partial class RenderedIssueYamlTests
         Items = [new ReviewItem("A.", "2026-439", "Public Hearing", DataCenterRule)],
         FirstSeenUtc = new DateTimeOffset(2026, 10, 28, 12, 47, 3, TimeSpan.Zero),
     };
-
-    [GeneratedRegex("`(?<path>data/[a-z]+/[a-z0-9-]+\\.yaml)`\\n\\n```yaml\\n(?<yaml>.*?)```", RegexOptions.Singleline)]
-    private static partial Regex OfferedFile();
 
     [GeneratedRegex("'([a-z_]+)'")]
     private static partial Regex FieldName();

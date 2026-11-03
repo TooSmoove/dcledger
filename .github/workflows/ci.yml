@@ -103,6 +103,49 @@ jobs:
         working-directory: .
         run: bash tools/ci_annotate.sh "site" "$RUNNER_TEMP/ci.log"
 
+  e2e:
+    name: e2e smoke (ingest to /radar)
+    # The permanent end-to-end smoke test (issue #24, ADR-0006): recorded Legistar responses -> dcl ingest (in-memory
+    # bucket and review queue) -> the review issue's YAML -> dcl validate -> dcl export -> Astro build -> /radar.
+    # The .NET half also runs in the dotnet job on both OSes; here it writes its export to out/ for the site build.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      DCL_E2E_OUT: ${{ github.workspace }}/out
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: ${{ env.DOTNET_SDK }}
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Ingest, review, validate and export (EndToEndSmokeTests)
+        # Only that class (xunit's console runner, which `dotnet run` starts, takes -class). Only that test writes
+        # out/, so the final check also fails the step if the filter ever matches nothing.
+        run: |
+          dotnet restore tests/DcLedger.Cli.Tests --locked-mode -p:NuGetAudit=false 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+          dotnet run --project tests/DcLedger.Cli.Tests -c Release --no-restore -- \
+            -class DcLedger.Cli.Tests.EndToEndSmokeTests 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+          test -s out/site-data/events.json || { echo "::error title=e2e smoke::the smoke test wrote no export"; exit 1; }
+      - name: Build the site from that export
+        working-directory: site
+        run: |
+          npm ci --no-audit --no-fund 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+          npm run build 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: The event is on /radar and the feeds are deployed
+        working-directory: site
+        run: npm run test:e2e 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: Annotate failure
+        if: failure()
+        run: bash tools/ci_annotate.sh "e2e smoke" "$RUNNER_TEMP/ci.log"
+
   tools:
     name: tools (python)
     runs-on: ubuntu-24.04
@@ -274,7 +317,7 @@ jobs:
   ci-passed:
     name: CI passed
     if: always()
-    needs: [dotnet, site, tools, audit, dco, ledger, package]
+    needs: [dotnet, site, e2e, tools, audit, dco, ledger, package]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:

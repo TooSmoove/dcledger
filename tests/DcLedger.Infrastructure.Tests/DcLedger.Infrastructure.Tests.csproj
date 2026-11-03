@@ -6,4 +6,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\DcLedger.Infrastructure\DcLedger.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Reads the files a review issue offers; shared with the CLI's end-to-end smoke test. -->
+    <Compile Include="..\Shared\OfferedFiles.cs" Link="Shared\OfferedFiles.cs" />
+  </ItemGroup>
 </Project>
