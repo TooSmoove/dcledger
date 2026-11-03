@@ -9,6 +9,14 @@ Legistar's own; free text is synthetic.
   text matched the keyword classifier says "about a data center" (meeting 1599, case 2026-439, a public hearing).
   Each item list keeps its first five items plus every classifier match. Note the body name
   `"Board of Commissioners Work Session "` with a trailing space (meeting 1630): it is Legistar's, kept on purpose.
+- `winston-salem/`: **recorded** Nov 3, 2026 from `webapi.legistar.com/v1/winston-salem` for meetings dated Apr 27,
+  2026 to Jan 1, 2027 (issue #26), the same way, with item lists for the configured full-council bodies only: City
+  Council, Special Meeting of the City Council and Emergency Meeting of the City Council (none in the window).
+  - One classifier match: meeting 2821 (Aug 17), item G-10., case 26-0310, an ordinance.
+  - Meeting 2816 (Jul 6) is a real cancellation: its comment mentions it and it has no agenda file.
+  - Meeting 2843 (Nov 2) is the first after daylight saving ended.
+  - Committee meetings stay in `events.json` to prove they're skipped. One is `"General Government Committee "`, with
+    a trailing space.
 - `derived/`: **hand-made** from recorded meeting 1598 for cases the recording doesn't contain:
   9001 no `EventTime`; 9002 a comment mentioning a cancellation; 9003 a 2:30 AM start on Mar 8, 2026 (skipped by
   daylight saving); 9004 a body that isn't configured; 9005 a date outside the requested window; 9006 a draft with no
