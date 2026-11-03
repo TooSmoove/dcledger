@@ -1,1 +1,0 @@
-To try it locally: in site/, run npm ci, then npm run fixture, then npm run dev
