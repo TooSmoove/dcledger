@@ -18,7 +18,7 @@ jobs:
       - name: Record scrubbed fixtures
         run: |
           python3 tools/record_legistar_fixtures.py --client winston-salem --from 2026-04-27 --to 2027-01-01 \
-            --body "City Council" --body "Special Meeting of the City Council" \
+            --body "City Council" --body "Special Meeting of the City Council" --body "Emergency Meeting of the City Council" \
             --out out/winston-salem
       - name: Probe body spellings, robots.txt and meeting-page agenda links (names and counts only)
         env:
@@ -64,6 +64,6 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add out/
+          git add -f out/
           git commit -m "Recorded output"
           git push origin HEAD:tmp/26-record-ws
