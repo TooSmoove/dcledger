@@ -1,0 +1,10 @@
+id: winston-salem
+name: Winston-Salem
+platform: legistar
+legistar_client: winston-salem
+# Full-council bodies only, names as the Legistar API spells them (spike S15; issue #26, checked Nov 3, 2026).
+# Committees and Committee of the Whole are left out.
+bodies:
+  - City Council
+  - Special Meeting of the City Council
+  - Emergency Meeting of the City Council

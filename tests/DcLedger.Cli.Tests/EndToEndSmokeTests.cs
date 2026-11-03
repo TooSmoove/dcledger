@@ -39,7 +39,7 @@ public sealed class EndToEndSmokeTests : IDisposable
 
     public EndToEndSmokeTests()
     {
-        _fetcher = new FakeFetcher(_time) { Fallback = RecordedGuilford.Respond };
+        _fetcher = new FakeFetcher(_time) { Fallback = RecordedLegistar.Respond };
     }
 
     [Fact]

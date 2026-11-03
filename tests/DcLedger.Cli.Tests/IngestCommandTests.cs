@@ -8,7 +8,7 @@ using Xunit;
 namespace DcLedger.Cli.Tests;
 
 /// <summary>
-/// dcl ingest end to end over the recorded Guilford responses (tests/fixtures/legistar/guilford), with the real Legistar
+/// dcl ingest end to end over the recorded Legistar responses (tests/fixtures/legistar/{client}), with the real Legistar
 /// adapter and in-memory stand-ins for the private bucket, the review queue and the run log.
 /// </summary>
 public sealed class IngestCommandTests : IDisposable
@@ -27,7 +27,7 @@ public sealed class IngestCommandTests : IDisposable
 
     public IngestCommandTests()
     {
-        _fetcher = new FakeFetcher(_time) { Fallback = RecordedGuilford.Respond };
+        _fetcher = new FakeFetcher(_time) { Fallback = RecordedLegistar.Respond };
     }
 
     [Fact]
@@ -57,6 +57,35 @@ public sealed class IngestCommandTests : IDisposable
         _runLog.Runs.Count.ShouldBe(2);
         _runLog.Runs[1].Documents.ShouldHaveSingleItem().Sha256.ShouldBe(_runLog.Runs[0].Documents.ShouldHaveSingleItem().Sha256);
         _composedDryRun.ShouldAllBe(dryRun => !dryRun);
+    }
+
+    [Fact]
+    public async Task Winston_Salem_runs_from_its_data_file_alone()
+    {
+        _time.Now = new DateTimeOffset(2026, 7, 20, 12, 0, 0, TimeSpan.Zero);
+
+        var first = await IngestJurisdictionAsync("winston-salem", "--run-id", "41000000001-1");
+        var second = await IngestJurisdictionAsync("winston-salem", "--run-id", "41000000002-1");
+
+        first.Code.ShouldBe(ExitCodes.Ok, first.Error);
+        first.Output.ShouldContain("winston-salem: meetings dated 2026-06-20 to 2026-09-18, run 41000000001-1.");
+        first.Output.ShouldContain("2026-06-22 legistar/winston-salem/2838 Special Meeting of the City Council: agenda published, no item matches.");
+        first.Output.ShouldContain("2026-07-06 legistar/winston-salem/2816 City Council: no agenda published yet.");
+        first.Output.ShouldContain("2026-08-17 legistar/winston-salem/2821 City Council: opened issue #1 (rules: data_center).");
+        first.Output.ShouldContain("2026-09-08 legistar/winston-salem/2822 City Council: agenda published, no item matches.");
+        first.Output.ShouldContain("4 meeting(s), 1 agenda(s) retrieved; opened 1 issue(s), 0 agenda change(s); 0 error(s).");
+        first.Output.ShouldNotContain("Committee");
+
+        second.Code.ShouldBe(ExitCodes.Ok, second.Error);
+        second.Output.ShouldContain("2026-08-17 legistar/winston-salem/2821 City Council: unchanged since #1 (rules: data_center).");
+        second.Output.ShouldContain("opened 0 issue(s)");
+
+        var issue = _queue.Opened.ShouldHaveSingleItem();
+        issue.Title.ShouldBe("Review: Winston-Salem, City Council, 2026-08-17 (case 26-0310)");
+        issue.Body.ShouldNotContain("Synthetic agenda item");
+        _runLog.Runs[0].Documents.ShouldHaveSingleItem().Uri.Host.ShouldBe("winston-salem.legistar.com");
+        _fetcher.Requests.ShouldNotContain(uri => uri.Host == "winston-salem.legistar1.com"); // robots.txt: Disallow: /
+        _fetcher.Requests.ShouldNotContain(uri => uri.Host.StartsWith("guilford", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -146,10 +175,10 @@ public sealed class IngestCommandTests : IDisposable
     [Fact]
     public async Task Unknown_jurisdiction_is_a_usage_error()
     {
-        var result = await DclRunner.RunWithAsync(Root, "ingest", "--jurisdiction", "winston-salem", "--data", DataDirectory());
+        var result = await DclRunner.RunWithAsync(Root, "ingest", "--jurisdiction", "forsyth", "--data", DataDirectory());
 
         result.Code.ShouldBe(ExitCodes.Usage);
-        result.Error.ShouldContain("No jurisdiction file jurisdictions/winston-salem.yaml");
+        result.Error.ShouldContain("No jurisdiction file jurisdictions/forsyth.yaml");
     }
 
     [Fact]
@@ -208,7 +237,10 @@ public sealed class IngestCommandTests : IDisposable
     }
 
     private Task<(int Code, string Output, string Error)> IngestAsync(params string[] options) =>
-        DclRunner.RunWithAsync(Root, ["ingest", "--jurisdiction", "guilford", "--data", DataDirectory(), .. options]);
+        IngestJurisdictionAsync("guilford", options);
+
+    private Task<(int Code, string Output, string Error)> IngestJurisdictionAsync(string jurisdiction, params string[] options) =>
+        DclRunner.RunWithAsync(Root, ["ingest", "--jurisdiction", jurisdiction, "--data", DataDirectory(), .. options]);
 
     private System.CommandLine.RootCommand Root(TextWriter output, TextWriter error) => CliApp.CreateRootCommand(output, error, Compose);
 
