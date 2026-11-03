@@ -1,7 +1,7 @@
 # Publish
 
 `publish.yml` builds the site from the reviewed ledger on main and deploys it to Cloudflare Pages
-(`https://dcledger.pages.dev`). Merging a YAML pull request is the publication decision (SPEC AC8): the next publish
+(`https://ncdcledger.org`; `https://dcledger.pages.dev` still serves the same build, also noindex). Merging a YAML pull request is the publication decision (SPEC AC8): the next publish
 after ci goes green on main puts the item on /radar (WS-AC4).
 
 ## When it runs
@@ -23,14 +23,17 @@ One publish runs at a time; a newer one waits and replaces any other that is wai
    - Builds the site (`npm ci`, `npm run build`) with `PUBLIC_BASEMAP_URL` from the `BASEMAP_URL` variable; the build
      copies the calendars and CSV into `dist/`.
    - Checks `dist/`: the pages and feeds exist, `_headers` keeps `X-Robots-Tag: noindex`, no page but /map has a
-     `<script>`, /map has its button, and /radar shows this export's time. Uploads `dist/` as the `site` artifact (7 days).
+     `<script>`, /map has its button, and /radar shows this export's time.
+   - Checks the basemap host (AC13, `tools/check_basemap.py`): neither `dist/` nor `BASEMAP_URL` mentions
+     `r2.dev`, a ranged GET of `nc.pmtiles` with `Origin: https://ncdcledger.org` returns 206 with
+     `Access-Control-Allow-Origin`, and the sprite beside it is readable cross-origin. Uploads `dist/` as the `site` artifact (7 days).
 2. **deploy** (environment `cloudflare-pages`, `contents: read`)
    - Fails if it can see an R2 document credential.
    - Installs wrangler from `tools/deploy/package-lock.json` with `npm ci --ignore-scripts`, so every package is
      hash-checked and none of their install scripts run beside the token. Metrics are off.
    - `wrangler pages deploy` to the `dcledger` project's production branch (`main`), tagged with the commit.
      Wrangler's output is printed with email addresses masked, because Actions logs are public.
-   - Waits up to 3 minutes for `https://dcledger.pages.dev/radar/` to serve this build, then checks
+   - Waits up to 3 minutes for `https://ncdcledger.org/radar/` to serve this build, then checks
      `X-Robots-Tag: noindex` on `/`, `/radar/` and `/radar.ics` (AC11).
 3. **report** (`issues: write`): on failure, opens or comments on the issue **"Publish failing"** (label
    `publish-broken`); after the next success, closes it. A failing publish matters even when nothing else is red: the
@@ -53,7 +56,7 @@ SPEC AC10) is measured against it.
 |---|---|---|
 | `CLOUDFLARE_API_TOKEN` | secret in environment `cloudflare-pages` | Account → Cloudflare Pages → Edit only (enough, spike S16) |
 | `R2_ACCOUNT_ID` | repository variable | The Cloudflare account ID; add `CLOUDFLARE_ACCOUNT_ID` if Pages is in another account |
-| `BASEMAP_URL` | repository variable | The public `nc.pmtiles` URL; the map's fonts and sprite must sit beside it (run *basemap* once). Publish fails when it's empty |
+| `BASEMAP_URL` | repository variable | `https://tiles.ncdcledger.org/basemap/nc.pmtiles` (the public bucket's custom domain); the map's fonts and sprite must sit beside it (run *basemap* once). Publish fails when it's empty or on `r2.dev` |
 | `cloudflare-pages` | environment | Deployment branches: main only |
 | `R2_PRIVATE_ACCESS_KEY_ID`, `R2_PRIVATE_SECRET_ACCESS_KEY` | environment `r2-docs` **only** | As repository secrets or in `cloudflare-pages`, publish refuses to run (WS-AC9) |
 
@@ -65,6 +68,7 @@ SPEC AC10) is measured against it.
 | Validate / Export | Data on main fails the quality gate | Shouldn't happen (ci validates every PR); fix the YAML |
 | R2 credentials | A private-bucket secret is readable by publish | Move it back into the `r2-docs` environment |
 | Deploy | Token, account ID or Cloudflare outage | Check the settings above; rerun |
+| Check the basemap host | `BASEMAP_URL` on r2.dev, or the bucket's CORS policy doesn't allow `https://ncdcledger.org` | Point the variable at `tiles.ncdcledger.org`; fix the R2 bucket's CORS policy |
 | Check the live site | The alias didn't update within 3 minutes, or `_headers` lost noindex | Rerun; if noindex is missing, check `site/public/_headers` |
 
 ## Updating wrangler
