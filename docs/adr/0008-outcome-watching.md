@@ -1,6 +1,6 @@
 # ADR-0008: Outcome watching
 
-**Status:** Proposed (Nov 5, 2026). Spike S19 done (below); owner chose 6c for the action-name map and a 90-day window (Nov 5). No open questions.
+**Status:** Accepted (Nov 5, 2026). Spike S19 done (below); owner chose 6c for the action-name map and a 90-day window (Nov 5). No open questions.
 
 **Context:**
 - Ingest notices new data-center agenda items and changed agenda bytes, but not what happened at the meeting or when minutes appear. Decisions reach the ledger only when a reviewer notices them and archives a page by hand (SPEC §J, Nov 3; the Oct 15 Guilford continuance, PR #82).
