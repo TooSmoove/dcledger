@@ -18,3 +18,5 @@ jobs:
           persist-credentials: false
       - name: Query outcomes (names and titles are never printed)
         run: python3 -I spikes/outcomes/spike.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Guilford public pages (S19b; only non-personal cells are printed)
+        run: python3 -I spikes/outcomes/pages.py | tee -a "$GITHUB_STEP_SUMMARY"
