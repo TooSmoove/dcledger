@@ -101,8 +101,43 @@ def describe(title, url, case_rows_only):
         print()
 
 
+def minutes_page():
+    """Guilford's Board page (Keith, Nov 5): which meetings link minutes, and how those links look."""
+    url = "https://guilford.legistar.com/DepartmentDetail.aspx?ID=30411&GUID=B02C5AC9-9E70-4044-A95C-8A9BC5197F35&Mode=MainBody"
+    status, page = fetch(url)
+    print(f"## Board page (DepartmentDetail, Mode=MainBody)\n\nHTTP {status}, {len(page)} chars.\n")
+    p = Tables()
+    p.feed(page)
+    kinds = {}
+    for href in p.links:
+        k = kind(href)
+        if k:
+            kinds[k] = kinds.get(k, 0) + 1
+    print(f"- link kinds on page: {json.dumps(dict(sorted(kinds.items())))}\n")
+    for t in p.tables:
+        rows = [r for r in t["rows"] if r]
+        if len(rows) < 2 or not t["id"]:
+            continue
+        header = [c["text"] for c in rows[0]]
+        print(f"### table `{t['id']}`: {len(rows) - 1} rows; headers {header}\n")
+        for r in rows[1:]:
+            out = []
+            for h, c in zip(header, r):
+                links = []
+                for l in c["links"]:
+                    k = kind(l)
+                    m = re.search(r"[?&]ID=(\d+)", l)
+                    if k:
+                        links.append(f"{k}{' ID=' + m.group(1) if m else ''}")
+                text = c["text"][:40] if h.lower() in SAFE or h.lower() in ("meeting name", "meeting date") else "(withheld)"
+                out.append(f"{h}=`{text}`" + (f" {links}" if links else ""))
+            print("- " + "; ".join(out))
+        print()
+
+
 def main():
     print("# Spike S19b — Guilford public pages\n")
+    minutes_page()
     ev = json.loads(fetch("https://webapi.legistar.com/v1/guilford/events/1599")[1])
     describe("MeetingDetail for event 1599 (Oct 15), rows for the watched cases", ev["EventInSiteURL"], True)
     describe("LegislationDetail archived for the Oct 15 continuance (PR #82)",
