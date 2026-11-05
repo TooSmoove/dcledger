@@ -106,7 +106,7 @@ def main():
     hits = [mid for (c, mid), g in matter_guids.items() if c == client and g == guid]
     print(f"## LegislationDetail GUID check\n\nArchived page GUID equals EventItemMatterGuid of matter(s): "
           f"{hits or 'none of the matched matters'}\n")
-    for c in sorted({t[0] for t in TARGETS}):
+    for c in []:
         acts, aerr = get(f"{c}/actions")
         print(f"## {c} action vocabulary\n")
         if aerr or not isinstance(acts, list):
@@ -114,7 +114,36 @@ def main():
             continue
         print(table(sorted(acts, key=lambda a: str(a.get("ActionName"))),
                     ["ActionId", "ActionName", "ActionActiveFlag", "ActionUsedFlag"]) + "\n")
+    scan()
     return 0
+
+
+def scan():
+    """How often each client fills outcomes, and how long minutes take, over the last ~8 months of meetings."""
+    from datetime import datetime
+    for client in ("guilford", "winston-salem"):
+        evs, err = get(f"{client}/events?$filter=EventDate+ge+datetime%272026-03-01%27+and+EventDate+lt+datetime%272026-11-01%27&$orderby=EventDate")
+        print(f"## {client}: meetings Mar 1 to Oct 31, 2026\n")
+        if err or not isinstance(evs, list):
+            print(f"{err or 'unexpected shape'}\n")
+            continue
+        print("| EventId | date | body | items | with action | with tally | minutes status | minutes file | days to minutes |")
+        print("|---|---|---|---|---|---|---|---|---|")
+        for ev in evs:
+            body = (ev.get("EventBodyName") or "").strip()
+            if "Committee" in body:
+                continue
+            items, ierr = get(f"{client}/events/{ev['EventId']}/eventitems?AgendaNote=0&MinutesNote=0&Attachments=0")
+            items = items if isinstance(items, list) else []
+            acted = sum(1 for i in items if (i.get("EventItemActionName") or "").strip())
+            tallied = sum(1 for i in items if (i.get("EventItemTally") or "").strip())
+            lag = ""
+            pub = ev.get("EventMinutesLastPublishedUTC")
+            if pub and ev.get("EventDate"):
+                lag = (datetime.fromisoformat(pub[:19]) - datetime.fromisoformat(ev["EventDate"][:19])).days
+            print(f"| {ev['EventId']} | {ev.get('EventDate','')[:10]} | {cell(body)} | {len(items) if not ierr else ierr} | {acted} | {tallied}"
+                  f" | {cell(ev.get('EventMinutesStatusName'))} | {'set' if ev.get('EventMinutesFile') else 'no'} | {lag} (last publish) |")
+        print()
 
 
 if __name__ == "__main__":
