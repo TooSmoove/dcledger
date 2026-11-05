@@ -12,7 +12,8 @@ for eid in (1596, 1597, 1626, 1627, 1598, 1599, 1600):
     ev = json.loads(body)
     _, page = req(ev["EventInSiteURL"])
     page = html.unescape(page.decode("utf-8", "replace"))
-    web_id = re.search(r"[?&]ID=(\d+)", ev["EventInSiteURL"]).group(1)
+    m = re.search(r"[?&]ID=(\d+)", ev["EventInSiteURL"] or "", re.I)
+    web_id = m.group(1) if m else f"? ({(ev['EventInSiteURL'] or '')[:90]})"
     mins = sorted(set(re.findall(r'View\.ashx\?M=M&ID=(\d+)&GUID=([0-9A-Fa-f-]{36})', page)))
     status = re.search(r"Minutes status:\s*<.*?<span[^>]*>(.*?)</span>", page, re.S)
     line = (f"- event {eid} ({ev['EventDate'][:10]}, `{ev['EventBodyName'].strip()}`), web ID {web_id}: "
