@@ -1,6 +1,10 @@
 <Solution>
   <Folder Name="/data/" />
+  <Folder Name="/data/actions/">
+    <File Path="guilford-moratorium-2026-10-15.yaml" />
+  </Folder>
   <Folder Name="/data/documents/">
+    <File Path="08050367f5d7a33f571ba3fa8c573d8a099431058c9ad9a5f2c786007b0742bf.yaml" />
     <File Path="5ca91fec29ccd081808c3cc17782fe54258badbbf6b4b18dd2c64e8f1e227101.yaml" />
   </Folder>
   <Folder Name="/data/events/">
