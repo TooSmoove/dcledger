@@ -1,6 +1,6 @@
 # ADR-0008: Outcome watching
 
-**Status:** Proposed (Nov 5, 2026). Spike S19 done (below); owner chose 6c for the action-name map (Nov 5).
+**Status:** Proposed (Nov 5, 2026). Spike S19 done (below); owner chose 6c for the action-name map and a 90-day window (Nov 5). No open questions.
 
 **Context:**
 - Ingest notices new data-center agenda items and changed agenda bytes, but not what happened at the meeting or when minutes appear. Decisions reach the ledger only when a reviewer notices them and archives a page by hand (SPEC §J, Nov 3; the Oct 15 Guilford continuance, PR #82).
@@ -20,7 +20,7 @@
 **Decision:** C.
 
 1. **Watch set.** Every meeting that has a review issue, keyed `client:EventId:EventItemId` for each matched item, with its `MatterId`, case number and meeting page (`EventInSiteURL`) from first ingest. Same-slot siblings (same trimmed body, date and time) are watched as one group.
-2. **Window.** From the first run after the meeting's start (Eastern) until **60 days** after it. Watching continues after an `actions/` record is merged, so minutes are still caught for the "second document" step (SPEC §J, Nov 3). *S19 note: some minutes arrive later (Winston-Salem 80–87 days twice; Guilford over five weeks); see open question 1.*
+2. **Window.** From the first run after the meeting's start (Eastern) until **90 days** after it (owner, Nov 5). Watching continues after an `actions/` record is merged, so minutes are still caught for the "second document" step (SPEC §J, Nov 3). 90 rather than 60 because S19 found minutes arriving late: Guilford's take over five weeks, and two Winston-Salem meetings took 80–87 days.
 3. **Reads per watched meeting per run**, inside the existing ingest run, through the existing fetcher (rate limit, size caps, user agent, robots.txt), sequentially:
    - API: `events/{EventId}?EventItems=1` (notes and attachments off), and `matters/{MatterId}` plus `matters/{MatterId}/histories` once per distinct matched matter.
    - Public page: the meeting page (`EventInSiteURL`), the same page ingest reads for the agenda link (`LegistarMeetingPage`). Only fixed shapes are recognized, as for the agenda link: the minutes link `View.ashx?M=M&ID=…&GUID=…`, the "Minutes status" label, and, on the matched case's row, the Action and Result cells and its `LegislationDetail.aspx?ID=…&GUID=…` link.
@@ -57,6 +57,3 @@
 - Tests: a renderer test fails if any field from Decision 4's exclusion list reaches a comment; regression fixtures record a Winston-Salem approval (2821, case 26-0310), a Guilford meeting page before and after minutes appear (Sep 17), a duplicate-slot group, and a source error that must not comment.
 - SPEC §J gets an amendment on acceptance (new scope: change comments on review issues).
 - Out of scope: cancellations (#29), notifications outside GitHub, automatic `actions/` PRs, minutes posted outside Legistar.
-
-**Open questions for the owner:**
-1. Keep 60 days, or extend the minutes watch to 90 days? S19 shows Guilford minutes take over five weeks and Winston-Salem's twice took 80+ days.
