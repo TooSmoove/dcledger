@@ -4,6 +4,6 @@ event_id: guilford-board-of-commissioners-2026-10-15
 action_type: moratorium
 outcome: continued
 decided_on: 2026-10-15
-votes: "N/A"
 label: confirmed_official
-document_ids: 08050367f5d7a33f571ba3fa8c573d8a099431058c9ad9a5f2c786007b0742bf
+document_ids:
+  - ebed56f5526257b6f872c6af0a353e27ec7d09d3ad52409fb525bfec4ccbfaa7
