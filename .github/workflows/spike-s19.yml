@@ -22,3 +22,5 @@ jobs:
         run: python3 -I spikes/outcomes/pages.py | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Guilford minutes since 2024 (S19c)
         run: python3 -I spikes/outcomes/minutes_lag.py | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Guilford minutes on meeting pages (S19d)
+        run: python3 -I spikes/outcomes/minutes_page.py | tee -a "$GITHUB_STEP_SUMMARY"
