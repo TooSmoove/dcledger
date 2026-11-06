@@ -32,6 +32,15 @@ public sealed record MeetingState
 
     /// <summary>The review issue opened for this agenda, once there is one.</summary>
     public int? ReviewIssueNumber { get; init; }
+
+    /// <summary>
+    /// The meeting as last seen while it had a review issue, to notice reschedules and cancellation hints (issue #29).
+    /// Null until the first run that sees it with an issue; that run takes it as the baseline without commenting.
+    /// </summary>
+    public MeetingSighting? LastSeen { get; init; }
+
+    /// <summary>When ingest noticed the platform no longer lists the meeting before its date; null while it's listed.</summary>
+    public DateTimeOffset? MissingSinceUtc { get; init; }
 }
 
 /// <summary>Ingest state per meeting, kept in the private bucket between runs (ADR-0002).</summary>
@@ -42,6 +51,12 @@ public interface IIngestState
 
     /// <summary>Replaces the meeting's state.</summary>
     Task PutAsync(MeetingKey meeting, MeetingState state, CancellationToken cancellationToken);
+
+    /// <summary>The jurisdiction's meetings with review issues, as last listed; empty when none are recorded.</summary>
+    Task<IReadOnlyList<TrackedMeeting>> GetTrackedAsync(string jurisdictionId, CancellationToken cancellationToken);
+
+    /// <summary>Replaces the jurisdiction's tracked meetings.</summary>
+    Task PutTrackedAsync(string jurisdictionId, IReadOnlyList<TrackedMeeting> meetings, CancellationToken cancellationToken);
 }
 
 /// <summary>How an ingest run ended.</summary>

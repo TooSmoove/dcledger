@@ -44,6 +44,12 @@ public enum MeetingOutcome
 
     /// <summary>The agenda couldn't be downloaded; see <see cref="MeetingResult.Error"/>.</summary>
     Failed,
+
+    /// <summary>
+    /// A meeting with a review issue that the platform no longer lists, before its date (spike S15). The issue gets one
+    /// comment when this is first noticed; <see cref="MeetingResult.Changes"/> is empty on later runs.
+    /// </summary>
+    NoLongerListed,
 }
 
 /// <summary>One meeting's outcome. Holds no source titles, so it is safe to print in public logs.</summary>
@@ -73,6 +79,9 @@ public sealed record MeetingResult
     /// <summary>True when commenting reopened a closed issue.</summary>
     public bool Reopened { get; init; }
 
+    /// <summary>What changed about the meeting since the last run; each change set was commented on the issue (issue #29).</summary>
+    public IReadOnlyList<MeetingChange> Changes { get; init; } = [];
+
     /// <summary>Why the meeting failed, for <see cref="MeetingOutcome.Failed"/>.</summary>
     public string? Error { get; init; }
 }
@@ -95,7 +104,7 @@ public sealed record IngestReport
     /// <summary>How late the run started against its schedule, when it was scheduled.</summary>
     public TimeSpan? StartDelay { get; init; }
 
-    /// <summary>Every meeting the source returned, in its order.</summary>
+    /// <summary>Every meeting the source returned, in its order, then tracked meetings it no longer lists.</summary>
     public IReadOnlyList<MeetingResult> Meetings { get; init; } = [];
 
     /// <summary>The documents retrieved (the run log's manifest).</summary>

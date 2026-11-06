@@ -30,6 +30,13 @@ public sealed class StorageKeysTests
     }
 
     [Fact]
+    public void Tracked_meetings_are_filed_by_jurisdiction_apart_from_meeting_state()
+    {
+        StorageKeys.Tracked("guilford").ShouldBe("state/tracked/guilford.json");
+        Should.Throw<ArgumentException>(() => StorageKeys.Tracked("../guilford"));
+    }
+
+    [Fact]
     public void Runs_are_filed_by_their_utc_start_month_and_jurisdiction()
     {
         var startedEastern = new DateTimeOffset(2026, 10, 31, 20, 30, 0, TimeSpan.FromHours(-4)); // Nov 1, 00:30 UTC

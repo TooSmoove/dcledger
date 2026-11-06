@@ -65,6 +65,10 @@ internal static class IngestComposition
 
         public Task PutAsync(MeetingKey meeting, MeetingState state, CancellationToken cancellationToken) => throw Refused();
 
+        public Task<IReadOnlyList<TrackedMeeting>> GetTrackedAsync(string jurisdictionId, CancellationToken cancellationToken) => throw Refused();
+
+        public Task PutTrackedAsync(string jurisdictionId, IReadOnlyList<TrackedMeeting> meetings, CancellationToken cancellationToken) => throw Refused();
+
         public Task<int> OpenAsync(ReviewIssue issue, CancellationToken cancellationToken) => throw Refused();
 
         public Task<bool> CommentAsync(int issueNumber, string body, CancellationToken cancellationToken) => throw Refused();

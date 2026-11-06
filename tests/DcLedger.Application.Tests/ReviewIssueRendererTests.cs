@@ -18,6 +18,59 @@ public sealed class ReviewIssueRendererTests
         Verify(ReviewIssueRenderer.RenderAgendaChanged(ReviewCandidates.Hearing(), Sha256Hash.Compute("old agenda"u8)));
 
     [Fact]
+    public Task Meeting_changed_comment_golden() => Verify(ReviewIssueRenderer.RenderMeetingChanged(MovedAndPossiblyCancelled()));
+
+    [Fact]
+    public void Meeting_no_longer_listed_shows_the_last_known_time_and_the_cancellation_steps()
+    {
+        var notice = MovedAndPossiblyCancelled() with { Now = null, Changes = [MeetingChange.NoLongerListed] };
+
+        var comment = ReviewIssueRenderer.RenderMeetingChanged(notice);
+
+        comment.ShouldStartWith("<!-- dc-ledger:meeting-changed legistar/guilford/1599 no-longer-listed 2026-10-28T12:47:03Z -->\n**Possible cancellation**");
+        comment.ShouldContain("| Scheduled | Thursday, October 15, 2026 at 5:30 PM |");
+        comment.ShouldNotContain("| Was |");
+        comment.ShouldContain("**If it's cancelled:**");
+        comment.ShouldNotContain("**If it moved:**");
+        comment.ShouldNotContain("**If it's back on:**");
+    }
+
+    [Fact]
+    public void Relisted_meeting_offers_to_undo_a_cancellation()
+    {
+        var notice = MovedAndPossiblyCancelled() with { Changes = [MeetingChange.ListedAgain] };
+
+        var comment = ReviewIssueRenderer.RenderMeetingChanged(notice);
+
+        comment.ShouldContain("**Meeting changed**");
+        comment.ShouldContain("**If it's back on:**");
+        comment.ShouldNotContain("**If it's cancelled:**");
+    }
+
+    [Fact]
+    public void Meeting_changed_comment_escapes_configured_names_and_works_without_a_page()
+    {
+        var notice = MovedAndPossiblyCancelled() with { JurisdictionName = "Guilford <County> @everyone", MeetingPageUri = null };
+
+        var comment = ReviewIssueRenderer.RenderMeetingChanged(notice);
+
+        comment.ShouldContain("Guilford &lt;County&gt; @&#8203;everyone");
+        comment.ShouldContain("| Meeting | Legistar meeting 1599 |");
+    }
+
+    private static MeetingChangeNotice MovedAndPossiblyCancelled() => new()
+    {
+        Meeting = new MeetingKey(Platform.Legistar, "guilford", "1599"),
+        JurisdictionName = "Guilford County",
+        Body = "Board of Commissioners",
+        MeetingPageUri = new Uri("https://guilford.legistar.com/MeetingDetail.aspx?LEGID=1599&GID=590"),
+        Before = new MeetingSighting { Date = new DateOnly(2026, 10, 15), Time = new TimeOnly(17, 30), AgendaPublished = true },
+        Now = new MeetingSighting { Date = new DateOnly(2026, 10, 22), Time = new TimeOnly(18, 0), PossiblyCancelled = true, AgendaPublished = true },
+        Changes = [MeetingChange.Rescheduled, MeetingChange.CancellationMentioned],
+        CheckedUtc = ReviewCandidates.Retrieved,
+    };
+
+    [Fact]
     public void Title_is_neutral_and_carries_the_filtered_case_number()
     {
         ReviewIssueRenderer.Render(ReviewCandidates.Hearing()).Title

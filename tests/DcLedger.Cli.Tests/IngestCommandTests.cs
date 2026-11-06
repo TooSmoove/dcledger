@@ -41,7 +41,7 @@ public sealed class IngestCommandTests : IDisposable
         first.Output.ShouldContain("guilford: meetings dated 2026-09-28 to 2026-12-27, run 40623358875-1.");
         first.Output.ShouldContain("2026-10-15 legistar/guilford/1599 Board of Commissioners: opened issue #1 (rules: data_center).");
         first.Output.ShouldContain("2026-10-15 legistar/guilford/1631 Board of Commissioners: agenda published, no item matches.");
-        first.Output.ShouldContain("6 meeting(s), 1 agenda(s) retrieved; opened 1 issue(s), 0 agenda change(s); 0 error(s).");
+        first.Output.ShouldContain("6 meeting(s), 1 agenda(s) retrieved; opened 1 issue(s), 0 agenda change(s), 0 meeting change(s); 0 error(s).");
 
         second.Code.ShouldBe(ExitCodes.Ok, second.Error);
         second.Output.ShouldContain("2026-10-15 legistar/guilford/1599 Board of Commissioners: unchanged since #1 (rules: data_center).");
@@ -73,7 +73,7 @@ public sealed class IngestCommandTests : IDisposable
         first.Output.ShouldContain("2026-07-06 legistar/winston-salem/2816 City Council: no agenda published yet.");
         first.Output.ShouldContain("2026-08-17 legistar/winston-salem/2821 City Council: opened issue #1 (rules: data_center).");
         first.Output.ShouldContain("2026-09-08 legistar/winston-salem/2822 City Council: agenda published, no item matches.");
-        first.Output.ShouldContain("4 meeting(s), 1 agenda(s) retrieved; opened 1 issue(s), 0 agenda change(s); 0 error(s).");
+        first.Output.ShouldContain("4 meeting(s), 1 agenda(s) retrieved; opened 1 issue(s), 0 agenda change(s), 0 meeting change(s); 0 error(s).");
         first.Output.ShouldNotContain("Committee");
 
         second.Code.ShouldBe(ExitCodes.Ok, second.Error);

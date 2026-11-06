@@ -1,0 +1,20 @@
+﻿<!-- dc-ledger:meeting-changed legistar/guilford/1599 rescheduled,cancellation-mentioned 2026-10-28T12:47:03Z -->
+**Possible cancellation** for Guilford County, Board of Commissioners. The platform has no cancellation status (spike S15), so ingest changes nothing on its own: check the meeting page before editing the ledger.
+
+| | |
+|---|---|
+| Meeting | [Legistar meeting 1599](<https://guilford.legistar.com/MeetingDetail.aspx?LEGID=1599&GID=590>) |
+| Was | Thursday, October 15, 2026 at 5:30 PM |
+| Now | Thursday, October 22, 2026 at 6:00 PM |
+| Checked | 2026-10-28T12:47:03Z |
+
+### What changed
+
+- The date or start time changed.
+- A comment on the meeting now mentions a cancellation. Its text isn't copied here; read it on the meeting page.
+
+### If this meeting is published
+
+- **If it's cancelled:** in its `data/events/` record, set `status: cancelled` and raise `sequence` by 1. Keep `id` and `platform_meeting_id`: the calendar UID is built from them, so subscribers see the cancellation instead of a new event.
+- **If it moved:** update `starts_at`, with the Eastern offset in effect on the new date, and raise `sequence` by 1.
+- **If it isn't published,** or nothing changed for the public record, close this issue.

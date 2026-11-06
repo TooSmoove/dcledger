@@ -61,7 +61,20 @@ public sealed class IngestJurisdictionTests
 
         var agenda = Sha256Hash.Compute(_fetcher.Responses[HearingAgenda].Content);
         _documents.Documents.Keys.ShouldHaveSingleItem().ShouldBe(agenda);
-        _state.States[Key("1599")].ShouldBe(new MeetingState { FirstSeenUtc = Morning, LastAgendaSha256 = agenda, ReviewIssueNumber = 1 });
+        _state.States[Key("1599")].ShouldBe(new MeetingState
+        {
+            FirstSeenUtc = Morning,
+            LastAgendaSha256 = agenda,
+            ReviewIssueNumber = 1,
+            LastSeen = new MeetingSighting { Date = October15, Time = new TimeOnly(17, 30), AgendaPublished = true },
+        });
+        _state.Tracked["guilford"].ShouldHaveSingleItem().ShouldBe(new TrackedMeeting
+        {
+            Meeting = Key("1599"),
+            Body = "Board of Commissioners",
+            Date = October15,
+            MeetingPageUri = Hearing().MeetingPageUri,
+        });
 
         var run = _runLog.Runs.ShouldHaveSingleItem();
         run.RunId.ShouldBe("40623358875-1");
@@ -312,6 +325,181 @@ public sealed class IngestJurisdictionTests
     }
 
     [Fact]
+    public async Task Rescheduled_meeting_comments_once_and_reopens_the_issue()
+    {
+        _source.Meetings.Add(Hearing());
+        await RunAsync();
+        _queue.Closed.Add(1);
+        _source.Meetings[0] = Hearing() with
+        {
+            Date = new DateOnly(2026, 10, 22),
+            Time = new TimeOnly(18, 0),
+            StartsAt = new DateTimeOffset(2026, 10, 22, 18, 0, 0, TimeSpan.FromHours(-4)),
+        };
+
+        var report = await RunAsync();
+        var again = await RunAsync();
+
+        var meeting = report.Meetings.ShouldHaveSingleItem();
+        meeting.Outcome.ShouldBe(MeetingOutcome.Unchanged, "the agenda's bytes didn't change");
+        meeting.Changes.ShouldHaveSingleItem().ShouldBe(MeetingChange.Rescheduled);
+        meeting.Reopened.ShouldBeTrue();
+        var comment = _queue.Comments.ShouldHaveSingleItem();
+        comment.Issue.ShouldBe(1);
+        comment.Body.ShouldContain("**Meeting rescheduled**");
+        comment.Body.ShouldContain("| Was | Thursday, October 15, 2026 at 5:30 PM |");
+        comment.Body.ShouldContain("| Now | Thursday, October 22, 2026 at 6:00 PM |");
+        again.Meetings.ShouldHaveSingleItem().Changes.ShouldBeEmpty();
+        _state.States[Key("1599")].LastSeen!.Date.ShouldBe(new DateOnly(2026, 10, 22));
+        _state.Tracked["guilford"].ShouldHaveSingleItem().Date.ShouldBe(new DateOnly(2026, 10, 22));
+    }
+
+    [Fact]
+    public async Task Cancellation_hint_asks_the_reviewer_and_marks_nothing()
+    {
+        _source.Meetings.Add(Hearing());
+        await RunAsync();
+        _source.Meetings[0] = Hearing() with { PossiblyCancelled = true };
+
+        var report = await RunAsync();
+        await RunAsync();
+
+        report.Meetings.ShouldHaveSingleItem().Changes.ShouldHaveSingleItem().ShouldBe(MeetingChange.CancellationMentioned);
+        var comment = _queue.Comments.ShouldHaveSingleItem();
+        comment.Body.ShouldContain("**Possible cancellation**");
+        comment.Body.ShouldContain("set `status: cancelled` and raise `sequence` by 1");
+        comment.Body.ShouldNotContain(PrivateTitle);
+    }
+
+    [Fact]
+    public async Task Withdrawn_agenda_on_a_tracked_meeting_comments_without_downloading()
+    {
+        _source.Meetings.Add(Hearing());
+        await RunAsync();
+        var requests = _fetcher.Requests.Count;
+        _source.Meetings[0] = Hearing() with { AgendaUri = null };
+
+        var report = await RunAsync();
+
+        var meeting = report.Meetings.ShouldHaveSingleItem();
+        meeting.Outcome.ShouldBe(MeetingOutcome.NoAgenda);
+        meeting.IssueNumber.ShouldBe(1);
+        meeting.Changes.ShouldHaveSingleItem().ShouldBe(MeetingChange.AgendaWithdrawn);
+        _queue.Comments.ShouldHaveSingleItem().Body.ShouldContain("The platform no longer lists a published agenda.");
+        _fetcher.Requests.Count.ShouldBe(requests);
+        _state.Tracked["guilford"].ShouldHaveSingleItem().Meeting.ShouldBe(Key("1599"), "still tracked without an agenda");
+    }
+
+    [Fact]
+    public async Task Meeting_that_disappears_before_its_date_comments_once_then_again_when_relisted()
+    {
+        _source.Meetings.AddRange([Upcoming(), Unrelated()]);
+        await RunAsync();
+        _queue.Closed.Add(1);
+        _source.Meetings.RemoveAt(0);
+
+        var missing = await RunAsync();
+        var stillMissing = await RunAsync();
+        _source.Meetings.Insert(0, Upcoming());
+        var back = await RunAsync();
+
+        var gone = missing.Meetings.Single(result => result.Meeting == Key("1600"));
+        gone.Outcome.ShouldBe(MeetingOutcome.NoLongerListed);
+        gone.Changes.ShouldHaveSingleItem().ShouldBe(MeetingChange.NoLongerListed);
+        gone.Reopened.ShouldBeTrue();
+        var later = stillMissing.Meetings.Single(result => result.Meeting == Key("1600"));
+        later.Outcome.ShouldBe(MeetingOutcome.NoLongerListed);
+        later.Changes.ShouldBeEmpty();
+        back.Meetings.Single(result => result.Meeting == Key("1600")).Changes.ShouldHaveSingleItem().ShouldBe(MeetingChange.ListedAgain);
+
+        _queue.Comments.Count.ShouldBe(2);
+        _queue.Comments[0].Body.ShouldContain("The platform no longer lists this meeting, and its date hasn't passed.");
+        _queue.Comments[0].Body.ShouldContain("| Scheduled | Thursday, November 5, 2026 at 5:30 PM |");
+        _queue.Comments[1].Body.ShouldContain("The platform lists this meeting again.");
+        _state.States[Key("1600")].MissingSinceUtc.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Meeting_missing_after_its_date_is_not_reported()
+    {
+        _source.Meetings.AddRange([Hearing(), Unrelated()]); // Oct 15, before the Oct 28 run
+        await RunAsync();
+        _source.Meetings.RemoveAt(0);
+
+        var report = await RunAsync();
+
+        report.Meetings.ShouldNotContain(result => result.Outcome == MeetingOutcome.NoLongerListed);
+        _queue.Comments.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Empty_meeting_list_is_never_read_as_every_meeting_removed()
+    {
+        _source.Meetings.Add(Upcoming());
+        await RunAsync();
+        _source.Meetings.Clear();
+
+        var report = await RunAsync();
+
+        report.Meetings.ShouldBeEmpty();
+        _queue.Comments.ShouldBeEmpty();
+        _state.Tracked["guilford"].ShouldHaveSingleItem().Meeting.ShouldBe(Key("1600"), "kept for when the source answers again");
+    }
+
+    [Fact]
+    public async Task Source_failure_reports_no_disappearance()
+    {
+        _source.Meetings.AddRange([Upcoming(), Unrelated()]);
+        await RunAsync();
+        _source.Failure = new SourceFailedException(SourceFailure.Unavailable, null, "Legistar is down.");
+
+        await RunAsync();
+
+        _queue.Comments.ShouldBeEmpty();
+        _state.States[Key("1600")].MissingSinceUtc.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Issue_from_before_sightings_takes_a_silent_baseline()
+    {
+        var agenda = Sha256Hash.Compute(_fetcher.Responses[HearingAgenda].Content);
+        _state.States[Key("1599")] = new MeetingState { FirstSeenUtc = Morning, LastAgendaSha256 = agenda, ReviewIssueNumber = 58 };
+        _source.Meetings.Add(Hearing() with { PossiblyCancelled = true });
+
+        var first = await RunAsync();
+        _source.Meetings[0] = Hearing();
+        var second = await RunAsync();
+
+        first.Meetings.ShouldHaveSingleItem().Changes.ShouldBeEmpty();
+        second.Meetings.ShouldHaveSingleItem().Changes.ShouldHaveSingleItem().ShouldBe(MeetingChange.CancellationMentionRemoved);
+        var comment = _queue.Comments.ShouldHaveSingleItem();
+        comment.Issue.ShouldBe(58);
+        comment.Body.ShouldContain("**If it's back on:**");
+    }
+
+    [Fact]
+    public async Task Dry_run_reads_and_writes_no_tracked_meetings()
+    {
+        _source.Meetings.Add(Upcoming());
+
+        await RunAsync(dryRun: true);
+
+        _state.Tracked.ShouldBeEmpty();
+        _state.TrackedWrites.ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Unchanged_tracked_meetings_are_not_rewritten()
+    {
+        _source.Meetings.Add(Upcoming());
+        await RunAsync();
+
+        await RunAsync();
+
+        _state.TrackedWrites.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Jurisdiction_whose_platform_has_no_adapter_is_refused()
     {
         var manual = Guilford with { Id = "greensboro", Platform = Platform.Manual, LegistarClient = null };
@@ -338,6 +526,25 @@ public sealed class IngestJurisdictionTests
         AgendaUri = HearingAgenda,
         MeetingPageUri = new Uri("https://guilford.legistar.com/MeetingDetail.aspx?LEGID=1599&GID=590"),
         Items = [Item("1", PrivateTitle, "2026-439"), Item("2", "Budget amendment")],
+    };
+
+    /// <summary>The Nov 5 meeting: after the Oct 28 run, so missing from the list means before its date.</summary>
+    private static SourceMeeting Upcoming() => Hearing() with
+    {
+        Key = Key("1600"),
+        Date = new DateOnly(2026, 11, 5),
+        StartsAt = new DateTimeOffset(2026, 11, 5, 17, 30, 0, TimeSpan.FromHours(-5)),
+        MeetingPageUri = new Uri("https://guilford.legistar.com/MeetingDetail.aspx?LEGID=1600&GID=590"),
+    };
+
+    /// <summary>A meeting with a published agenda and no match, so the source's list isn't empty.</summary>
+    private static SourceMeeting Unrelated() => Hearing() with
+    {
+        Key = Key("1601"),
+        Date = new DateOnly(2026, 11, 19),
+        StartsAt = new DateTimeOffset(2026, 11, 19, 17, 30, 0, TimeSpan.FromHours(-5)),
+        AgendaUri = new Uri("https://guilford.legistar1.com/guilford/meetings/2026/11/1601_A_Agenda.pdf"),
+        Items = [Item("3", "Budget amendment")],
     };
 
     private static SourceItem Item(string id, string title, string? caseNumber = null) => new()

@@ -26,7 +26,7 @@ internal sealed class BucketDocumentStore(IObjectStore bucket) : IDocumentStore
     }
 }
 
-/// <summary>One small JSON object per meeting.</summary>
+/// <summary>One small JSON object per meeting, plus one per jurisdiction listing its tracked meetings.</summary>
 internal sealed class BucketIngestState(IObjectStore bucket) : IIngestState
 {
     private const int MaxStateBytes = 64 * 1024;
@@ -40,6 +40,21 @@ internal sealed class BucketIngestState(IObjectStore bucket) : IIngestState
 
     public Task PutAsync(MeetingKey meeting, MeetingState state, CancellationToken cancellationToken) =>
         bucket.PutAsync(StorageKeys.MeetingState(meeting), StorageJson.Serialize(state), "application/json", cancellationToken);
+
+    public async Task<IReadOnlyList<TrackedMeeting>> GetTrackedAsync(string jurisdictionId, CancellationToken cancellationToken)
+    {
+        var key = StorageKeys.Tracked(jurisdictionId);
+        var json = await bucket.GetAsync(key, MaxStateBytes, cancellationToken).ConfigureAwait(false);
+        if (json is null)
+        {
+            return [];
+        }
+
+        return StorageJson.DeserializeTracked(key, json);
+    }
+
+    public Task PutTrackedAsync(string jurisdictionId, IReadOnlyList<TrackedMeeting> meetings, CancellationToken cancellationToken) =>
+        bucket.PutAsync(StorageKeys.Tracked(jurisdictionId), StorageJson.SerializeTracked(meetings), "application/json", cancellationToken);
 }
 
 /// <summary>One JSON object per run and jurisdiction, filed by month.</summary>
