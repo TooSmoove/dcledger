@@ -75,6 +75,19 @@ label: confirmed_official
 document_ids: [<sha256>]
 ```
 
+## Cancelling or rescheduling a meeting
+
+Ingest comments on a meeting's review issue when the platform moves it, hints at a cancellation, withdraws its agenda or
+stops listing it (`docs/ingest.md`). It never changes the ledger itself. Once the meeting page confirms the change:
+
+- **Cancelled:** set `status: cancelled` and raise `sequence` by 1. Keep the file, `id` and `platform_meeting_id`: the
+  calendar UID is built from the jurisdiction, platform and meeting ID, so subscribers' calendars mark the existing event
+  cancelled instead of dropping it, and /radar shows "Cancelled".
+- **Rescheduled:** set the new `starts_at`, with the Eastern offset in effect on the new date, and raise `sequence` by 1.
+- **Back on after a cancellation:** set `status: scheduled` and raise `sequence` by 1.
+
+Calendar apps ignore an update whose `sequence` didn't go up, so every published change to an event raises it.
+
 ## Recording a decision
 
 A decision is an `actions/` record. It shows on its meeting's item page (through `event_id`) and on its jurisdiction's

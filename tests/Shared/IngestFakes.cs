@@ -112,6 +112,20 @@ internal sealed class MemoryIngestState : IIngestState
         States[meeting] = state;
         return Task.CompletedTask;
     }
+
+    public Dictionary<string, IReadOnlyList<TrackedMeeting>> Tracked { get; } = new(StringComparer.Ordinal);
+
+    public int TrackedWrites { get; private set; }
+
+    public Task<IReadOnlyList<TrackedMeeting>> GetTrackedAsync(string jurisdictionId, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<TrackedMeeting>>(Tracked.TryGetValue(jurisdictionId, out var meetings) ? meetings : []);
+
+    public Task PutTrackedAsync(string jurisdictionId, IReadOnlyList<TrackedMeeting> meetings, CancellationToken cancellationToken)
+    {
+        Tracked[jurisdictionId] = [.. meetings];
+        TrackedWrites++;
+        return Task.CompletedTask;
+    }
 }
 
 /// <summary>Issues numbered from 1; a test can close one to check that a comment reopens it.</summary>

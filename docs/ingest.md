@@ -15,7 +15,18 @@ agenda in the private bucket and opens a review issue. A person then decides wha
    titles never appear in an issue, the job log or the summary.
 4. **Follows republished agendas.** When a matching meeting's agenda bytes change later, it comments on the issue,
    reopening it if needed. A rerun with nothing new opens nothing.
-5. **Writes the run log.** Each run's log in the private bucket lists every document it retrieved: URL, time, SHA-256,
+5. **Watches meetings with issues for changes (#29).** Legistar has no cancellation status (spike S15), so ingest
+   comments on the issue, reopening it, when the platform:
+   - moves the date or start time;
+   - adds or removes a comment mentioning a cancellation (the comment's text is never copied: it can name people);
+   - stops listing a published agenda, or lists one again;
+   - stops listing the meeting while its date is still ahead, or lists it again.
+
+   Each change is commented once. Nothing is marked cancelled automatically: the comment says how to edit the
+   `events/` record (`status: cancelled` or a new `starts_at`, and `sequence` + 1). A meeting missing after its date, or
+   a run whose meeting list is empty, is never reported as removed (ADR-0008). The first run after an issue predates
+   this feature takes its baseline silently.
+6. **Writes the run log.** Each run's log in the private bucket lists every document it retrieved: URL, time, SHA-256,
    media type and size.
 
 **Where Legistar agendas come from.** The API's `EventAgendaFile` points to Legistar's file host
@@ -30,7 +41,8 @@ fetches from it.
 | Private bucket key | Contents |
 |---|---|
 | `docs/sha256/{ab}/{hash}` | Agenda bytes; never rewritten |
-| `state/{platform}/{client}/{meetingId}.json` | First seen, last agenda hash, review issue number |
+| `state/{platform}/{client}/{meetingId}.json` | First seen, last agenda hash, review issue number; for a meeting with an issue, its last-seen date, time, cancellation hint and agenda flag, and when it went missing |
+| `state/tracked/{jurisdiction}.json` | The jurisdiction's meetings with review issues as last listed, so a missing one is noticed |
 | `runs/{yyyy}/{MM}/{jurisdiction}/{runId}.json` | Run log and manifest |
 
 ## When it fails

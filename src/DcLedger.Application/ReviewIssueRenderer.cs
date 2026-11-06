@@ -23,12 +23,12 @@ public static class ReviewIssueRenderer
         var title = IssueText.Title(string.Create(Invariant, $"Review: {candidate.JurisdictionName}, {candidate.Body}, {candidate.Date:yyyy-MM-dd}{caseSuffix}"));
 
         var body = new StringBuilder();
-        Line(body, $"<!-- dc-ledger:meeting {candidate.Meeting.Platform.ToToken()}/{candidate.Meeting.Client}/{candidate.Meeting.MeetingId} -->");
+        Line(body, $"<!-- dc-ledger:meeting {MeetingPath(candidate.Meeting)} -->");
         Line(body, $"A keyword rule matched {Plural(candidate.Items.Count, "agenda item")} for **{IssueText.Inline(candidate.JurisdictionName)}, {IssueText.Inline(candidate.Body)}** on **{When(candidate)}**. Publish it only if it's about a data center.");
         Line(body);
         Line(body, "| | |");
         Line(body, "|---|---|");
-        Line(body, $"| Meeting | {MeetingLink(candidate)} |");
+        Line(body, $"| Meeting | {MeetingLink(candidate.Meeting, candidate.MeetingPageUri)} |");
         AgendaRows(body, candidate.Agenda, previous: null);
         Line(body, $"| First seen | {candidate.FirstSeenUtc.UtcDateTime.ToString(Utc, Invariant)} (the review clock starts here, SPEC AC9) |");
         Line(body);
@@ -60,6 +60,70 @@ public static class ReviewIssueRenderer
         Line(body, "If this meeting is already published, add the new document row and list its ID in the event's `document_ids`.");
         Line(body);
         DocumentFile(body, candidate.Agenda);
+        return body.ToString();
+    }
+
+    /// <summary>
+    /// The comment posted when a tracked meeting changes on the platform (issue #29): a new date or time, a cancellation
+    /// hint, a withdrawn agenda, or the meeting no longer being listed. The platform has no cancellation status (spike
+    /// S15), so the comment asks a human and says how to record what they find. The hinting comment's own text can name
+    /// people and is never copied.
+    /// </summary>
+    public static string RenderMeetingChanged(MeetingChangeNotice notice)
+    {
+        ArgumentNullException.ThrowIfNull(notice);
+        var changes = notice.Changes;
+        var checkedUtc = notice.CheckedUtc.UtcDateTime.ToString(Utc, Invariant);
+        var tokens = string.Join(",", changes.Select(MeetingChanges.Token));
+        var headline = MeetingChanges.SuggestsCancellation(changes) ? "Possible cancellation"
+            : changes.Contains(MeetingChange.Rescheduled) ? "Meeting rescheduled"
+            : "Meeting changed";
+
+        var body = new StringBuilder();
+        Line(body, $"<!-- dc-ledger:meeting-changed {MeetingPath(notice.Meeting)} {tokens} {checkedUtc} -->");
+        Line(body, $"**{headline}** for {IssueText.Inline(notice.JurisdictionName)}, {IssueText.Inline(notice.Body)}. The platform has no cancellation status (spike S15), so ingest changes nothing on its own: check the meeting page before editing the ledger.");
+        Line(body);
+        Line(body, "| | |");
+        Line(body, "|---|---|");
+        Line(body, $"| Meeting | {MeetingLink(notice.Meeting, notice.MeetingPageUri)} |");
+        if (changes.Contains(MeetingChange.Rescheduled) && notice.Now is { } moved)
+        {
+            Line(body, $"| Was | {When(notice.Before)} |");
+            Line(body, $"| Now | {When(moved)} |");
+        }
+        else
+        {
+            Line(body, $"| Scheduled | {When(notice.Now ?? notice.Before)} |");
+        }
+
+        Line(body, $"| Checked | {checkedUtc} |");
+        Line(body);
+        Line(body, "### What changed");
+        Line(body);
+        foreach (var change in changes)
+        {
+            Line(body, $"- {Describe(change)}");
+        }
+
+        Line(body);
+        Line(body, "### If this meeting is published");
+        Line(body);
+        if (MeetingChanges.SuggestsCancellation(changes))
+        {
+            Line(body, "- **If it's cancelled:** in its `data/events/` record, set `status: cancelled` and raise `sequence` by 1. Keep `id` and `platform_meeting_id`: the calendar UID is built from them, so subscribers see the cancellation instead of a new event.");
+        }
+
+        if (changes.Contains(MeetingChange.Rescheduled))
+        {
+            Line(body, "- **If it moved:** update `starts_at`, with the Eastern offset in effect on the new date, and raise `sequence` by 1.");
+        }
+
+        if (MeetingChanges.SuggestsReinstatement(changes))
+        {
+            Line(body, "- **If it's back on:** a record already set to `status: cancelled` goes back to `scheduled`, and `sequence` goes up by 1.");
+        }
+
+        Line(body, "- **If it isn't published,** or nothing changed for the public record, close this issue.");
         return body.ToString();
     }
 
@@ -119,7 +183,7 @@ public static class ReviewIssueRenderer
         if (candidate.SameSlotMeetingIds.Count > 0)
         {
             var ids = string.Join(", ", candidate.SameSlotMeetingIds.Select(IssueText.Inline));
-            Warning(body, $"{PlatformName(candidate)} also lists {(candidate.SameSlotMeetingIds.Count == 1 ? "meeting" : "meetings")} {ids} for the same body, date and time, and its public site can hide some of them. Open each meeting page and approve only the one that's live.");
+            Warning(body, $"{PlatformName(candidate.Meeting.Platform)} also lists {(candidate.SameSlotMeetingIds.Count == 1 ? "meeting" : "meetings")} {ids} for the same body, date and time, and its public site can hide some of them. Open each meeting page and approve only the one that's live.");
         }
 
         if (candidate.PossiblyCancelled)
@@ -192,13 +256,33 @@ public static class ReviewIssueRenderer
         };
     }
 
-    private static string MeetingLink(ReviewCandidate candidate)
+    private static string When(MeetingSighting sighting)
     {
-        var label = $"{PlatformName(candidate)} meeting {IssueText.Inline(candidate.Meeting.MeetingId)}";
-        return candidate.MeetingPageUri is { } page ? $"[{label}](<{page.AbsoluteUri}>)" : label;
+        var date = sighting.Date.ToString("dddd, MMMM d, yyyy", Invariant);
+        return sighting.Time is { } time ? $"{date} at {time.ToString("h:mm tt", Invariant)}" : $"{date} (no start time given)";
     }
 
-    private static string PlatformName(ReviewCandidate candidate) => candidate.Meeting.Platform switch
+    private static string Describe(MeetingChange change) => change switch
+    {
+        MeetingChange.Rescheduled => "The date or start time changed.",
+        MeetingChange.CancellationMentioned => "A comment on the meeting now mentions a cancellation. Its text isn't copied here; read it on the meeting page.",
+        MeetingChange.CancellationMentionRemoved => "The comment that mentioned a cancellation is gone.",
+        MeetingChange.AgendaWithdrawn => "The platform no longer lists a published agenda.",
+        MeetingChange.AgendaPublishedAgain => "The platform lists a published agenda again.",
+        MeetingChange.NoLongerListed => "The platform no longer lists this meeting, and its date hasn't passed. It may be cancelled, moved outside the dates ingest scans, or hidden.",
+        MeetingChange.ListedAgain => "The platform lists this meeting again.",
+        _ => throw new ArgumentOutOfRangeException(nameof(change), change, "Unknown meeting change."),
+    };
+
+    private static string MeetingPath(MeetingKey meeting) => $"{meeting.Platform.ToToken()}/{meeting.Client}/{meeting.MeetingId}";
+
+    private static string MeetingLink(MeetingKey meeting, Uri? page)
+    {
+        var label = $"{PlatformName(meeting.Platform)} meeting {IssueText.Inline(meeting.MeetingId)}";
+        return page is { } uri ? $"[{label}](<{uri.AbsoluteUri}>)" : label;
+    }
+
+    private static string PlatformName(Platform platform) => platform switch
     {
         Platform.Legistar => "Legistar",
         _ => "The platform",

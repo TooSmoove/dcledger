@@ -171,9 +171,10 @@ internal static partial class IngestCommand
 
         var opened = report.Meetings.Count(meeting => meeting.Outcome is MeetingOutcome.IssueOpened or MeetingOutcome.WouldOpenIssue);
         var changed = report.Meetings.Count(meeting => meeting.Outcome == MeetingOutcome.AgendaChanged);
+        var meetingChanges = report.Meetings.Count(meeting => meeting.Changes.Count > 0);
         var verb = report.DryRun ? "would open" : "opened";
         console.Out.WriteLine(
-            $"{report.Meetings.Count} meeting(s), {report.Documents.Count} agenda(s) retrieved; {verb} {opened} issue(s), {changed} agenda change(s); {report.Errors.Count} error(s).");
+            $"{report.Meetings.Count} meeting(s), {report.Documents.Count} agenda(s) retrieved; {verb} {opened} issue(s), {changed} agenda change(s), {meetingChanges} meeting change(s); {report.Errors.Count} error(s).");
 
         var title = $"ingest {report.JurisdictionId}";
         foreach (var problem in report.Errors)
@@ -206,18 +207,31 @@ internal static partial class IngestCommand
     {
         var rules = meeting.Rules.Count > 0 ? $" (rules: {string.Join(", ", meeting.Rules)})" : string.Empty;
         var issue = meeting.IssueNumber is { } number ? $"#{number.ToString(CultureInfo.InvariantCulture)}" : "the issue";
-        return meeting.Outcome switch
+        var reopened = meeting.Reopened ? " and reopened it" : string.Empty;
+        if (meeting.Outcome == MeetingOutcome.NoLongerListed)
         {
-            MeetingOutcome.NoAgenda => "no agenda published yet.",
-            MeetingOutcome.NoMatch => "agenda published, no item matches.",
-            MeetingOutcome.IssueOpened => $"opened issue {issue}{rules}.",
-            MeetingOutcome.WouldOpenIssue => $"would open \"{meeting.IssueTitle}\"{rules}.",
-            MeetingOutcome.AgendaChanged => $"the agenda changed; commented on {issue}{(meeting.Reopened ? " and reopened it" : string.Empty)}{rules}.",
-            MeetingOutcome.Unchanged => $"unchanged since {issue}{rules}.",
-            MeetingOutcome.Failed => $"failed: {meeting.Error}",
-            _ => meeting.Outcome.ToString(),
-        };
+            return meeting.Changes.Count > 0
+                ? $"no longer listed before its date; commented on {issue}{reopened}."
+                : $"still not listed (see {issue}).";
+        }
+
+        var changes = meeting.Changes.Count > 0
+            ? $" The meeting changed ({string.Join(", ", meeting.Changes.Select(MeetingChanges.Token))}); commented on {issue}{reopened}."
+            : string.Empty;
+        return Outcome(meeting, issue, rules) + changes;
     }
+
+    private static string Outcome(MeetingResult meeting, string issue, string rules) => meeting.Outcome switch
+    {
+        MeetingOutcome.NoAgenda => "no agenda published yet.",
+        MeetingOutcome.NoMatch => "agenda published, no item matches.",
+        MeetingOutcome.IssueOpened => $"opened issue {issue}{rules}.",
+        MeetingOutcome.WouldOpenIssue => $"would open \"{meeting.IssueTitle}\"{rules}.",
+        MeetingOutcome.AgendaChanged => $"the agenda changed; commented on {issue}{(meeting.Reopened ? " and reopened it" : string.Empty)}{rules}.",
+        MeetingOutcome.Unchanged => $"unchanged since {issue}{rules}.",
+        MeetingOutcome.Failed => $"failed: {meeting.Error}",
+        _ => meeting.Outcome.ToString(),
+    };
 
     private static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 

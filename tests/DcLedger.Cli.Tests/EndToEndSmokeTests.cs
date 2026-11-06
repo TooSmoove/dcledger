@@ -62,7 +62,7 @@ public sealed class EndToEndSmokeTests : IDisposable
         _time.Now = SecondRun;
         var second = await IngestAsync(data, "e2e-2");
         second.Code.ShouldBe(ExitCodes.Ok, second.Error);
-        second.Output.ShouldContain("opened 0 issue(s), 0 agenda change(s); 0 error(s).");
+        second.Output.ShouldContain("opened 0 issue(s), 0 agenda change(s), 0 meeting change(s); 0 error(s).");
         _queue.Opened.Count.ShouldBe(1);
         _queue.Comments.ShouldBeEmpty();
         _runLog.Runs[1].Documents.ShouldHaveSingleItem().Sha256.Value.ShouldBe(agenda);
