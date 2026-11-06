@@ -159,3 +159,7 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
 - **Nov 6, 2026 — Unanimous votes without a tally (issue #25):**
   - Actions gain an optional `unanimous: true` for a vote reported unanimous before the platform posts a count. `votes` stays a pure ayes-noes count and is never inferred from the board's size; alongside a tally, `unanimous` needs no noes.
   - `events.json` actions gain a boolean `unanimous` (schema version 1, additive). The site shows "Unanimous (tally not yet recorded)", or the tally marked "(unanimous)".
+- **Nov 6, 2026 — Reschedules and cancellations (issue #29, AC4):**
+  - Ingest watches each meeting with a review issue and comments on (and reopens) the issue once per change: a new date or start time, a cancellation mention added or removed, the agenda withdrawn or republished, or the meeting no longer listed before its date (spike S15 decision 3) and listed again. Nothing is marked cancelled automatically; the reviewer edits `events/` (`status: cancelled` or `starts_at`, `sequence` + 1) and the existing ICS and /radar output does the rest.
+  - Absence is read narrowly (ADR-0008): a meeting missing after its date, or an empty meeting list, is never reported. Issues opened before this change take a silent baseline.
+  - Ingest state gains each tracked meeting's last sighting and a per-jurisdiction list of tracked meetings (`state/tracked/{jurisdiction}.json`); both are additive (schema version 1).

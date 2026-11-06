@@ -55,6 +55,7 @@ public sealed class BucketDocumentStoreTests
 public sealed class BucketIngestStateTests
 {
     private const string Key = "state/legistar/guilford/1599.json";
+    private const string TrackedKey = "state/tracked/guilford.json";
     private static readonly MeetingKey Meeting = new(Platform.Legistar, "guilford", "1599");
     private static readonly Sha256Hash Agenda = Sha256Hash.Compute("agenda"u8);
 
@@ -121,6 +122,84 @@ public sealed class BucketIngestStateTests
         var failure = await Should.ThrowAsync<StorageFailedException>(() => State().GetAsync(Meeting, Ct));
 
         failure.Key.ShouldBe(Key);
+    }
+
+    [Fact]
+    public async Task Sighting_and_missing_time_round_trip_in_utc()
+    {
+        var state = new MeetingState
+        {
+            FirstSeenUtc = new DateTimeOffset(2026, 10, 28, 15, 0, 0, TimeSpan.Zero),
+            ReviewIssueNumber = 12,
+            LastSeen = new MeetingSighting { Date = new DateOnly(2026, 11, 5), Time = new TimeOnly(17, 30), PossiblyCancelled = true, AgendaPublished = true },
+            MissingSinceUtc = new DateTimeOffset(2026, 11, 1, 8, 0, 0, TimeSpan.FromHours(-4)),
+        };
+
+        await State().PutAsync(Meeting, state, Ct);
+        var read = await State().GetAsync(Meeting, Ct);
+
+        read.ShouldBe(state);
+        read!.MissingSinceUtc!.Value.Offset.ShouldBe(TimeSpan.Zero);
+        _bucket.Objects[Key].Text.ShouldContain(
+            "\"last_seen\":{\"date\":\"2026-11-05\",\"time\":\"17:30:00\",\"possibly_cancelled\":true,\"agenda_published\":true},"
+            + "\"missing_since_utc\":\"2026-11-01T12:00:00+00:00\"");
+    }
+
+    [Fact]
+    public async Task Sighting_without_a_start_time_round_trips()
+    {
+        var state = new MeetingState
+        {
+            FirstSeenUtc = new DateTimeOffset(2026, 10, 28, 15, 0, 0, TimeSpan.Zero),
+            LastSeen = new MeetingSighting { Date = new DateOnly(2026, 11, 5) },
+        };
+
+        await State().PutAsync(Meeting, state, Ct);
+
+        (await State().GetAsync(Meeting, Ct)).ShouldBe(state);
+    }
+
+    [Fact]
+    public async Task No_tracked_meetings_until_some_are_written()
+    {
+        (await State().GetTrackedAsync("guilford", Ct)).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Tracked_meetings_round_trip_with_the_documented_shape()
+    {
+        IReadOnlyList<TrackedMeeting> tracked =
+        [
+            new TrackedMeeting { Meeting = Meeting, Body = "Board of Commissioners", Date = new DateOnly(2026, 10, 15), MeetingPageUri = new Uri("https://guilford.legistar.com/MeetingDetail.aspx?LEGID=1599&GID=590") },
+            new TrackedMeeting { Meeting = Meeting with { MeetingId = "1600" }, Body = "Board of Commissioners", Date = new DateOnly(2026, 11, 5) },
+        ];
+
+        await State().PutTrackedAsync("guilford", tracked, Ct);
+        var read = await State().GetTrackedAsync("guilford", Ct);
+
+        read.ShouldBe(tracked);
+        _bucket.Objects[TrackedKey].ContentType.ShouldBe("application/json");
+        _bucket.Objects[TrackedKey].Text.ShouldBe(
+            "{\"schema_version\":1,\"meetings\":["
+            + "{\"platform\":\"legistar\",\"client\":\"guilford\",\"meeting_id\":\"1599\",\"body\":\"Board of Commissioners\",\"date\":\"2026-10-15\","
+            + "\"meeting_page_url\":\"https://guilford.legistar.com/MeetingDetail.aspx?LEGID=1599\\u0026GID=590\"},"
+            + "{\"platform\":\"legistar\",\"client\":\"guilford\",\"meeting_id\":\"1600\",\"body\":\"Board of Commissioners\",\"date\":\"2026-11-05\",\"meeting_page_url\":null}]}");
+    }
+
+    [Theory]
+    [InlineData("not json")]
+    [InlineData("{\"schema_version\":2,\"meetings\":[]}")]
+    [InlineData("{\"schema_version\":1}")]
+    [InlineData("{\"schema_version\":1,\"meetings\":[{\"platform\":\"escribe\",\"client\":\"g\",\"meeting_id\":\"1\",\"body\":\"B\",\"date\":\"2026-11-05\",\"meeting_page_url\":null}]}")]
+    [InlineData("{\"schema_version\":1,\"meetings\":[{\"platform\":\"legistar\",\"client\":\"g\",\"meeting_id\":\"1\",\"body\":\"B\",\"date\":\"2026-11-05\",\"meeting_page_url\":\"not a url\"}]}")]
+    [InlineData("{\"schema_version\":1,\"meetings\":[],\"title\":\"x\"}")]
+    public async Task Invalid_tracked_meetings_are_a_storage_failure(string json)
+    {
+        _bucket.Seed(TrackedKey, json);
+
+        var failure = await Should.ThrowAsync<StorageFailedException>(() => State().GetTrackedAsync("guilford", Ct));
+
+        failure.Key.ShouldBe(TrackedKey);
     }
 
     [Fact]

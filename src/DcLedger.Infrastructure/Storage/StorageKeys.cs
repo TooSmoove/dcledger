@@ -23,6 +23,12 @@ internal static partial class StorageKeys
     }
 
     /// <summary>
+    /// <c>state/tracked/{jurisdictionId}.json</c>: the jurisdiction's meetings with review issues (issue #29). Platform
+    /// tokens are never <c>tracked</c>, so this can't collide with a meeting's state.
+    /// </summary>
+    public static string Tracked(string jurisdictionId) => $"state/tracked/{Segment(jurisdictionId, nameof(jurisdictionId))}.json";
+
+    /// <summary>
     /// <c>runs/{yyyy}/{MM}/{jurisdictionId}/{runId}.json</c>, by the UTC start date. The jurisdiction is part of the key
     /// because one workflow run ingests each jurisdiction in its own job under the same run ID (issue #19).
     /// </summary>
