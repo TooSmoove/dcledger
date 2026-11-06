@@ -12,15 +12,27 @@ public sealed class ValidateLedger(ILedgerReader reader)
 {
     private readonly ILedgerReader _reader = reader ?? throw new ArgumentNullException(nameof(reader));
 
-    /// <summary>Validates <paramref name="dataDirectory"/>; <paramref name="previousRecordFiles"/> are record files that must still exist.</summary>
-    public ValidationReport Run(string dataDirectory, IReadOnlyCollection<string> previousRecordFiles) =>
-        Check(_reader.Load(dataDirectory), previousRecordFiles);
+    /// <summary>
+    /// Validates <paramref name="dataDirectory"/>; <paramref name="previousRecordFiles"/> are record files that must still
+    /// exist. When <paramref name="previousDataDirectory"/> holds the data as it is on the base branch, changed events are
+    /// also checked against it (<see cref="EventRevisions"/>); problems in the old data itself are ignored.
+    /// </summary>
+    public ValidationReport Run(string dataDirectory, IReadOnlyCollection<string> previousRecordFiles, string? previousDataDirectory = null)
+    {
+        var previous = previousDataDirectory is null ? null : _reader.Load(previousDataDirectory);
+        return Check(_reader.Load(dataDirectory), previousRecordFiles, previous);
+    }
 
-    /// <summary>Runs the quality gate on an already-loaded <paramref name="snapshot"/>; errors are ordered by file, then rule.</summary>
-    public static ValidationReport Check(LedgerSnapshot snapshot, IReadOnlyCollection<string> previousRecordFiles)
+    /// <summary>
+    /// Runs the quality gate on an already-loaded <paramref name="snapshot"/>, and against <paramref name="previous"/>
+    /// when given; errors are ordered by file, then rule.
+    /// </summary>
+    public static ValidationReport Check(LedgerSnapshot snapshot, IReadOnlyCollection<string> previousRecordFiles, LedgerSnapshot? previous = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
+        IReadOnlyList<ValidationError> revisions = previous is null ? [] : EventRevisions.Check(snapshot.Events, previous.Events);
         var errors = LedgerValidator.Validate(snapshot, previousRecordFiles)
+            .Concat(revisions)
             .OrderBy(e => e.File, StringComparer.Ordinal)
             .ThenBy(e => e.Rule, StringComparer.Ordinal)
             .ToList();

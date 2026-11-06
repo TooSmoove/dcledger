@@ -16,6 +16,7 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 
 - Only the keys shown below. Names of private people and original source titles are **never** stored (`FORBIDDEN_FIELD`).
 - IDs are lowercase letters, digits and single hyphens, match the file name (`ID_MISMATCH`), and are **permanent** once merged (`SLUG_CHANGED`). To retire a meeting, set `status: cancelled`.
+- A published event that changes (`body`, `title`, `case_number`, `starts_at`, `status`, `label`, `document_ids` or `location`) raises `sequence` by at least 1, and `sequence` never goes down (`SEQUENCE_NOT_RAISED`). `jurisdiction_id`, `platform` and `platform_meeting_id` never change once published, because the calendar UID is built from them (`UID_CHANGED`). CI compares against the base branch with `--previous-data`.
 - Every event and action lists at least one document, and every listed document exists (`DOC_MISSING`); its jurisdiction exists (`FK_MISSING`).
 - An action's `event_id`, when given, names an event in the same jurisdiction on the same Eastern date as `decided_on` (`FK_MISSING`, `EVENT_MISMATCH`). `action_type` and `outcome` take only the tokens below, and `votes` is ayes-noes like `"9-0"` (`INVALID_VALUE`).
 - `confirmed_official` needs at least one document with `source_type: official` (`LABEL_INVALID`).
@@ -86,7 +87,13 @@ stops listing it (`docs/ingest.md`). It never changes the ledger itself. Once th
 - **Rescheduled:** set the new `starts_at`, with the Eastern offset in effect on the new date, and raise `sequence` by 1.
 - **Back on after a cancellation:** set `status: scheduled` and raise `sequence` by 1.
 
-Calendar apps ignore an update whose `sequence` didn't go up, so every published change to an event raises it.
+Calendar apps ignore an update whose `sequence` didn't go up, so every published change to an event raises it; the gate
+checks this against the base branch (`SEQUENCE_NOT_RAISED`, `UID_CHANGED`). Locally:
+
+```sh
+git worktree add /tmp/dcl-base origin/main
+dotnet run --project src/DcLedger.Cli -- validate --data data --previous-data /tmp/dcl-base/data
+```
 
 ## Recording a decision
 
