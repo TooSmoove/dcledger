@@ -14,6 +14,7 @@ import {
   outcomeText,
   statusText,
   votesText,
+  voteText,
 } from '../src/lib/radar.js';
 
 test('Eastern text carries the zone and crosses the daylight-saving change', () => {
@@ -109,6 +110,13 @@ test('votes read as ayes and noes, and a missing vote stays missing', () => {
   assert.equal(votesText('9-0'), '9 in favor, 0 against');
   assert.equal(votesText(null), null);
   assert.throws(() => votesText('unanimous'), /Expected votes like "9-0"/);
+});
+
+test('a unanimous vote reads as such, with or without the tally', () => {
+  assert.equal(voteText(null, true), 'Unanimous (tally not yet recorded)');
+  assert.equal(voteText('9-0', true), '9 in favor, 0 against (unanimous)');
+  assert.equal(voteText('8-1', false), '8 in favor, 1 against');
+  assert.equal(voteText(null, false), null);
 });
 
 test('decision dates are calendar dates with no zone shift', () => {

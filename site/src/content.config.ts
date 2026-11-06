@@ -51,6 +51,8 @@ const actions = defineCollection({
       .string()
       .regex(/^\d{1,2}-\d{1,2}$/)
       .nullable(),
+    // Reported unanimous, possibly before the tally is posted. Defaults for an events.json written before the field.
+    unanimous: z.boolean().default(false),
     label: z.enum(['reported_news', 'confirmed_official']),
     documents,
   }),

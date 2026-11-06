@@ -232,6 +232,43 @@ public sealed class YamlLedgerReaderTests
 
         action.EventId.ShouldBeNull();
         action.Votes.ShouldBeNull();
+        action.Unanimous.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Action_can_be_unanimous_before_the_tally_is_posted()
+    {
+        var yaml = ValidAction.Replace("votes: \"9-0\"\n", "unanimous: true\n", StringComparison.Ordinal);
+
+        var action = Load("actions/fixture-moratorium-2026-11-05.yaml", yaml).Actions.ShouldHaveSingleItem().Record;
+
+        action.Votes.ShouldBeNull();
+        action.Unanimous.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("9-0")]
+    [InlineData("8-00")]
+    public void Action_can_be_unanimous_with_a_tally_that_has_no_noes(string votes)
+    {
+        var yaml = ValidAction.Replace("votes: \"9-0\"\n", $"votes: \"{votes}\"\nunanimous: true\n", StringComparison.Ordinal);
+
+        var action = Load("actions/fixture-moratorium-2026-11-05.yaml", yaml).Actions.ShouldHaveSingleItem().Record;
+
+        action.Votes.ShouldBe(votes);
+        action.Unanimous.ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("votes: \"9-0\"\n", "unanimous: false\n", "false is left out: a split vote is a tally")]
+    [InlineData("votes: \"9-0\"\n", "unanimous: yes\n", "only the literal true")]
+    [InlineData("votes: \"9-0\"\n", "unanimous: True\n", "lowercase only")]
+    [InlineData("votes: \"9-0\"\n", "votes: \"8-1\"\nunanimous: true\n", "a unanimous vote has no noes")]
+    public void Unanimous_must_be_true_and_agree_with_the_tally(string valid, string invalid, string because)
+    {
+        var yaml = ValidAction.Replace(valid, invalid, StringComparison.Ordinal);
+
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", yaml).ShouldBe(ValidationRule.InvalidValue, because);
     }
 
     [Theory]

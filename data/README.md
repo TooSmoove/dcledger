@@ -70,6 +70,7 @@ action_type: moratorium       # moratorium | rezoning | text_amendment | resolut
 outcome: adopted              # adopted | adopted_amended | failed | continued | tabled
 decided_on: 2026-01-15        # the meeting's date in Eastern time
 votes: "5-2"                  # optional: ayes-noes, quoted
+unanimous: true               # optional: true or left out; reported unanimous, tally or not
 label: confirmed_official
 document_ids: [<sha256>]
 ```
@@ -88,7 +89,10 @@ page. Record every vote on the item, including a continuance or a tabling (`cont
    is archived; until then, `reported_news` backed by an archived news story. When the official record arrives, add its
    document and change the label in a new PR; the action's ID stays the same.
 3. **Take the outcome and vote from the record, not from coverage.** `outcome` is the closest token to what the record
-   says; `votes` is ayes-noes as recorded, without abstentions or absences. Leave `votes` out for a voice vote with no
+   says; `votes` is ayes-noes as recorded, without abstentions or absences. When the source says the vote was unanimous
+   but gives no count, set `unanimous: true` and leave `votes` out; the site shows "Unanimous (tally not yet recorded)".
+   Don't infer a count from the size of the board: a member may have been absent. With a tally, `unanimous: true` needs
+   no noes (`INVALID_VALUE`). Leave `votes` out for a voice vote with no
    tally.
 4. **Check and open the PR:** `dotnet run --project src/DcLedger.Cli -- validate --data data`. The gate checks that
    `event_id` exists, is in the same jurisdiction and falls on `decided_on` (`FK_MISSING`, `EVENT_MISMATCH`).

@@ -130,6 +130,7 @@
       "outcome": "adopted_amended",
       "decided_on": "2026-11-05",
       "votes": "8-1",
+      "unanimous": false,
       "label": "confirmed_official",
       "documents": [
         {
@@ -147,12 +148,31 @@
       "outcome": "continued",
       "decided_on": "2026-10-20",
       "votes": null,
+      "unanimous": false,
       "label": "reported_news",
       "documents": [
         {
           "url": "https://news.example.org/fixture-continued",
           "retrieved_utc": "2026-10-21T12:00:00Z",
           "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+        }
+      ]
+    },
+    {
+      "id": "fixture-guilford-resolution-2026-11-04",
+      "jurisdiction_id": "guilford",
+      "event_id": null,
+      "action_type": "resolution",
+      "outcome": "adopted",
+      "decided_on": "2026-11-04",
+      "votes": null,
+      "unanimous": true,
+      "label": "reported_news",
+      "documents": [
+        {
+          "url": "https://news.example.org/fixture-unanimous",
+          "retrieved_utc": "2026-11-05T12:00:00Z",
+          "sha256": "6666666666666666666666666666666666666666666666666666666666666666"
         }
       ]
     }

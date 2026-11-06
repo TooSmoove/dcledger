@@ -42,12 +42,14 @@ The key was added without bumping `schema_version`, because a reader that ignore
   "outcome": "adopted_amended",
   "decided_on": "2026-11-05",
   "votes": "8-1",
+  "unanimous": false,
   "label": "confirmed_official",
   "documents": [{ "url": "…", "retrieved_utc": "…", "sha256": "…" }]
 }
 ```
 
-`event_id` and `votes` may be null. `decided_on` is a date, not a time, so it carries no offset. The calendars and the
+`event_id` and `votes` may be null. `unanimous` is always a boolean: true when the vote was reported unanimous, which
+can be before `votes` is known (added Nov 6, 2026, still schema version 1; the site treats a missing key as false). `decided_on` is a date, not a time, so it carries no offset. The calendars and the
 CSV list meetings only; a decision shows on the site, on its meeting's page and its jurisdiction's page.
 
 ## The ingest status (`--status`)

@@ -104,6 +104,7 @@ public sealed class SiteDataExporter : IExporter
         json.WriteString("outcome", action.Outcome.ToToken());
         json.WriteString("decided_on", action.DecidedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         WriteStringOrNull(json, "votes", action.Votes);
+        json.WriteBoolean("unanimous", action.Unanimous);
         json.WriteString("label", action.Label.ToToken());
         WriteDocuments(json, item.Documents);
         json.WriteEndObject();

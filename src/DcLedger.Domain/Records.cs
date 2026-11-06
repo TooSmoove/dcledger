@@ -120,6 +120,12 @@ public sealed record LocalAction
     /// <summary>The recorded vote as ayes-noes, when available, for example "7-2".</summary>
     public string? Votes { get; init; }
 
+    /// <summary>
+    /// The vote was reported as unanimous. Can stand alone while <see cref="Votes"/> is still unknown (coverage says
+    /// "unanimous" before the platform posts a tally); alongside a tally, the tally has no noes.
+    /// </summary>
+    public bool Unanimous { get; init; }
+
     /// <summary>How the action is sourced.</summary>
     public required EvidenceLabel Label { get; init; }
 

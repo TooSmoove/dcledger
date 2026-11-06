@@ -121,6 +121,18 @@ export function votesText(votes) {
 }
 
 /**
+ * The vote line for a decision: the tally, marked unanimous when it was; "Unanimous (tally not yet recorded)" when
+ * coverage reported a unanimous vote before the platform posted the count; null when nothing is known.
+ */
+export function voteText(votes, unanimous) {
+  const tally = votesText(votes);
+  if (!unanimous) {
+    return tally;
+  }
+  return tally === null ? 'Unanimous (tally not yet recorded)' : `${tally} (unanimous)`;
+}
+
+/**
  * A calendar date such as "Thu, Nov 5, 2026". Decisions are dated, not timed, so there is no zone to show.
  * @param {string} isoDate YYYY-MM-DD
  */

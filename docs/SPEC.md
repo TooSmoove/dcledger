@@ -156,3 +156,6 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - Sources differ by jurisdiction (S19): Winston-Salem records outcomes and minutes in the Legistar Web API; Guilford records no outcomes in Legistar and posts minutes only on its public meeting pages, which ingest now reads for the minutes link alongside the agenda link.
   - Minutes of watched meetings are archived to the private bucket. A missing platform tally means no `votes`.
   - Outcome suggestions come from an exact-match, per-jurisdiction `outcome_map` keyed by action name (option 6c); unmapped names are listed for the reviewer. `data/jurisdictions/` gains that optional key when it lands (ADR-0004 amendment then).
+- **Nov 6, 2026 — Unanimous votes without a tally (issue #25):**
+  - Actions gain an optional `unanimous: true` for a vote reported unanimous before the platform posts a count. `votes` stays a pure ayes-noes count and is never inferred from the board's size; alongside a tally, `unanimous` needs no noes.
+  - `events.json` actions gain a boolean `unanimous` (schema version 1, additive). The site shows "Unanimous (tally not yet recorded)", or the tally marked "(unanimous)".

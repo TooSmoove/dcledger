@@ -304,6 +304,34 @@ internal sealed partial class YamlFields
         return null;
     }
 
+    /// <summary>
+    /// The optional <c>unanimous</c> flag: <c>true</c> or left out, never <c>false</c> (a split vote is a tally, not a
+    /// flag). It lets a reviewer record a reported unanimous vote before the platform posts the count. When
+    /// <paramref name="votes"/> is also given, it must have no noes.
+    /// </summary>
+    public bool Unanimous(string key, string? votes)
+    {
+        var value = Optional(key);
+        if (value is null)
+        {
+            return false;
+        }
+
+        if (!string.Equals(value, "true", StringComparison.Ordinal))
+        {
+            Add(ValidationRule.InvalidValue, $"'{key}' is either true or left out.");
+            return false;
+        }
+
+        if (votes is not null && int.Parse(votes[(votes.IndexOf('-') + 1)..], CultureInfo.InvariantCulture) != 0)
+        {
+            Add(ValidationRule.InvalidValue, $"'{key}: true' contradicts votes \"{votes}\": a unanimous vote has no noes.");
+            return false;
+        }
+
+        return true;
+    }
+
     /// <summary>Reports every key no reader asked for: forbidden ones by name, the rest as unknown.</summary>
     public void RejectUnreadKeys()
     {
