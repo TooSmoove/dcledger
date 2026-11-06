@@ -261,6 +261,7 @@ public sealed class YamlLedgerReader : ILedgerReader
         var outcome = f.Choice("outcome", Outcomes);
         var decidedOn = f.Date("decided_on");
         var votes = f.Votes("votes");
+        var unanimous = f.Unanimous("unanimous", votes);
         var label = f.Choice("label", Labels);
         var documentIds = f.Hashes("document_ids");
 
@@ -275,6 +276,7 @@ public sealed class YamlLedgerReader : ILedgerReader
                 Outcome = outcome.Value,
                 DecidedOn = decidedOn.Value,
                 Votes = votes,
+                Unanimous = unanimous,
                 Label = label.Value,
                 DocumentIds = documentIds,
             };

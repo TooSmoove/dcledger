@@ -102,6 +102,7 @@ public sealed class SiteDataExporterTests
         action.GetProperty("outcome").GetString().ShouldBe("adopted_amended");
         action.GetProperty("decided_on").GetString().ShouldBe("2026-11-05");
         action.GetProperty("votes").GetString().ShouldBe("8-1");
+        action.GetProperty("unanimous").GetBoolean().ShouldBeFalse();
         action.GetProperty("label").GetString().ShouldBe("confirmed_official");
         var source = action.GetProperty("documents").EnumerateArray().ShouldHaveSingleItem();
         source.GetProperty("sha256").GetString().ShouldBe(ExportSamples.CountyActionDetail1600.Id.Value);
@@ -118,6 +119,18 @@ public sealed class SiteDataExporterTests
         var action = document.RootElement.GetProperty("actions")[0];
         action.GetProperty("event_id").ValueKind.ShouldBe(JsonValueKind.Null);
         action.GetProperty("votes").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public void A_unanimous_action_without_a_tally_says_so()
+    {
+        var model = ExportSamples.Model();
+        var reported = model.Actions[0] with { Action = ExportSamples.November5Moratorium with { Votes = null, Unanimous = true } };
+        using var document = JsonDocument.Parse(TestFiles.Text(new SiteDataExporter().Export(model with { Actions = [reported] })[0]));
+
+        var action = document.RootElement.GetProperty("actions")[0];
+        action.GetProperty("votes").ValueKind.ShouldBe(JsonValueKind.Null);
+        action.GetProperty("unanimous").GetBoolean().ShouldBeTrue();
     }
 
     [Fact]

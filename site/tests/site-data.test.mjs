@@ -38,7 +38,11 @@ test('a file without a schema version is rejected', () => {
 test('actions are read from the actions array', () => {
   assert.deepEqual(
     actionsFrom(fixture).map((action) => action.id),
-    ['fixture-guilford-moratorium-2026-11-05', 'fixture-city-text-amendment-2026-10-20'],
+    [
+      'fixture-guilford-moratorium-2026-11-05',
+      'fixture-city-text-amendment-2026-10-20',
+      'fixture-guilford-resolution-2026-11-04',
+    ],
   );
 });
 

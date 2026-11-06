@@ -2,7 +2,7 @@
 // Decisions such as a moratorium vote (issue #25, WS-AC8): what was decided, the recorded outcome and vote, how it is
 // sourced (SPEC AC6), and its sources (AC2). Outcome words come from a fixed table, never from the source's text.
 import type { CollectionEntry } from 'astro:content';
-import { actionTypeText, dateText, labelText, outcomeText, votesText } from '../lib/radar.js';
+import { actionTypeText, dateText, labelText, outcomeText, voteText } from '../lib/radar.js';
 import Sources from './Sources.astro';
 
 interface Props {
@@ -28,10 +28,10 @@ const { actions, heading, linkMeetings } = Astro.props;
           <dd>
             <time datetime={data.decided_on}>{dateText(data.decided_on)}</time>
           </dd>
-          {data.votes !== null && (
+          {(data.votes !== null || data.unanimous) && (
             <>
               <dt>Vote</dt>
-              <dd>{votesText(data.votes)}</dd>
+              <dd>{voteText(data.votes, data.unanimous)}</dd>
             </>
           )}
           {linkMeetings && data.event_id !== null && (

@@ -284,6 +284,11 @@ test('jurisdiction pages list their decisions with sourcing and link the meeting
   assert.match(guilford, /href="\/items\/fixture-guilford-boc-2026-11-05\/"[^>]*>Meeting page/);
   assert.match(guilford, /Confirmed \(official record\)/);
   assert.doesNotMatch(guilford, /Continued to a later meeting/, 'only its own decisions');
+  assert.match(
+    guilford,
+    /<dt>Vote<\/dt>\s*<dd>Unanimous \(tally not yet recorded\)<\/dd>/,
+    'a unanimous vote shows before the tally is posted',
+  );
 
   const city = page('jurisdictions/fixture-city/index.html');
   assert.match(city, /Ordinance text amendment: Continued to a later meeting/);

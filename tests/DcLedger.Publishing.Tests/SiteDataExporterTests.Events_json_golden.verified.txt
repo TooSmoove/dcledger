@@ -97,6 +97,7 @@
       "outcome": "adopted_amended",
       "decided_on": "2026-11-05",
       "votes": "8-1",
+      "unanimous": false,
       "label": "confirmed_official",
       "documents": [
         {
