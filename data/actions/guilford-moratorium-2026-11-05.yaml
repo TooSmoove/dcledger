@@ -1,0 +1,12 @@
+id: guilford-moratorium-2026-11-05
+jurisdiction_id: guilford
+event_id: guilford-board-of-commissioners-2026-11-05
+action_type: moratorium
+outcome: adopted
+decided_on: 2026-11-05
+# votes: WFMY (archived doc 97169a7d…) reports the vote as unanimous, with no tally. Likely 9-0 if all
+# nine commissioners were present; add the recorded ayes-noes from the approved minutes.
+unanimous: true
+label: reported_news
+document_ids:
+  - 97169a7ddda332235e1c2fd9bb5390c2777002bb1ab2bcf08194d43b443a27b6
