@@ -18,6 +18,10 @@ internal static class ValidateCommand
         {
             Description = "A file listing record files (relative to the data directory) that existed on the base branch; each must still exist.",
         };
+        var previousData = new Option<string?>("--previous-data")
+        {
+            Description = "The data directory as it is on the base branch; a changed event must raise its sequence and keep its calendar UID.",
+        };
         var format = new Option<string>("--format")
         {
             Description = "Output format: text, or github for workflow annotations.",
@@ -25,17 +29,18 @@ internal static class ValidateCommand
         };
         format.AcceptOnlyFromAmong("text", "github");
 
-        var command = new Command("validate", "Check the ledger data against the quality gate.") { data, previous, format };
+        var command = new Command("validate", "Check the ledger data against the quality gate.") { data, previous, previousData, format };
         command.SetAction(parseResult => Run(
             parseResult.GetValue(data)!,
             parseResult.GetValue(previous),
+            parseResult.GetValue(previousData),
             parseResult.GetValue(format) == "github",
             output,
             error));
         return command;
     }
 
-    private static int Run(string dataDirectory, string? previousFilesPath, bool github, TextWriter output, TextWriter error)
+    private static int Run(string dataDirectory, string? previousFilesPath, string? previousDataDirectory, bool github, TextWriter output, TextWriter error)
     {
         if (!Directory.Exists(dataDirectory))
         {
@@ -49,11 +54,17 @@ internal static class ValidateCommand
             return ExitCodes.Usage;
         }
 
+        if (previousDataDirectory is not null && !Directory.Exists(previousDataDirectory))
+        {
+            error.WriteLine($"Previous data directory not found: {previousDataDirectory}");
+            return ExitCodes.Usage;
+        }
+
         IReadOnlyCollection<string> previousFiles = previousFilesPath is null
             ? []
             : File.ReadAllLines(previousFilesPath).Select(line => line.Trim()).Where(YamlLedgerReader.IsRecordPath).ToList();
 
-        var report = new ValidateLedger(new YamlLedgerReader()).Run(dataDirectory, previousFiles);
+        var report = new ValidateLedger(new YamlLedgerReader()).Run(dataDirectory, previousFiles, previousDataDirectory);
         LedgerProblems.Print(report.Errors, dataDirectory, github, output);
         output.WriteLine($"Checked {report.RecordFiles} record file(s) in {dataDirectory}: {report.Errors.Count} problem(s).");
         return report.IsValid ? ExitCodes.Ok : ExitCodes.DataInvalid;

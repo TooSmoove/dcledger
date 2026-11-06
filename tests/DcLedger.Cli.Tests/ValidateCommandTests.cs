@@ -55,6 +55,34 @@ public sealed class ValidateCommandTests : IDisposable
     }
 
     [Fact]
+    public async Task Cancelling_a_published_event_needs_a_raised_sequence()
+    {
+        var previous = CopyFixture("previous");
+        var current = CopyFixture("current");
+        var eventFile = Path.Combine(current, "events", "fixture-county-boc-2026-11-05.yaml");
+        File.WriteAllText(eventFile, File.ReadAllText(eventFile).Replace("status: scheduled", "status: cancelled", StringComparison.Ordinal));
+
+        var (code, output, _) = await DclRunner.RunAsync("validate", "--data", current, "--previous-data", previous);
+
+        code.ShouldBe(ExitCodes.DataInvalid);
+        output.ShouldContain("events/fixture-county-boc-2026-11-05.yaml: [SEQUENCE_NOT_RAISED] fixture-county-boc-2026-11-05: status changed but sequence is still 0.");
+
+        File.WriteAllText(eventFile, File.ReadAllText(eventFile).Replace("sequence: 0", "sequence: 1", StringComparison.Ordinal));
+        var (fixedCode, fixedOutput, _) = await DclRunner.RunAsync("validate", "--data", current, "--previous-data", previous);
+
+        fixedCode.ShouldBe(ExitCodes.Ok, fixedOutput);
+    }
+
+    [Fact]
+    public async Task Missing_previous_data_directory_is_a_usage_error()
+    {
+        var (code, _, error) = await DclRunner.RunAsync("validate", "--data", FixturePath("valid"), "--previous-data", Path.Combine(_temp, "nowhere"));
+
+        code.ShouldBe(ExitCodes.Usage);
+        error.ShouldContain("Previous data directory not found");
+    }
+
+    [Fact]
     public async Task Missing_data_directory_is_a_usage_error()
     {
         var (code, _, error) = await DclRunner.RunAsync("validate", "--data", Path.Combine(_temp, "nowhere"));
@@ -75,6 +103,21 @@ public sealed class ValidateCommandTests : IDisposable
     {
         Directory.Delete(_temp, recursive: true);
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>A copy of the valid fixture ledger under the test's temporary directory.</summary>
+    private string CopyFixture(string name)
+    {
+        var source = FixturePath("valid");
+        var target = Path.Combine(_temp, name);
+        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+        {
+            var copy = Path.Combine(target, Path.GetRelativePath(source, file));
+            Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+            File.Copy(file, copy);
+        }
+
+        return target;
     }
 
     private string WriteEvent(string yaml)
