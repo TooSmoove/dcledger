@@ -63,22 +63,36 @@ public static class EventRevisions
             return;
         }
 
-        if (now.Sequence < was.Sequence)
+        Revisions.CheckSequence(errors, file, now.Id, was.Sequence, now.Sequence, ChangedFields(was, now), "calendar apps apply the change");
+    }
+
+    private static void Note(List<string> changed, string field, bool differs) => Revisions.Note(changed, field, differs);
+}
+
+/// <summary>The sequence rule shared by <see cref="EventRevisions"/> and <see cref="ActionRevisions"/>.</summary>
+internal static class Revisions
+{
+    /// <summary>
+    /// <paramref name="now"/> may not be lower than <paramref name="was"/>, and must be higher when any field in
+    /// <paramref name="changed"/> differs (<see cref="ValidationRule.SequenceNotRaised"/>).
+    /// </summary>
+    public static void CheckSequence(List<ValidationError> errors, string file, string id, int was, int now, IReadOnlyList<string> changed, string why)
+    {
+        if (now < was)
         {
-            errors.Add(new ValidationError(file, now.Id, ValidationRule.SequenceNotRaised,
-                $"sequence went down from {was.Sequence} to {now.Sequence}; it only goes up."));
+            errors.Add(new ValidationError(file, id, ValidationRule.SequenceNotRaised,
+                $"sequence went down from {was} to {now}; it only goes up."));
             return;
         }
 
-        var changed = ChangedFields(was, now);
-        if (changed.Count > 0 && now.Sequence == was.Sequence)
+        if (changed.Count > 0 && now == was)
         {
-            errors.Add(new ValidationError(file, now.Id, ValidationRule.SequenceNotRaised,
-                $"{string.Join(", ", changed)} changed but sequence is still {now.Sequence}. Raise it to {now.Sequence + 1} so calendar apps apply the change."));
+            errors.Add(new ValidationError(file, id, ValidationRule.SequenceNotRaised,
+                $"{string.Join(", ", changed)} changed but sequence is still {now}. Raise it to {now + 1} so {why}."));
         }
     }
 
-    private static void Note(List<string> changed, string field, bool differs)
+    public static void Note(List<string> changed, string field, bool differs)
     {
         if (differs)
         {

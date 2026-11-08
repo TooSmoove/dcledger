@@ -74,6 +74,25 @@ public sealed class ValidateCommandTests : IDisposable
     }
 
     [Fact]
+    public async Task Changing_a_published_decision_needs_a_raised_sequence()
+    {
+        var previous = CopyFixture("previous");
+        var current = CopyFixture("current");
+        var actionFile = Path.Combine(current, "actions", "fixture-county-action-2026-01-15.yaml");
+        File.WriteAllText(actionFile, File.ReadAllText(actionFile).Replace("votes: 5-2", "votes: 6-1", StringComparison.Ordinal));
+
+        var (code, output, _) = await DclRunner.RunAsync("validate", "--data", current, "--previous-data", previous);
+
+        code.ShouldBe(ExitCodes.DataInvalid);
+        output.ShouldContain("actions/fixture-county-action-2026-01-15.yaml: [SEQUENCE_NOT_RAISED] fixture-county-action-2026-01-15: votes changed but sequence is still 0.");
+
+        File.WriteAllText(actionFile, File.ReadAllText(actionFile).Replace("label: confirmed_official", "sequence: 1\nlabel: confirmed_official", StringComparison.Ordinal));
+        var (fixedCode, fixedOutput, _) = await DclRunner.RunAsync("validate", "--data", current, "--previous-data", previous);
+
+        fixedCode.ShouldBe(ExitCodes.Ok, fixedOutput);
+    }
+
+    [Fact]
     public async Task Missing_previous_data_directory_is_a_usage_error()
     {
         var (code, _, error) = await DclRunner.RunAsync("validate", "--data", FixturePath("valid"), "--previous-data", Path.Combine(_temp, "nowhere"));

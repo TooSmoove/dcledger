@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using DcLedger.Application;
 using DcLedger.Domain;
 using DuckDB.NET.Data;
@@ -71,6 +72,56 @@ internal static class LedgerTables
         ORDER BY e.starts_utc, e.id
         """;
 
+    /// <summary>
+    /// One row per local action (issue #90), in the order of <c>events.json</c>'s actions, documents joined like the
+    /// events' and every text column guarded (see <see cref="CsvTextMacro"/>). <c>unanimous</c> is <c>true</c> or
+    /// <c>false</c>; <c>sequence</c> a number.
+    /// </summary>
+    public const string ActionsCsvQuery = """
+        SELECT
+            csv_text(a.id) AS id,
+            csv_text(a.jurisdiction_id) AS jurisdiction_id,
+            csv_text(a.event_id) AS event_id,
+            csv_text(a.action_type) AS action_type,
+            csv_text(a.outcome) AS outcome,
+            csv_text(a.decided_on) AS decided_on,
+            csv_text(a.votes) AS votes,
+            a.unanimous,
+            a.sequence,
+            csv_text(a.label) AS label,
+            csv_text(string_agg(d.url, ' ' ORDER BY ad.position)) AS document_urls,
+            csv_text(string_agg(strftime(d.retrieved_utc, '%Y-%m-%dT%H:%M:%SZ'), ' ' ORDER BY ad.position)) AS document_retrieved_utc,
+            csv_text(string_agg(d.sha256, ' ' ORDER BY ad.position)) AS document_sha256
+        FROM actions AS a
+        JOIN action_documents AS ad ON ad.action_id = a.id
+        JOIN documents AS d ON d.sha256 = ad.sha256
+        GROUP BY a.id, a.jurisdiction_id, a.event_id, a.action_type, a.outcome, a.decided_on, a.votes, a.unanimous, a.sequence,
+            a.label
+        ORDER BY a.decided_on, a.id
+        """;
+
+    /// <summary>The actions' Parquet rows: native types (<c>decided_on</c> a DATE) and documents as a list of structs.</summary>
+    public const string ActionsParquetQuery = """
+        SELECT
+            a.id,
+            a.jurisdiction_id,
+            a.event_id,
+            a.action_type,
+            a.outcome,
+            CAST(a.decided_on AS DATE) AS decided_on,
+            a.votes,
+            a.unanimous,
+            a.sequence,
+            a.label,
+            list({'url': d.url, 'retrieved_utc': d.retrieved_utc, 'sha256': d.sha256} ORDER BY ad.position) AS documents
+        FROM actions AS a
+        JOIN action_documents AS ad ON ad.action_id = a.id
+        JOIN documents AS d ON d.sha256 = ad.sha256
+        GROUP BY a.id, a.jurisdiction_id, a.event_id, a.action_type, a.outcome, a.decided_on, a.votes, a.unanimous, a.sequence,
+            a.label
+        ORDER BY a.decided_on, a.id
+        """;
+
     private static readonly string[] Settings =
     [
         "SET autoinstall_known_extensions = false",
@@ -137,6 +188,28 @@ internal static class LedgerTables
             PRIMARY KEY (event_id, position)
         )
         """,
+        """
+        CREATE TABLE actions (
+            id VARCHAR PRIMARY KEY,
+            jurisdiction_id VARCHAR NOT NULL,
+            event_id VARCHAR,
+            action_type VARCHAR NOT NULL,
+            outcome VARCHAR NOT NULL,
+            decided_on VARCHAR NOT NULL,
+            votes VARCHAR,
+            unanimous BOOLEAN NOT NULL,
+            sequence INTEGER NOT NULL,
+            label VARCHAR NOT NULL
+        )
+        """,
+        """
+        CREATE TABLE action_documents (
+            action_id VARCHAR NOT NULL,
+            position INTEGER NOT NULL,
+            sha256 VARCHAR NOT NULL,
+            PRIMARY KEY (action_id, position)
+        )
+        """,
     ];
 
     /// <summary>Configures <paramref name="connection"/> (already open) and loads <paramref name="model"/> into it.</summary>
@@ -151,8 +224,9 @@ internal static class LedgerTables
         }
 
         AppendJurisdictions(connection, model.Jurisdictions);
-        AppendDocuments(connection, model.Events);
+        AppendDocuments(connection, model.Events.SelectMany(item => item.Documents).Concat(model.Actions.SelectMany(item => item.Documents)));
         AppendEvents(connection, model.Events);
+        AppendActions(connection, model.Actions);
     }
 
     /// <summary>Runs one statement built from this class's constants and paths it created.</summary>
@@ -188,10 +262,9 @@ internal static class LedgerTables
         }
     }
 
-    private static void AppendDocuments(DuckDBConnection connection, IReadOnlyList<ExportEvent> events)
+    private static void AppendDocuments(DuckDBConnection connection, IEnumerable<Document> all)
     {
-        var documents = events
-            .SelectMany(item => item.Documents)
+        var documents = all
             .DistinctBy(document => document.Id)
             .OrderBy(document => document.Id.Value, StringComparer.Ordinal);
 
@@ -243,6 +316,42 @@ internal static class LedgerTables
             {
                 links.CreateRow()
                     .AppendValue(item.Event.Id)
+                    .AppendValue(position)
+                    .AppendValue(item.Documents[position].Id.Value)
+                    .EndRow();
+            }
+        }
+    }
+
+    private static void AppendActions(DuckDBConnection connection, IReadOnlyList<ExportAction> actions)
+    {
+        using (var appender = connection.CreateAppender("actions"))
+        {
+            foreach (var item in actions)
+            {
+                var action = item.Action;
+                appender.CreateRow()
+                    .AppendValue(action.Id)
+                    .AppendValue(action.JurisdictionId)
+                    .AppendValue(action.EventId)
+                    .AppendValue(action.ActionType.ToToken())
+                    .AppendValue(action.Outcome.ToToken())
+                    .AppendValue(action.DecidedOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
+                    .AppendValue(action.Votes)
+                    .AppendValue(action.Unanimous)
+                    .AppendValue(action.Sequence)
+                    .AppendValue(action.Label.ToToken())
+                    .EndRow();
+            }
+        }
+
+        using var links = connection.CreateAppender("action_documents");
+        foreach (var item in actions)
+        {
+            for (var position = 0; position < item.Documents.Count; position++)
+            {
+                links.CreateRow()
+                    .AppendValue(item.Action.Id)
                     .AppendValue(position)
                     .AppendValue(item.Documents[position].Id.Value)
                     .EndRow();

@@ -18,6 +18,12 @@ public static class ExportPaths
     /// <summary>The same rows as <see cref="EventsCsv"/>, typed, with each event's documents as a list.</summary>
     public const string EventsParquet = "public/events.parquet";
 
+    /// <summary>One row per local action (decision), issue #90.</summary>
+    public const string ActionsCsv = "public/actions.csv";
+
+    /// <summary>The same rows as <see cref="ActionsCsv"/>, typed, with each action's documents as a list.</summary>
+    public const string ActionsParquet = "public/actions.parquet";
+
     /// <summary>The RSS 2.0 feed of reviewed changes.</summary>
     public const string Feed = "public/feed.xml";
 

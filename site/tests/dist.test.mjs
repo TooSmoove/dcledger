@@ -151,16 +151,20 @@ test('jurisdiction pages show freshness with a text stale flag and link their fe
   assert.match(radar, /Stale: no successful check in 48 hours/, 'the radar shows it too');
 });
 
-test('the radar links the calendar, feed, CSV and Parquet, and the build carries them (feeds)', async () => {
+test('the radar links the calendar, feed and downloads, and the build carries them (feeds)', async () => {
   assert.match(radar, /href="\/radar.ics"/);
   assert.match(radar, /href="\/feed.xml"/);
   assert.match(radar, /href="\/events.csv"/);
   assert.match(radar, /href="\/events.parquet"/);
+  assert.match(radar, /href="\/actions.csv"/);
+  assert.match(radar, /href="\/actions.parquet"/);
   for (const file of [
     'radar.ics',
     'feed.xml',
     'events.csv',
     'events.parquet',
+    'actions.csv',
+    'actions.parquet',
     'radar/guilford.ics',
   ]) {
     assert.ok(existsSync(join(dist, file)), file);
@@ -170,10 +174,13 @@ test('the radar links the calendar, feed, CSV and Parquet, and the build carries
     await readFile(join(dist, 'feed.xml'), 'utf8'),
     /^<\?xml version="1.0" encoding="utf-8"\?>\n<rss version="2.0"/,
   );
-  assert.equal(
-    (await readFile(join(dist, 'events.parquet'))).subarray(0, 4).toString('latin1'),
-    'PAR1',
-  );
+  for (const file of ['events.parquet', 'actions.parquet']) {
+    assert.equal(
+      (await readFile(join(dist, file))).subarray(0, 4).toString('latin1'),
+      'PAR1',
+      file,
+    );
+  }
 });
 
 test('every page advertises the feed for readers that discover it', () => {

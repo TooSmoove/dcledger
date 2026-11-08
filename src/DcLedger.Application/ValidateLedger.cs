@@ -14,8 +14,9 @@ public sealed class ValidateLedger(ILedgerReader reader)
 
     /// <summary>
     /// Validates <paramref name="dataDirectory"/>; <paramref name="previousRecordFiles"/> are record files that must still
-    /// exist. When <paramref name="previousDataDirectory"/> holds the data as it is on the base branch, changed events are
-    /// also checked against it (<see cref="EventRevisions"/>); problems in the old data itself are ignored.
+    /// exist. When <paramref name="previousDataDirectory"/> holds the data as it is on the base branch, changed events and
+    /// actions are also checked against it (<see cref="EventRevisions"/>, <see cref="ActionRevisions"/>); problems in the
+    /// old data itself are ignored.
     /// </summary>
     public ValidationReport Run(string dataDirectory, IReadOnlyCollection<string> previousRecordFiles, string? previousDataDirectory = null)
     {
@@ -30,7 +31,9 @@ public sealed class ValidateLedger(ILedgerReader reader)
     public static ValidationReport Check(LedgerSnapshot snapshot, IReadOnlyCollection<string> previousRecordFiles, LedgerSnapshot? previous = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
-        IReadOnlyList<ValidationError> revisions = previous is null ? [] : EventRevisions.Check(snapshot.Events, previous.Events);
+        IReadOnlyList<ValidationError> revisions = previous is null
+            ? []
+            : [.. EventRevisions.Check(snapshot.Events, previous.Events), .. ActionRevisions.Check(snapshot.Actions, previous.Actions)];
         var errors = LedgerValidator.Validate(snapshot, previousRecordFiles)
             .Concat(revisions)
             .OrderBy(e => e.File, StringComparer.Ordinal)

@@ -3,7 +3,8 @@ using DcLedger.Application;
 namespace DcLedger.Publishing.Feed;
 
 /// <summary>
-/// Writes <c>public/feed.xml</c>, an RSS 2.0 feed with one item per reviewed revision of each event (SPEC AC5, AC4).
+/// Writes <c>public/feed.xml</c>, an RSS 2.0 feed with one item per reviewed revision of each event and each recorded
+/// decision (SPEC AC5, AC4; issue #90).
 /// Links are absolute, so the exporter needs the site's public origin.
 /// </summary>
 public sealed class FeedExporter : IExporter
@@ -26,6 +27,6 @@ public sealed class FeedExporter : IExporter
     public IReadOnlyList<ExportFile> Export(ExportModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        return [new ExportFile(ExportPaths.Feed, RssFeedWriter.Write(_siteUrl, model.Events))];
+        return [new ExportFile(ExportPaths.Feed, RssFeedWriter.Write(_siteUrl, model.Events, model.Actions))];
     }
 }

@@ -233,6 +233,26 @@ public sealed class YamlLedgerReaderTests
         action.EventId.ShouldBeNull();
         action.Votes.ShouldBeNull();
         action.Unanimous.ShouldBeFalse();
+        action.Sequence.ShouldBe(0, "records written before #90 have no sequence");
+    }
+
+    [Fact]
+    public void Action_reads_its_sequence()
+    {
+        var yaml = ValidAction.Replace("label: confirmed_official\n", "sequence: 2\nlabel: confirmed_official\n", StringComparison.Ordinal);
+
+        Load("actions/fixture-moratorium-2026-11-05.yaml", yaml).Actions.ShouldHaveSingleItem().Record.Sequence.ShouldBe(2);
+    }
+
+    [Theory]
+    [InlineData("sequence: -1\n")]
+    [InlineData("sequence: two\n")]
+    [InlineData("sequence: 1.5\n")]
+    public void Action_sequence_is_a_whole_number(string line)
+    {
+        var yaml = ValidAction.Replace("label: confirmed_official\n", line + "label: confirmed_official\n", StringComparison.Ordinal);
+
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", yaml).ShouldBe(ValidationRule.InvalidValue);
     }
 
     [Fact]

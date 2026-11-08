@@ -10,7 +10,8 @@ namespace DcLedger.Publishing.Feed;
 /// The RSS 2.0 feed (SPEC AC5). Export keeps no history, so each event contributes one item for its current revision:
 /// the GUID is the calendar UID plus <c>sequence</c>, which every published change raises (<c>SEQUENCE_NOT_RAISED</c>).
 /// A change therefore arrives in readers as a new item, and an unchanged event keeps its GUID. A cancellation is such a
-/// change (SPEC AC4). Written with <see cref="XmlWriter"/> rather than a syndication library so the bytes depend only on
+/// change (SPEC AC4). Each recorded decision does the same with its own <c>sequence</c> (issue #90). Items are newest
+/// first. Written with <see cref="XmlWriter"/> rather than a syndication library so the bytes depend only on
 /// the ledger: every date comes from it, including <c>lastBuildDate</c>.
 /// </summary>
 internal static class RssFeedWriter
@@ -26,12 +27,12 @@ internal static class RssFeedWriter
     // Minutes; publish runs every 6 hours (#23), like the calendars' refresh interval.
     private const string Ttl = "360";
 
-    public static byte[] Write(Uri siteUrl, IEnumerable<ExportEvent> events)
+    public static byte[] Write(Uri siteUrl, IEnumerable<ExportEvent> events, IEnumerable<ExportAction> actions)
     {
-        var items = events
-            .Select(item => (Item: item, Published: item.Documents.Max(document => document.RetrievedAtUtc)))
-            .OrderByDescending(entry => entry.Published)
-            .ThenBy(entry => entry.Item.Event.Id, StringComparer.Ordinal)
+        var items = events.Select(item => FromEvent(siteUrl, item))
+            .Concat(actions.Select(item => FromAction(siteUrl, item)))
+            .OrderByDescending(item => item.Published)
+            .ThenBy(item => item.Guid, StringComparer.Ordinal)
             .ToList();
 
         var settings = new XmlWriterSettings
@@ -65,9 +66,9 @@ internal static class RssFeedWriter
             xml.WriteAttributeString("rel", "self");
             xml.WriteAttributeString("type", "application/rss+xml");
             xml.WriteEndElement();
-            foreach (var (item, published) in items)
+            foreach (var item in items)
             {
-                WriteItem(xml, siteUrl, item, published);
+                WriteItem(xml, item);
             }
 
             xml.WriteEndElement();
@@ -79,19 +80,57 @@ internal static class RssFeedWriter
         return stream.ToArray();
     }
 
-    private static void WriteItem(XmlWriter xml, Uri siteUrl, ExportEvent item, DateTimeOffset published)
+    private static void WriteItem(XmlWriter xml, FeedItem item)
     {
-        var ledgerEvent = item.Event;
         xml.WriteStartElement("item");
-        xml.WriteElementString("title", $"{Change(ledgerEvent)}{ledgerEvent.Title} ({item.Jurisdiction.Name})");
-        xml.WriteElementString("link", Absolute(siteUrl, $"items/{ledgerEvent.Id}/"));
+        xml.WriteElementString("title", item.Title);
+        xml.WriteElementString("link", item.Link);
         xml.WriteStartElement("guid");
         xml.WriteAttributeString("isPermaLink", "false");
-        xml.WriteString($"{ledgerEvent.Uid}/{ledgerEvent.Sequence.ToString(CultureInfo.InvariantCulture)}");
+        xml.WriteString(item.Guid);
         xml.WriteEndElement();
-        xml.WriteElementString("pubDate", Rfc822(published));
-        xml.WriteElementString("description", Describe(item));
+        xml.WriteElementString("pubDate", Rfc822(item.Published));
+        xml.WriteElementString("description", item.Description);
         xml.WriteEndElement();
+    }
+
+    /// <summary>An event's current revision. The GUID is the calendar UID plus <c>sequence</c>.</summary>
+    private static FeedItem FromEvent(Uri siteUrl, ExportEvent item)
+    {
+        var ledgerEvent = item.Event;
+        return new FeedItem(
+            Title: $"{Change(ledgerEvent)}{ledgerEvent.Title} ({item.Jurisdiction.Name})",
+            Link: Absolute(siteUrl, $"items/{ledgerEvent.Id}/"),
+            Guid: $"{ledgerEvent.Uid}/{ledgerEvent.Sequence.ToString(CultureInfo.InvariantCulture)}",
+            Published: item.Documents.Max(document => document.RetrievedAtUtc),
+            Description: Describe(item));
+    }
+
+    /// <summary>
+    /// A decision's current revision (issue #90): "Decision: Moratorium adopted (Guilford County)", linked to its meeting
+    /// page, or to its jurisdiction's page when the meeting isn't in the ledger. The GUID's <c>action:</c> prefix keeps it
+    /// apart from event GUIDs.
+    /// </summary>
+    private static FeedItem FromAction(Uri siteUrl, ExportAction item)
+    {
+        var action = item.Action;
+        var what = $"{ActionTypeText(action.ActionType)} {OutcomeText(action.Outcome)}";
+        var html = new StringBuilder();
+        html.Append(CultureInfo.InvariantCulture,
+            $"<p>{Html(item.Jurisdiction.Name)}: {what}, decided {action.DecidedOn.ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture)}.</p>");
+        if (VoteText(action.Votes, action.Unanimous) is { } vote)
+        {
+            html.Append(CultureInfo.InvariantCulture, $"<p>Vote: {vote}</p>");
+        }
+
+        html.Append(CultureInfo.InvariantCulture, $"<p>{LabelText(action.Label)}</p>");
+        AppendSources(html, item.Documents);
+        return new FeedItem(
+            Title: $"{(action.Sequence > 0 ? "Decision updated: " : "Decision: ")}{what} ({item.Jurisdiction.Name})",
+            Link: Absolute(siteUrl, action.EventId is { } eventId ? $"items/{eventId}/" : $"jurisdictions/{action.JurisdictionId}/"),
+            Guid: $"action:{action.Id}/{action.Sequence.ToString(CultureInfo.InvariantCulture)}",
+            Published: item.Documents.Max(document => document.RetrievedAtUtc),
+            Description: html.ToString());
     }
 
     /// <summary>What the revision is, as a title prefix: nothing for a meeting's first version.</summary>
@@ -117,8 +156,16 @@ internal static class RssFeedWriter
             html.Append(CultureInfo.InvariantCulture, $"<p>Case: {Html(caseNumber)}</p>");
         }
 
-        html.Append(CultureInfo.InvariantCulture, $"<p>{LabelText(ledgerEvent.Label)}</p><ul>");
-        foreach (var document in item.Documents)
+        html.Append(CultureInfo.InvariantCulture, $"<p>{LabelText(ledgerEvent.Label)}</p>");
+        AppendSources(html, item.Documents);
+        return html.ToString();
+    }
+
+    /// <summary>Every source with its retrieval time (Eastern) and SHA-256 (SPEC AC2), as a list.</summary>
+    private static void AppendSources(StringBuilder html, IReadOnlyList<Document> documents)
+    {
+        html.Append("<ul>");
+        foreach (var document in documents)
         {
             var url = Html(document.Url.AbsoluteUri);
             html.Append(CultureInfo.InvariantCulture,
@@ -126,7 +173,40 @@ internal static class RssFeedWriter
         }
 
         html.Append("</ul>");
-        return html.ToString();
+    }
+
+    /// <summary>The site's wording for action types (site/src/lib/radar.js), capitalized to start a title.</summary>
+    private static string ActionTypeText(ActionType actionType) => actionType switch
+    {
+        ActionType.Moratorium => "Moratorium",
+        ActionType.Rezoning => "Rezoning",
+        ActionType.TextAmendment => "Ordinance text amendment",
+        ActionType.Resolution => "Resolution",
+        _ => throw new ArgumentOutOfRangeException(nameof(actionType), actionType, "Unknown action type."),
+    };
+
+    /// <summary>The site's wording for outcomes, lowercase to follow the action type.</summary>
+    private static string OutcomeText(ActionOutcome outcome) => outcome switch
+    {
+        ActionOutcome.Adopted => "adopted",
+        ActionOutcome.AdoptedAmended => "adopted with amendments",
+        ActionOutcome.Failed => "failed",
+        ActionOutcome.Continued => "continued to a later meeting",
+        ActionOutcome.Tabled => "tabled",
+        _ => throw new ArgumentOutOfRangeException(nameof(outcome), outcome, "Unknown outcome."),
+    };
+
+    /// <summary>The site's vote line (voteText in site/src/lib/radar.js), or null when nothing is known.</summary>
+    private static string? VoteText(string? votes, bool unanimous)
+    {
+        string? tally = null;
+        if (votes is not null)
+        {
+            var dash = votes.IndexOf('-', StringComparison.Ordinal);
+            tally = $"{votes[..dash]} in favor, {votes[(dash + 1)..]} against";
+        }
+
+        return unanimous ? (tally is null ? "Unanimous (tally not yet recorded)" : $"{tally} (unanimous)") : tally;
     }
 
     private static string LabelText(EvidenceLabel label) => label switch
@@ -148,4 +228,6 @@ internal static class RssFeedWriter
         instant.UtcDateTime.ToString("ddd, dd MMM yyyy HH:mm:ss '+0000'", CultureInfo.InvariantCulture);
 
     private static string Absolute(Uri siteUrl, string path) => new Uri(siteUrl, path).AbsoluteUri;
+
+    private sealed record FeedItem(string Title, string Link, string Guid, DateTimeOffset Published, string Description);
 }
