@@ -97,6 +97,59 @@ public sealed class ExportModelBuilderTests
         result.Warnings.ShouldHaveSingleItem().ShouldContain("'fixture-city'");
     }
 
+    [Theory]
+    [InlineData(5, false)]
+    [InlineData(8, true)]
+    public void A_manual_check_stays_fresh_for_7_days(int daysAgo, bool stale)
+    {
+        var city = Jurisdictions(ExportSamples.City with { LastManualCheckUtc = ExportSamples.GeneratedUtc.AddDays(-daysAgo) })
+            .Single(j => j.Jurisdiction.Id == ExportSamples.City.Id);
+
+        city.Stale.ShouldBe(stale);
+        city.StaleAfter.ShouldBe(TimeSpan.FromDays(7));
+    }
+
+    [Fact]
+    public void An_automated_jurisdiction_keeps_the_48_hour_threshold()
+    {
+        ExportModelBuilder.Build(ExportSamples.Snapshot(), ExportSamples.Status()).Model.Jurisdictions
+            .Single(j => j.Jurisdiction.Id == ExportSamples.County.Id).StaleAfter.ShouldBe(TimeSpan.FromHours(48));
+    }
+
+    [Fact]
+    public void A_manual_check_dated_after_the_export_is_stale_with_a_warning()
+    {
+        var snapshot = WithCity(ExportSamples.City with { LastManualCheckUtc = ExportSamples.GeneratedUtc.AddDays(365) });
+
+        var result = ExportModelBuilder.Build(snapshot, ExportSamples.Status());
+
+        result.Model.Jurisdictions.Single(j => j.Jurisdiction.Id == ExportSamples.City.Id).Stale.ShouldBeTrue();
+        result.Warnings.ShouldHaveSingleItem().ShouldBe("'fixture-city' has a last_manual_check_utc later than this export; it shows as stale until that's corrected.");
+    }
+
+    [Fact]
+    public void A_manual_check_minutes_after_the_export_is_fine()
+    {
+        var snapshot = WithCity(ExportSamples.City with { LastManualCheckUtc = ExportSamples.GeneratedUtc.AddMinutes(20) });
+
+        var result = ExportModelBuilder.Build(snapshot, ExportSamples.Status());
+
+        result.Model.Jurisdictions.Single(j => j.Jurisdiction.Id == ExportSamples.City.Id).Stale.ShouldBeFalse();
+        result.Warnings.ShouldBeEmpty();
+    }
+
+    private static LedgerSnapshot WithCity(Jurisdiction city)
+    {
+        var snapshot = ExportSamples.Snapshot();
+        return snapshot with
+        {
+            Jurisdictions = [.. snapshot.Jurisdictions.Select(j => j.Record.Id == city.Id ? j with { Record = city } : j)],
+        };
+    }
+
+    private static IReadOnlyList<ExportJurisdiction> Jurisdictions(Jurisdiction city) =>
+        ExportModelBuilder.Build(WithCity(city), ExportSamples.Status()).Model.Jurisdictions;
+
     [Fact]
     public void An_automated_jurisdiction_missing_from_the_status_was_never_checked()
     {

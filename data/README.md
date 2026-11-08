@@ -18,6 +18,7 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 - IDs are lowercase letters, digits and single hyphens, match the file name (`ID_MISMATCH`), and are **permanent** once merged (`SLUG_CHANGED`). To retire a meeting, set `status: cancelled`.
 - A published event that changes (`body`, `title`, `case_number`, `starts_at`, `status`, `label`, `document_ids` or `location`) raises `sequence` by at least 1, and `sequence` never goes down (`SEQUENCE_NOT_RAISED`). `jurisdiction_id`, `platform` and `platform_meeting_id` never change once published, because the calendar UID is built from them (`UID_CHANGED`). CI compares against the base branch with `--previous-data`.
 - Actions follow the same rule: a published action that changes (`event_id`, `action_type`, `outcome`, `decided_on`, `votes`, `unanimous`, `label` or `document_ids`) raises its `sequence` (optional, default 0), and `jurisdiction_id` never changes (`JURISDICTION_CHANGED`). The feed gives each revision of a decision its own item.
+- An event's `platform` is its jurisdiction's (`PLATFORM_MISMATCH`). `last_manual_check_utc` appears only on a `manual` jurisdiction (`INVALID_VALUE`); export shows one dated after the export as stale and warns.
 - Every event and action lists at least one document, and every listed document exists (`DOC_MISSING`); its jurisdiction exists (`FK_MISSING`).
 - An action's `event_id`, when given, names an event in the same jurisdiction on the same Eastern date as `decided_on` (`FK_MISSING`, `EVENT_MISMATCH`). `action_type` and `outcome` take only the tokens below, and `votes` is ayes-noes like `"9-0"` (`INVALID_VALUE`).
 - `confirmed_official` needs at least one document with `source_type: official` (`LABEL_INVALID`).
@@ -119,3 +120,27 @@ page. Record every vote on the item, including a continuance or a tabling (`cont
    tally.
 4. **Check and open the PR:** `dotnet run --project src/DcLedger.Cli -- validate --data data`. The gate checks that
    `event_id` exists, is in the same jurisdiction and falls on `decided_on` (`FK_MISSING`, `EVENT_MISMATCH`).
+
+## Entering a manual jurisdiction
+
+Some jurisdictions publish agendas on a platform without an adapter. Greensboro is on eSCRIBE, and #94's Stokes and
+Vance post PDF lists. Their meetings are entered by hand, until #96 automates the check.
+
+1. **The jurisdiction:** `platform: manual`, with `bodies` listing the bodies you watch (documentation only) and no
+   `legistar_client`. Ingest skips it.
+2. **Check, then record the check.** Open the jurisdiction's meeting calendar and read the agendas for the next 30
+   days, looking for data-center items: data centers, data processing, moratoriums, zoning text amendments,
+   rezonings of large industrial sites, and economic development agreements. Then set `last_manual_check_utc` to the
+   time you finished, in UTC with a `Z` (for example `2026-11-08T23:00:00Z`), and commit it with your sign-off, even
+   when you found nothing. That timestamp is a statement that someone looked, so never set it ahead of time. The site
+   shows it as "last checked" and flags the jurisdiction stale after **7 days** without a check (48 hours for
+   automated ones; SPEC AC10).
+3. **Each item becomes an event.** Archive the agenda or notice with **archive-document** (`official`), then add
+   `events/<id>.yaml` as usual, with:
+   - `platform: manual`;
+   - `platform_meeting_id`: the platform's own ID for the meeting (for eSCRIBE, the `Id=` value in the meeting page's
+     URL), quoted. The calendar UID is built from it, so it never changes once published;
+   - `first_seen_utc`: when you found the agenda, which serves as the start of the review clock (AC9);
+   - a neutral title of your own, and `location` only for a publicly known project site.
+4. **Decisions** are `actions/` records like any other (see "Recording a decision"). Without an event in the ledger,
+   leave out `event_id`; the decision then shows on the jurisdiction's page and in the feed.

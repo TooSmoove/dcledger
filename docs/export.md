@@ -91,7 +91,9 @@ Publish builds `ingest-status.json` from ingest run history with `tools/ingest_s
 - Manual jurisdictions take "last checked" from `last_manual_check_utc` in their YAML (SPEC AC10).
 
 A jurisdiction is **stale** when it has no successful check, or the last one is more than 48 hours before
-`generated_utc` (exactly 48 hours is still fresh).
+`generated_utc` (exactly 48 hours is still fresh). For a manual jurisdiction the threshold is 7 days (issue #27), and a
+`last_manual_check_utc` more than an hour after `generated_utc` counts as stale, with a warning. `events.json` states
+each jurisdiction's threshold as `stale_after_hours` (48 or 168), so the site's flag says which applies.
 
 ## Exit codes
 

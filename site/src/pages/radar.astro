@@ -40,7 +40,11 @@ const events = byStart(
     {jurisdictions.map(({ id, data }) => (
       <li>
         <a href={`/jurisdictions/${id}/`}>{data.name}</a>
-        <Freshness lastCheckedUtc={data.last_checked_utc} stale={data.stale} />
+        <Freshness
+          lastCheckedUtc={data.last_checked_utc}
+          stale={data.stale}
+          staleAfterHours={data.stale_after_hours}
+        />
       </li>
     ))}
   </ul>

@@ -34,6 +34,19 @@ public sealed class FreshnessTests
         Freshness.IsStale(AsOf.AddMinutes(5), AsOf).ShouldBeFalse();
     }
 
+    [Theory]
+    [InlineData(Platform.Legistar, 48)]
+    [InlineData(Platform.Manual, 168)]
+    public void A_manual_check_stays_fresh_for_7_days_an_automated_one_for_48_hours(Platform platform, int hours)
+    {
+        var staleAfter = Freshness.StaleAfterFor(platform);
+
+        staleAfter.ShouldBe(TimeSpan.FromHours(hours));
+        Freshness.IsStale(AsOf - staleAfter, AsOf, staleAfter).ShouldBeFalse("exactly the threshold is still fresh");
+        Freshness.IsStale(AsOf - staleAfter - TimeSpan.FromSeconds(1), AsOf, staleAfter).ShouldBeTrue();
+        Freshness.IsStale(null, AsOf, staleAfter).ShouldBeTrue();
+    }
+
     [Fact]
     public void Offsets_do_not_matter_only_instants()
     {

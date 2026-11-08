@@ -1,0 +1,9 @@
+# Greensboro is on eSCRIBE (since 2021), which has no adapter, so its meetings are entered by hand (SPEC Q2;
+# data/README.md, "Entering a manual jurisdiction"). #96 tracks automating the check.
+# Add last_manual_check_utc after each check of the City Council meeting calendar; until the first one, the site
+# shows "Never checked" and the stale flag (7 days for a manual jurisdiction, SPEC AC10).
+id: greensboro
+name: Greensboro
+platform: manual
+bodies:
+  - City Council

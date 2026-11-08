@@ -70,6 +70,7 @@ public sealed class SiteDataExporter : IExporter
         json.WriteString("name", item.Jurisdiction.Name);
         WriteStringOrNull(json, "last_checked_utc", item.LastCheckedUtc is { } lastChecked ? IsoTime.Utc(lastChecked) : null);
         json.WriteBoolean("stale", item.Stale);
+        json.WriteNumber("stale_after_hours", (int)item.StaleAfter.TotalHours);
         json.WriteEndObject();
     }
 

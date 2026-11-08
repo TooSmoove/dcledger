@@ -55,18 +55,32 @@ public static class ExportModelBuilder
         return new ExportModelResult(model, Warnings(jurisdictions, status));
     }
 
+    /// <summary>A manual check dated this far after the export can't have happened yet (issue #27).</summary>
+    private static readonly TimeSpan FutureTolerance = TimeSpan.FromHours(1);
+
     private static ExportJurisdiction Freshen(Jurisdiction jurisdiction, IngestStatus status)
     {
         var lastChecked = jurisdiction.Platform == Platform.Manual
             ? jurisdiction.LastManualCheckUtc
             : status.LastCheckedUtc.GetValueOrDefault(jurisdiction.Id);
+        var staleAfter = Freshness.StaleAfterFor(jurisdiction.Platform);
         return new ExportJurisdiction
         {
             Jurisdiction = jurisdiction,
             LastCheckedUtc = lastChecked,
-            Stale = Freshness.IsStale(lastChecked, status.GeneratedUtc),
+            Stale = IsFutureManualCheck(jurisdiction, status) || Freshness.IsStale(lastChecked, status.GeneratedUtc, staleAfter),
+            StaleAfter = staleAfter,
         };
     }
+
+    /// <summary>
+    /// A typo such as the wrong year in <c>last_manual_check_utc</c> would otherwise keep the jurisdiction fresh for
+    /// months. The validator has no clock, so export catches it: shown as stale, with a warning.
+    /// </summary>
+    private static bool IsFutureManualCheck(Jurisdiction jurisdiction, IngestStatus status) =>
+        jurisdiction.Platform == Platform.Manual
+        && jurisdiction.LastManualCheckUtc is { } checkedAt
+        && checkedAt - status.GeneratedUtc > FutureTolerance;
 
     private static List<string> Warnings(List<ExportJurisdiction> jurisdictions, IngestStatus status)
     {
@@ -80,6 +94,11 @@ public static class ExportModelBuilder
                 .Where(id => !automated.Contains(id))
                 .Order(StringComparer.Ordinal)
                 .Select(id => $"The ingest status lists '{id}', which isn't an automated jurisdiction in the ledger; ignored."),
+            .. jurisdictions
+                .Where(j => IsFutureManualCheck(j.Jurisdiction, status))
+                .Select(j => j.Jurisdiction.Id)
+                .Order(StringComparer.Ordinal)
+                .Select(id => $"'{id}' has a last_manual_check_utc later than this export; it shows as stale until that's corrected."),
         ];
     }
 

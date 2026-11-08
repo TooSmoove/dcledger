@@ -83,6 +83,14 @@ test('freshness shows last checked in Eastern and a text stale flag', () => {
     'Last checked Thu, Oct 22, 2026, 10:00 AM EDT ⚠ Stale: no successful check in 48 hours',
   );
   assert.equal(
+    freshnessText({
+      last_checked_utc: '2026-10-22T14:00:00Z',
+      stale: true,
+      stale_after_hours: 168,
+    }),
+    'Last checked Thu, Oct 22, 2026, 10:00 AM EDT ⚠ Stale: no successful check in 7 days',
+  );
+  assert.equal(
     freshnessText({ last_checked_utc: null, stale: true }),
     'Never checked ⚠ Stale: no successful check in 48 hours',
   );

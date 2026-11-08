@@ -60,6 +60,9 @@ public static class ValidationRule
     /// <summary>A published event's jurisdiction, platform or platform meeting ID changed, which changes its calendar UID.</summary>
     public const string UidChanged = "UID_CHANGED";
 
+    /// <summary>An event's platform differs from its jurisdiction's (issue #27).</summary>
+    public const string PlatformMismatch = "PLATFORM_MISMATCH";
+
     /// <summary>A published action's jurisdiction changed (issue #90).</summary>
     public const string JurisdictionChanged = "JURISDICTION_CHANGED";
 }

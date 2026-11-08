@@ -170,7 +170,17 @@ export function freshnessText(jurisdiction) {
     jurisdiction.last_checked_utc === null
       ? 'Never checked'
       : `Last checked ${easternText(jurisdiction.last_checked_utc)}`;
-  return jurisdiction.stale ? `${checked} ⚠ Stale: no successful check in 48 hours` : checked;
+  const window = staleWindowText(jurisdiction.stale_after_hours ?? 48);
+  return jurisdiction.stale ? `${checked} ⚠ Stale: no successful check in ${window}` : checked;
+}
+
+/**
+ * The stale threshold in words: "48 hours" for an automated jurisdiction, "7 days" for one checked by hand (SPEC
+ * AC10, issue #27). Whole days past two days read as days.
+ * @param {number} hours
+ */
+export function staleWindowText(hours) {
+  return hours > 48 && hours % 24 === 0 ? `${hours / 24} days` : `${hours} hours`;
 }
 
 /**
