@@ -1,0 +1,2 @@
+﻿id,jurisdiction_id,event_id,action_type,outcome,decided_on,votes,unanimous,sequence,label,document_urls,document_retrieved_utc,document_sha256
+fixture-county-moratorium-2026-11-05,fixture-county,fixture-county-boc-2026-11-05,moratorium,adopted_amended,2026-11-05,8-1,false,0,confirmed_official,https://fixture-county.example.org/meetings/1600/actions/7,2026-11-06T13:00:00Z,de7880f9f6f1a7ad5eb2807c6960856ee17f04ea2d117706fb1425cd9c1cacb4

@@ -5,9 +5,16 @@
     <link>https://ncdcledger.org/radar/</link>
     <description>Reviewed North Carolina local-government meetings about data centers, each linked to its official source. A new item appears for each new meeting and each published change, including cancellations.</description>
     <language>en-us</language>
-    <lastBuildDate>Fri, 30 Oct 2026 14:05:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 06 Nov 2026 13:00:00 +0000</lastBuildDate>
     <ttl>360</ttl>
     <atom:link href="https://ncdcledger.org/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Decision: Moratorium adopted with amendments (Fixture County)</title>
+      <link>https://ncdcledger.org/items/fixture-county-boc-2026-11-05/</link>
+      <guid isPermaLink="false">action:fixture-county-moratorium-2026-11-05/0</guid>
+      <pubDate>Fri, 06 Nov 2026 13:00:00 +0000</pubDate>
+      <description>&lt;p&gt;Fixture County: Moratorium adopted with amendments, decided Thursday, November 5, 2026.&lt;/p&gt;&lt;p&gt;Vote: 8 in favor, 1 against&lt;/p&gt;&lt;p&gt;Confirmed (official record)&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;a href="https://fixture-county.example.org/meetings/1600/actions/7"&gt;https://fixture-county.example.org/meetings/1600/actions/7&lt;/a&gt; (retrieved 2026-11-06T08:00:00-05:00, SHA-256 de7880f9f6f1a7ad5eb2807c6960856ee17f04ea2d117706fb1425cd9c1cacb4)&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
     <item>
       <title>Café district text amendment: data centers (Fixture City)</title>
       <link>https://ncdcledger.org/items/fixture-city-council-2026-11-03/</link>

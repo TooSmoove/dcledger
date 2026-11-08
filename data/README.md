@@ -17,6 +17,7 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 - Only the keys shown below. Names of private people and original source titles are **never** stored (`FORBIDDEN_FIELD`).
 - IDs are lowercase letters, digits and single hyphens, match the file name (`ID_MISMATCH`), and are **permanent** once merged (`SLUG_CHANGED`). To retire a meeting, set `status: cancelled`.
 - A published event that changes (`body`, `title`, `case_number`, `starts_at`, `status`, `label`, `document_ids` or `location`) raises `sequence` by at least 1, and `sequence` never goes down (`SEQUENCE_NOT_RAISED`). `jurisdiction_id`, `platform` and `platform_meeting_id` never change once published, because the calendar UID is built from them (`UID_CHANGED`). CI compares against the base branch with `--previous-data`.
+- Actions follow the same rule: a published action that changes (`event_id`, `action_type`, `outcome`, `decided_on`, `votes`, `unanimous`, `label` or `document_ids`) raises its `sequence` (optional, default 0), and `jurisdiction_id` never changes (`JURISDICTION_CHANGED`). The feed gives each revision of a decision its own item.
 - Every event and action lists at least one document, and every listed document exists (`DOC_MISSING`); its jurisdiction exists (`FK_MISSING`).
 - An action's `event_id`, when given, names an event in the same jurisdiction on the same Eastern date as `decided_on` (`FK_MISSING`, `EVENT_MISMATCH`). `action_type` and `outcome` take only the tokens below, and `votes` is ayes-noes like `"9-0"` (`INVALID_VALUE`).
 - `confirmed_official` needs at least one document with `source_type: official` (`LABEL_INVALID`).
@@ -72,6 +73,7 @@ outcome: adopted              # adopted | adopted_amended | failed | continued |
 decided_on: 2026-01-15        # the meeting's date in Eastern time
 votes: "5-2"                  # optional: ayes-noes, quoted
 unanimous: true               # optional: true or left out; reported unanimous, tally or not
+sequence: 0                   # optional, default 0: +1 on every published change
 label: confirmed_official
 document_ids: [<sha256>]
 ```
@@ -108,7 +110,7 @@ page. Record every vote on the item, including a continuance or a tabling (`cont
    anything.
 2. **Label it mechanically.** `confirmed_official` once the platform's own record of the action (the action-detail page)
    is archived; until then, `reported_news` backed by an archived news story. When the official record arrives, add its
-   document and change the label in a new PR; the action's ID stays the same.
+   document, change the label and raise `sequence` by 1 in a new PR; the action's ID stays the same.
 3. **Take the outcome and vote from the record, not from coverage.** `outcome` is the closest token to what the record
    says; `votes` is ayes-noes as recorded, without abstentions or absences. When the source says the vote was unanimous
    but gives no count, set `unanimous: true` and leave `votes` out; the site shows "Unanimous (tally not yet recorded)".

@@ -7,6 +7,8 @@ public sealed class ExportCommandTests : IDisposable
 {
     private static readonly string[] ExpectedFiles =
     [
+        "public/actions.csv",
+        "public/actions.parquet",
         "public/events.csv",
         "public/events.parquet",
         "public/feed.xml",

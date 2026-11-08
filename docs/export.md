@@ -16,9 +16,10 @@ With `--out out` from the repository root, the site build finds its data at `out
 | `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance and `location` (`{"lat", "lon"}` or null), and every local action (see below). Mirrored by `site/src/content.config.ts`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per jurisdiction, even before it has events. |
-| `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision, newest first (see below). |
+| `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision and per decision revision, newest first (see below). |
 | `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order. UTF-8 with BOM and a formula guard on text cells (SPEC AC7). Every column: `docs/data-dictionary.md`. |
 | `public/events.parquet` | The CSV's rows with native types: `starts_utc` a UTC timestamp, `sequence` an integer, coordinates doubles, and `documents` one list of `{url, retrieved_utc, sha256}` in the record's order. Written by DuckDB `COPY` (snappy); values unguarded. |
+| `public/actions.csv`, `public/actions.parquet` | One row per local action (decision), same rules as the events' pair (#90). Columns: `docs/data-dictionary.md`. |
 
 Files under `public/` are served as they are, at the same paths under the site's root. Existing files of the same name
 are replaced; nothing is deleted, so use a fresh `--out` for a clean set.
@@ -37,7 +38,9 @@ case number, the label and every source with its retrieval time and SHA-256 (SPE
 retrieval of the event's documents, like the calendars' `DTSTAMP`, and `lastBuildDate` the newest `pubDate`, so the
 feed changes only when the ledger does. A cancellation sorts as new when the notice that confirms it is archived and
 added to `document_ids`. Links are absolute: `--site-url` (default `https://ncdcledger.org`; publish passes its
-`SITE_URL`). Written with `XmlWriter`, UTF-8 without BOM, LF.
+`SITE_URL`). Each decision is an item too (#90): "Decision: Moratorium adopted (Guilford County)", GUID
+`action:{id}/{sequence}`, linked to its meeting page (or its jurisdiction's page without one), with the outcome, the
+vote line as the site shows it, the label and every source; "Decision updated: " once `sequence` is above 0. Written with `XmlWriter`, UTF-8 without BOM, LF.
 
 **Same input, same bytes:** every file depends only on the ledger, the ingest status and `--site-url`. JSON and the feed
 are LF, calendars and CSV are CRLF, all UTF-8; Parquet is byte-identical across runs of the same DuckDB version; nothing depends on the machine's culture or time zone. Tests check this under several cultures.
@@ -55,6 +58,7 @@ The key was added without bumping `schema_version`, because a reader that ignore
   "decided_on": "2026-11-05",
   "votes": "8-1",
   "unanimous": false,
+  "sequence": 0,
   "label": "confirmed_official",
   "documents": [{ "url": "…", "retrieved_utc": "…", "sha256": "…" }]
 }

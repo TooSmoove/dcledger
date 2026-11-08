@@ -126,6 +126,12 @@ public sealed record LocalAction
     /// </summary>
     public bool Unanimous { get; init; }
 
+    /// <summary>
+    /// The revision, raised with every published change like <see cref="LedgerEvent.Sequence"/>; the feed gives each
+    /// revision its own item (issue #90). 0 when the record leaves it out.
+    /// </summary>
+    public int Sequence { get; init; }
+
     /// <summary>How the action is sourced.</summary>
     public required EvidenceLabel Label { get; init; }
 

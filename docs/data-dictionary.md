@@ -1,7 +1,8 @@
 # Data dictionary
 
-What's in the downloads: `events.csv` and `events.parquet`, served at the site's root next to the calendars and the
-feed (`docs/export.md`). Both have one row per reviewed event, ordered by start time, then ID. Everything in them is
+What's in the downloads, served at the site's root next to the calendars and the feed (`docs/export.md`):
+`events.csv` and `events.parquet` have one row per reviewed event, ordered by start time, then ID; `actions.csv` and
+`actions.parquet` one row per recorded decision. Everything in them is
 public by design: neutral titles written by a reviewer, case numbers, meeting metadata, source URLs, retrieval times
 and SHA-256 hashes. No private individual's name appears (SPEC §E).
 
@@ -63,8 +64,28 @@ guard and no BOM**. Snappy compression. The columns are the CSV's, with native t
 SELECT id, unnest(documents, recursive := true) FROM 'events.parquet';
 ```
 
+## `actions.csv` and `actions.parquet`
+
+One row per recorded decision (a local action: a vote on an item, including continuances and tablings), ordered by
+decision date, then ID. The CSV follows every rule of `events.csv` above: BOM, RFC 4180, CRLF, and the formula guard
+on text columns (`unanimous` and `sequence` aren't text). The Parquet file stores the values as they are, like
+`events.parquet`.
+
+| Column | CSV | Parquet | Empty when | Meaning | Example |
+|---|---|---|---|---|---|
+| `id` | text | `VARCHAR` | never | The decision's permanent ID. | `guilford-moratorium-2026-11-05` |
+| `jurisdiction_id` | text | `VARCHAR` | never | The jurisdiction that decided. | `guilford` |
+| `event_id` | text | `VARCHAR` | the meeting isn't in the ledger | The meeting where it was decided; matches `events.csv`'s `id`. | `guilford-board-of-commissioners-2026-11-05` |
+| `action_type` | text | `VARCHAR` | never | `moratorium`, `rezoning`, `text_amendment` or `resolution`. | `moratorium` |
+| `outcome` | text | `VARCHAR` | never | `adopted`, `adopted_amended`, `failed`, `continued` or `tabled`, as the platform records it. | `adopted` |
+| `decided_on` | text, `YYYY-MM-DD` | `DATE` | never | The date of the decision (Eastern). | `2026-11-05` |
+| `votes` | text | `VARCHAR` | no tally recorded | Ayes-noes as recorded, without abstentions or absences. Never inferred from the board's size. | `9-0` |
+| `unanimous` | `true` / `false` | `BOOLEAN` | never | Reported unanimous; can be `true` while `votes` is still empty. | `true` |
+| `sequence` | integer | `INTEGER` | never | The revision number; it goes up with every published change, and the feed shows each revision as a new item. | `0` |
+| `label` | text | `VARCHAR` | never | `reported_news` or `confirmed_official`, as for events. | `reported_news` |
+| `document_urls`, `document_retrieved_utc`, `document_sha256` | text, space-separated | `documents`: `STRUCT(url VARCHAR, retrieved_utc TIMESTAMP, sha256 VARCHAR)[]` | never | The sources, as for events. | |
+
 ## Changes
 
 New columns are added at the end. Existing columns aren't renamed, retyped or removed without a note here and in the
-SPEC's amendments log (`docs/SPEC.md` §J). Recorded decisions get their own files (`actions.csv`, `actions.parquet`;
-#90), documented here when they land.
+SPEC's amendments log (`docs/SPEC.md` §J).

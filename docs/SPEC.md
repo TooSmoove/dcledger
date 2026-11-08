@@ -171,7 +171,11 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - `public/feed.xml`: one RSS 2.0 item per event revision. Export keeps no history, so the GUID is the calendar UID plus `sequence`, which every published change raises (#29); a change or cancellation arrives as a new item. Every date comes from the ledger (`pubDate` the newest document retrieval, `lastBuildDate` the newest `pubDate`), so the same ledger gives the same bytes. `dcl export --site-url` sets the absolute links.
   - Written with the runtime's `XmlWriter` instead of System.ServiceModel.Syndication: one dependency fewer, and the output is fully controlled.
   - `public/events.parquet`: the CSV's rows with native types and documents as a list of structs, via DuckDB `COPY` (snappy, one thread, byte-identical across runs).
-  - Local actions (decisions) are not feed items yet.
+  - Local actions (decisions) are not feed items yet (added by #90 below).
 - **Nov 8, 2026 — CSV safety and data dictionary (issue #31, AC7):**
   - `events.csv` is UTF-8 with a BOM. Every text cell starting with `=`, `+`, `-`, `@`, tab or CR gets a leading apostrophe, and so does one already starting with an apostrophe, so the guard reverses exactly (drop one leading apostrophe). Number columns are never guarded. `events.parquet` stays unguarded.
   - `docs/data-dictionary.md` documents the encoding, the guard and how to reverse it, and every column of both downloads.
+- **Nov 8, 2026 — Decisions in the feed and downloads (issue #90, AC5):**
+  - Actions gain an optional `sequence` (default 0, so existing records stay valid), raised by every published change; the revision check (`--previous-data`) enforces it with `SEQUENCE_NOT_RAISED`, and an action's `jurisdiction_id` is frozen (`JURISDICTION_CHANGED`). A hash of the published fields was rejected as the change signal: it would turn typo fixes into feed items and work differently from events.
+  - Each decision revision is a feed item (GUID `action:{id}/{sequence}`), merged with event items newest first.
+  - `public/actions.csv` (same BOM, RFC 4180 and formula guard as `events.csv`) and `public/actions.parquet` (typed; `decided_on` a DATE). `events.json` actions gain `sequence` (schema version 1, additive).

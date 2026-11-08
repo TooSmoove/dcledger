@@ -120,7 +120,7 @@ jobs:
         env:
           GENERATED: ${{ steps.status.outputs.generated-utc }}
         run: |
-          for file in _headers 404.html index.html radar/index.html map/index.html map-style.json radar.ics feed.xml events.csv events.parquet; do
+          for file in _headers 404.html index.html radar/index.html map/index.html map-style.json radar.ics feed.xml events.csv events.parquet actions.csv actions.parquet; do
             [ -s "$file" ] || { echo "::error title=publish::dist/$file is missing or empty"; exit 1; }
           done
           grep -q '^  X-Robots-Tag: noindex$' _headers || { echo "::error title=publish::_headers lost noindex (AC11)"; exit 1; }

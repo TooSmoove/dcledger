@@ -186,11 +186,18 @@ internal sealed partial class YamlFields
     public long? WholeNumber(string key, long max = long.MaxValue)
     {
         var value = Required(key);
-        if (value is null)
-        {
-            return null;
-        }
+        return value is null ? null : ParseWholeNumber(key, value, max);
+    }
 
+    /// <summary>Like <see cref="WholeNumber"/>, but a missing key is null without an error.</summary>
+    public long? OptionalWholeNumber(string key, long max = long.MaxValue)
+    {
+        var value = Optional(key);
+        return value is null ? null : ParseWholeNumber(key, value, max);
+    }
+
+    private long? ParseWholeNumber(string key, string value, long max)
+    {
         if (long.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var count) && count <= max)
         {
             return count;

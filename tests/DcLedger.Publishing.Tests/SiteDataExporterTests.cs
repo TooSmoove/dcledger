@@ -103,6 +103,7 @@ public sealed class SiteDataExporterTests
         action.GetProperty("decided_on").GetString().ShouldBe("2026-11-05");
         action.GetProperty("votes").GetString().ShouldBe("8-1");
         action.GetProperty("unanimous").GetBoolean().ShouldBeFalse();
+        action.GetProperty("sequence").GetInt32().ShouldBe(0);
         action.GetProperty("label").GetString().ShouldBe("confirmed_official");
         var source = action.GetProperty("documents").EnumerateArray().ShouldHaveSingleItem();
         source.GetProperty("sha256").GetString().ShouldBe(ExportSamples.CountyActionDetail1600.Id.Value);

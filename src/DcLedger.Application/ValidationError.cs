@@ -54,9 +54,12 @@ public static class ValidationRule
     /// <summary>A location outside North Carolina's bounding box, which is as far as the basemap goes.</summary>
     public const string LocationOutOfRange = "LOCATION_OUT_OF_RANGE";
 
-    /// <summary>A published event changed without raising <c>sequence</c>, or <c>sequence</c> went down (SPEC AC4).</summary>
+    /// <summary>A published event or action changed without raising <c>sequence</c>, or <c>sequence</c> went down (SPEC AC4, AC5).</summary>
     public const string SequenceNotRaised = "SEQUENCE_NOT_RAISED";
 
     /// <summary>A published event's jurisdiction, platform or platform meeting ID changed, which changes its calendar UID.</summary>
     public const string UidChanged = "UID_CHANGED";
+
+    /// <summary>A published action's jurisdiction changed (issue #90).</summary>
+    public const string JurisdictionChanged = "JURISDICTION_CHANGED";
 }

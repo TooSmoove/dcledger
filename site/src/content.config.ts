@@ -53,6 +53,8 @@ const actions = defineCollection({
       .nullable(),
     // Reported unanimous, possibly before the tally is posted. Defaults for an events.json written before the field.
     unanimous: z.boolean().default(false),
+    // The decision's revision (issue #90); defaults for an events.json written before the field.
+    sequence: z.number().int().nonnegative().default(0),
     label: z.enum(['reported_news', 'confirmed_official']),
     documents,
   }),

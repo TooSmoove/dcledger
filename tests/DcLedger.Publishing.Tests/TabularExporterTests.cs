@@ -19,6 +19,12 @@ public sealed class TabularExporterTests
 
     private static readonly byte[] Utf8Bom = [0xEF, 0xBB, 0xBF];
 
+    private static readonly string[] ActionsHeader =
+    [
+        "id", "jurisdiction_id", "event_id", "action_type", "outcome", "decided_on", "votes", "unanimous", "sequence", "label",
+        "document_urls", "document_retrieved_utc", "document_sha256",
+    ];
+
     /// <summary>The CSV as text, without its BOM (asserted on the bytes below).</summary>
     private static string EventsCsv(ExportModel? model = null) =>
         TestFiles.Text(EventsCsvFile(model)).TrimStart('﻿');
@@ -180,6 +186,68 @@ public sealed class TabularExporterTests
     // Verify compares text with LF line endings and without the BOM; both are asserted on the bytes above.
     [Fact]
     public Task Events_csv_golden() => Verify(EventsCsv().ReplaceLineEndings("\n"));
+
+    [Fact]
+    public Task Actions_csv_golden() => Verify(ActionsCsv().ReplaceLineEndings("\n"));
+
+    [Fact]
+    public void Actions_csv_has_the_bom_crlf_and_guard_of_the_events_csv()
+    {
+        var sample = ExportSamples.Model();
+        var hostile = sample with
+        {
+            Actions = [.. sample.Actions.Select(item => item with { Action = item.Action with { Votes = null, Unanimous = true, Sequence = 3 } })],
+        };
+        var bytes = TestFiles.Single(new TabularExporter().Export(hostile), ExportPaths.ActionsCsv).Content.ToArray();
+        var rows = Rfc4180.Parse(TestFiles.Text(TestFiles.Single(new TabularExporter().Export(hostile), ExportPaths.ActionsCsv)).TrimStart('\uFEFF'));
+
+        bytes.Take(3).ShouldBe(Utf8Bom);
+        rows[0].ShouldBe(ActionsHeader);
+        var row = rows.Skip(1).ShouldHaveSingleItem();
+        (row[6], row[7], row[8]).ShouldBe((string.Empty, "true", "3"), "votes empty, unanimous and sequence as written");
+    }
+
+    [Fact]
+    public void Actions_parquet_round_trips_with_native_types()
+    {
+        var directory = Directory.CreateTempSubdirectory("dcl-parquet-");
+        try
+        {
+            var path = Path.Combine(directory.FullName, "actions.parquet");
+            File.WriteAllBytes(path, TestFiles.Single(new TabularExporter().Export(ExportSamples.Model()), ExportPaths.ActionsParquet).Content.ToArray());
+
+            var row = ReadParquet("SELECT id, decided_on, votes, unanimous, sequence, len(documents), documents[1].sha256 FROM parquet", path)
+                .ShouldHaveSingleItem();
+
+            row[0].ShouldBe(ExportSamples.November5Moratorium.Id);
+            var decidedOn = row[1] switch
+            {
+                DateOnly date => date,
+                DateTime dateTime => DateOnly.FromDateTime(dateTime),
+                var other => throw new InvalidOperationException($"decided_on read back as {other?.GetType().Name ?? "null"}."),
+            };
+            decidedOn.ShouldBe(new DateOnly(2026, 11, 5), "a DATE, not text");
+            (row[2], row[3], row[4], row[5]).ShouldBe(("8-1", (object)false, (object)0, (object)1L));
+            row[6].ShouldBe(ExportSamples.CountyActionDetail1600.Id.Value, "a document only the action cites is still in the documents table");
+        }
+        finally
+        {
+            directory.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void No_actions_gives_just_the_actions_header()
+    {
+        var model = ExportSamples.Model() with { Actions = [] };
+
+        var csv = TestFiles.Text(TestFiles.Single(new TabularExporter().Export(model), ExportPaths.ActionsCsv)).TrimStart('\uFEFF');
+
+        Rfc4180.Parse(csv).ShouldHaveSingleItem().ShouldBe(ActionsHeader);
+    }
+
+    private static string ActionsCsv() =>
+        TestFiles.Text(TestFiles.Single(new TabularExporter().Export(ExportSamples.Model()), ExportPaths.ActionsCsv)).TrimStart('\uFEFF');
 
     [Fact]
     public void Rows_round_trip_in_start_order_with_quoting()
