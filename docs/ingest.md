@@ -2,7 +2,8 @@
 
 `dcl ingest` reads one jurisdiction's agenda platform. When an agenda item matches the keyword rules, it keeps the
 agenda in the private bucket and opens a review issue. A person then decides what is published (SPEC AC8). The
-`ingest` workflow runs it for every automated jurisdiction every 6 hours at :17 UTC.
+`ingest` workflow runs it for every automated jurisdiction hourly at :17 UTC. GitHub skips most scheduled runs, so in
+practice it runs a few times a day with gaps under 12 hours (spike S5, `docs/spikes/2026-11-08-cron-skew.md`).
 
 ## What one run does
 

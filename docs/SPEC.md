@@ -27,7 +27,7 @@ Due live and unlisted by **Sun Nov 22, 2026**.
 - **AC6 Labels:** Each item carries exactly one label: "reported (news)" or "confirmed (official record)". "Confirmed" requires a document row from an official platform.
 - **AC7 CSV safety:** UTF-8 with BOM, RFC 4180 quoting. Text cells starting with `=` `+` `-` `@`, tab or CR get a leading apostrophe (text columns only; documented in the data dictionary). A fixture containing all six triggers round-trips.
 - **AC8 Nothing unreviewed is public:** The site builds only from merged YAML on main, and a test proves it needs nothing else.
-- **AC9 Review SLA (amended):** T is the time an ingest run first sees a published agenda (recorded as `first_seen_utc`). The review issue for that agenda opens in the same ingest run. Ingest starts at least every 6 hours (every 4 hours if spike S5 shows the 12-hour target is at risk), with start delay logged, so the worst case from posting to issue is one cadence interval plus GitHub's scheduling delay, within 12 hours. Legistar's `EventAgendaLastPublishedUTC` is not used: it records the *last* republication, not the first (spike S13).
+- **AC9 Review SLA (amended):** T is the time an ingest run first sees a published agenda (recorded as `first_seen_utc`). The review issue for that agenda opens in the same ingest run. Ingest is scheduled hourly, with start delay logged. GitHub skips most scheduled runs (spike S5), so the worst case from posting to issue is the longest gap between ingest starts: 10.8 hours over 14 days of hourly measurement, within 12 hours. Legistar's `EventAgendaLastPublishedUTC` is not used: it records the *last* republication, not the first (spike S13).
 - **AC10 Freshness:** Each jurisdiction shows "last checked" in Eastern time; a text-plus-icon stale flag appears after 48 hours without a successful check. For Greensboro, "last checked" is the reviewer's last manual check.
 - **AC11 Unlisted:** `noindex` meta tag plus `X-Robots-Tag: noindex` header; no sitemap.
 - **AC12 Quality:** axe reports zero critical or serious issues; Lighthouse mobile ≥ 90 on /radar and the map page; non-map pages ship no `<script>` (asserted in CI).
@@ -50,7 +50,7 @@ Modules follow ADR-0001; contracts follow ADR-0004.
 | `site/` (Astro 7.4.2) | /radar, item pages, map page (MapLibre GL JS 6.16 + pmtiles 4.5, loaded on demand) |
 | Public R2 basemap | Protomaps NC extract at z14 (370 MB), served from `tiles.ncdcledger.org`; r2.dev is off (AC13). |
 | Cloudflare Pages | Static deploy (project `dcledger`) at `ncdcledger.org`; `www` redirects to the apex |
-| Workflows | `ci` (ubuntu-24.04 + windows-2025), `ingest` (cron 6 h), `publish` (green CI on main + every 6 h), `basemap` (manual; only job holding the public-bucket token) |
+| Workflows | `ci` (ubuntu-24.04 + windows-2025), `ingest` (cron hourly), `publish` (green CI on main + every 6 h), `basemap` (manual; only job holding the public-bucket token) |
 
 - **WS-AC1:** `dotnet build`/`test` green on ubuntu-24.04 and windows-2025; Astro build green on Linux.
 - **WS-AC2:** Ingesting the same fixtures twice gives byte-identical output and hashes, and no new issue.
@@ -126,10 +126,9 @@ Repo `TooSmoove/dcledger`, namespace `DcLedger.*`, Pages project `dcledger`. npm
 3. **S16 Pages** (#11): `_headers` noindex on direct upload; Pages: Edit-only token.
 4. **S17 artifact handoff** (#12): scheduled workflows run the CLI from the latest green `ci`.
 5. **S18 map Lighthouse** (#3): ≥ 90 with on-demand MapLibre.
-6. **S5 cron delay** (#4): p95 by Nov 8; decides 6 h vs 4 h ingest.
-7. **S12 settings / S12b statute** (#10): owner tasks. S11 domain done (§H).
+6. **S12 settings / S12b statute** (#10): owner tasks. S11 domain done (§H).
 
-Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7, S9, S10, S13, S14.
+Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7, S9, S10, S13, S14. S5 in `docs/spikes/2026-11-08-cron-skew.md`.
 
 ## J. Amendments log
 
@@ -164,3 +163,7 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - Absence is read narrowly (ADR-0008): a meeting missing after its date, or an empty meeting list, is never reported. Issues opened before this change take a silent baseline.
   - Ingest state gains each tracked meeting's last sighting and a per-jurisdiction list of tracked meetings (`state/tracked/{jurisdiction}.json`); both are additive (schema version 1).
   - The quality gate compares events with the base branch (`dcl validate --previous-data`, run by ci): a changed published field needs a higher `sequence` and `sequence` never goes down (`SEQUENCE_NOT_RAISED`); `jurisdiction_id`, `platform` and `platform_meeting_id` are frozen once published because the UID is built from them (`UID_CHANGED`). This is what makes "SEQUENCE+1, same UID" hold in subscribers' calendars.
+- **Nov 8, 2026 — Hourly ingest (spike S5, issue #4, AC9):**
+  - GitHub skipped 83% of an hourly probe's slots and 37% of the 6-hour ingest's; the 6-hour schedule left 4 of 25 gaps over 12 hours (up to 13.4 h). Ingest is now scheduled hourly, whose probe's longest gap was 10.8 h. Publish stays every 6 hours.
+  - An external trigger (for example a Cloudflare Worker calling `workflow_dispatch`) is the fallback if hourly gaps reach 12 hours; it needs an ADR.
+  - `spikes/`, `spikes.yml` and the `cron-skew` probe are removed.
