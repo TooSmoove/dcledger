@@ -172,3 +172,6 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - Written with the runtime's `XmlWriter` instead of System.ServiceModel.Syndication: one dependency fewer, and the output is fully controlled.
   - `public/events.parquet`: the CSV's rows with native types and documents as a list of structs, via DuckDB `COPY` (snappy, one thread, byte-identical across runs).
   - Local actions (decisions) are not feed items yet.
+- **Nov 8, 2026 — CSV safety and data dictionary (issue #31, AC7):**
+  - `events.csv` is UTF-8 with a BOM. Every text cell starting with `=`, `+`, `-`, `@`, tab or CR gets a leading apostrophe, and so does one already starting with an apostrophe, so the guard reverses exactly (drop one leading apostrophe). Number columns are never guarded. `events.parquet` stays unguarded.
+  - `docs/data-dictionary.md` documents the encoding, the guard and how to reverse it, and every column of both downloads.

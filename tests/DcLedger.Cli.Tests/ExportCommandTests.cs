@@ -29,6 +29,7 @@ public sealed class ExportCommandTests : IDisposable
         stdout.ShouldContain("Exported 3 event(s) for 2 jurisdiction(s)");
         ListFiles(output).ShouldBe(ExpectedFiles);
         File.ReadAllText(Path.Combine(output, "site-data", "events.json")).ShouldContain("\"starts_utc\": \"2026-11-05T22:30:00Z\"");
+        File.ReadAllBytes(Path.Combine(output, "public", "events.csv")).Take(3).ShouldBe("\uFEFF"u8.ToArray(), "Excel needs the BOM to read UTF-8");
     }
 
     [Fact]

@@ -4,9 +4,10 @@ using DuckDB.NET.Data;
 namespace DcLedger.Publishing.Tabular;
 
 /// <summary>
-/// Builds the DuckDB tables from the export model and writes <c>public/events.csv</c> (one row per event, RFC 4180
-/// quoting, CRLF records, UTF-8) and <c>public/events.parquet</c> (the same rows, typed, with each event's documents as
-/// a list; #30). The CSV safety rules (BOM, formula guard, data dictionary; R30, #31) build on this.
+/// Builds the DuckDB tables from the export model and writes <c>public/events.csv</c> and <c>public/events.parquet</c>.
+/// The CSV is for spreadsheets (SPEC AC7): UTF-8 with a BOM so Excel reads it as UTF-8, RFC 4180 quoting, CRLF
+/// records, and the formula guard on every text cell (<see cref="LedgerTables.CsvTextMacro"/>). The Parquet file has
+/// the same rows, typed, with each event's documents as a list (#30). Columns: docs/data-dictionary.md.
 /// </summary>
 public sealed class TabularExporter : IExporter
 {
@@ -18,12 +19,15 @@ public sealed class TabularExporter : IExporter
         using var connection = new DuckDBConnection("DataSource=:memory:");
         connection.Open();
         LedgerTables.Load(connection, model);
+        byte[] csv = [.. Utf8Bom, .. CopyTo(connection, LedgerTables.EventsCsvQuery, "export.csv", CsvOptions)];
         return
         [
-            new ExportFile(ExportPaths.EventsCsv, CopyTo(connection, LedgerTables.EventsCsvQuery, "export.csv", CsvOptions)),
+            new ExportFile(ExportPaths.EventsCsv, csv),
             new ExportFile(ExportPaths.EventsParquet, CopyTo(connection, LedgerTables.EventsParquetQuery, "export.parquet", ParquetOptions)),
         ];
     }
+
+    private static readonly byte[] Utf8Bom = [0xEF, 0xBB, 0xBF];
 
     private const string CsvOptions = """FORMAT csv, HEADER true, DELIMITER ',', QUOTE '"', ESCAPE '"', NEW_LINE '\r\n'""";
 

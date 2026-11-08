@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using DcLedger.Application;
 using DcLedger.Publishing.Tabular;
 using DcLedger.Testing;
 using DuckDB.NET.Data;
@@ -16,8 +17,89 @@ public sealed class TabularExporterTests
         "label", "location_lat", "location_lon", "document_urls", "document_retrieved_utc", "document_sha256",
     ];
 
-    private static string EventsCsv() =>
-        TestFiles.Text(TestFiles.Single(new TabularExporter().Export(ExportSamples.Model()), ExportPaths.EventsCsv));
+    private static readonly byte[] Utf8Bom = [0xEF, 0xBB, 0xBF];
+
+    /// <summary>The CSV as text, without its BOM (asserted on the bytes below).</summary>
+    private static string EventsCsv(ExportModel? model = null) =>
+        TestFiles.Text(EventsCsvFile(model)).TrimStart('﻿');
+
+    private static ExportFile EventsCsvFile(ExportModel? model = null) =>
+        TestFiles.Single(new TabularExporter().Export(model ?? ExportSamples.Model()), ExportPaths.EventsCsv);
+
+    /// <summary>Reverses the formula guard as docs/data-dictionary.md says: drop one leading apostrophe.</summary>
+    private static string Unguard(string cell) => cell.StartsWith('\'') ? cell[1..] : cell;
+
+    [Fact]
+    public void Csv_starts_with_a_utf8_bom_and_records_end_in_crlf()
+    {
+        var bytes = EventsCsvFile().Content.ToArray();
+        var text = EventsCsv();
+
+        bytes.Take(3).ShouldBe(Utf8Bom);
+        bytes.Skip(3).Take(3).ShouldBe("id,"u8.ToArray(), "the header follows the BOM directly");
+        text.EndsWith("\r\n", StringComparison.Ordinal).ShouldBeTrue();
+        text.Replace("\r\n", string.Empty, StringComparison.Ordinal).Contains('\n', StringComparison.Ordinal).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Every_formula_trigger_is_guarded_in_text_cells_and_round_trips()
+    {
+        // The six triggers from SPEC AC7, plus a leading apostrophe so the guard reverses exactly; one per text field.
+        var sample = ExportSamples.Model();
+        var hostile = new Dictionary<string, (string Body, string Title, string? CaseNumber)>(StringComparer.Ordinal)
+        {
+            [ExportSamples.October15.Id] = ("=SUM(1,2)", "+cmd|' /C calc'!A0", "-2+3"),
+            [ExportSamples.November3.Id] = ("@SUM(A1)", "\tTabbed title", "\rCR case"),
+            [ExportSamples.November5.Id] = ("Board of Commissioners", "'Quoted title", "a=b, not a formula"),
+        };
+        var model = sample with
+        {
+            Events = [.. sample.Events.Select(item =>
+            {
+                var (body, title, caseNumber) = hostile[item.Event.Id];
+                return item with { Event = item.Event with { Body = body, Title = title, CaseNumber = caseNumber } };
+            })],
+        };
+
+        var rows = Rfc4180.Parse(EventsCsv(model));
+
+        rows.Count.ShouldBe(4);
+        foreach (var row in rows.Skip(1))
+        {
+            var (body, title, caseNumber) = hostile[row[0]];
+            (Unguard(row[3]), Unguard(row[4]), Unguard(row[5])).ShouldBe((body, title, caseNumber ?? string.Empty), row[0]);
+        }
+
+        var october15 = rows[1];
+        (october15[3], october15[4], october15[5]).ShouldBe(("'=SUM(1,2)", "'+cmd|' /C calc'!A0", "'-2+3"));
+        var november3 = rows[2];
+        (november3[3], november3[4], november3[5]).ShouldBe(("'@SUM(A1)", "'\tTabbed title", "'\rCR case"));
+        var november5 = rows[3];
+        (november5[3], november5[4], november5[5]).ShouldBe(("Board of Commissioners", "''Quoted title", "a=b, not a formula"));
+        november5[12].ShouldBe("-79.792", "numbers aren't text, so a negative longitude stays a number");
+    }
+
+    [Fact]
+    public void Parquet_keeps_values_unguarded()
+    {
+        var sample = ExportSamples.Model();
+        var model = sample with
+        {
+            Events = [.. sample.Events.Select(item => item with { Event = item.Event with { Title = "=formula" } })],
+        };
+        var directory = Directory.CreateTempSubdirectory("dcl-parquet-");
+        try
+        {
+            var path = Path.Combine(directory.FullName, "events.parquet");
+            File.WriteAllBytes(path, TestFiles.Single(new TabularExporter().Export(model), ExportPaths.EventsParquet).Content.ToArray());
+
+            ReadParquet("SELECT DISTINCT title FROM parquet", path).ShouldHaveSingleItem()[0].ShouldBe("=formula");
+        }
+        finally
+        {
+            directory.Delete(recursive: true);
+        }
+    }
 
     [Fact]
     public void Parquet_round_trips_through_read_parquet_with_native_types()
@@ -55,32 +137,15 @@ public sealed class TabularExporterTests
     private static byte[] Parquet() =>
         TestFiles.Single(new TabularExporter().Export(ExportSamples.Model()), ExportPaths.EventsParquet).Content.ToArray();
 
-    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "Test-only: constant SQL and a temporary path quoted by SqlLiteral.")]
+    /// <summary>Runs <paramref name="select"/> against the sample ledger's Parquet file, exposed as <c>parquet</c>.</summary>
     private static List<object?[]> ReadParquet(string select)
     {
         var directory = Directory.CreateTempSubdirectory("dcl-parquet-");
         try
         {
-            var path = Path.Combine(directory.FullName, "events.parquet").Replace('\\', '/');
+            var path = Path.Combine(directory.FullName, "events.parquet");
             File.WriteAllBytes(path, Parquet());
-            using var connection = new DuckDBConnection("DataSource=:memory:");
-            connection.Open();
-            using var command = connection.CreateCommand();
-            command.CommandText = $"WITH parquet AS (SELECT * FROM read_parquet({LedgerTables.SqlLiteral(path)})) {select}";
-            using var reader = command.ExecuteReader();
-            var rows = new List<object?[]>();
-            while (reader.Read())
-            {
-                var row = new object?[reader.FieldCount];
-                for (var i = 0; i < row.Length; i++)
-                {
-                    row[i] = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                }
-
-                rows.Add(row);
-            }
-
-            return rows;
+            return ReadParquet(select, path);
         }
         finally
         {
@@ -88,19 +153,33 @@ public sealed class TabularExporterTests
         }
     }
 
-    // Verify compares text with LF line endings; CRLF is asserted below.
+    /// <summary>Runs <paramref name="select"/> against the Parquet file at <paramref name="path"/>, exposed as <c>parquet</c>.</summary>
+    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "Test-only: constant SQL and a temporary path quoted by SqlLiteral.")]
+    private static List<object?[]> ReadParquet(string select, string path)
+    {
+        using var connection = new DuckDBConnection("DataSource=:memory:");
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = $"WITH parquet AS (SELECT * FROM read_parquet({LedgerTables.SqlLiteral(path.Replace('\\', '/'))})) {select}";
+        using var reader = command.ExecuteReader();
+        var rows = new List<object?[]>();
+        while (reader.Read())
+        {
+            var row = new object?[reader.FieldCount];
+            for (var i = 0; i < row.Length; i++)
+            {
+                row[i] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+            }
+
+            rows.Add(row);
+        }
+
+        return rows;
+    }
+
+    // Verify compares text with LF line endings and without the BOM; both are asserted on the bytes above.
     [Fact]
     public Task Events_csv_golden() => Verify(EventsCsv().ReplaceLineEndings("\n"));
-
-    [Fact]
-    public void Records_end_in_crlf_and_there_is_no_bom()
-    {
-        var csv = EventsCsv();
-
-        csv[0].ShouldBe('i'); // the header, no BOM yet (#31 adds it)
-        csv.EndsWith("\r\n", StringComparison.Ordinal).ShouldBeTrue();
-        csv.Replace("\r\n", string.Empty, StringComparison.Ordinal).Contains('\n', StringComparison.Ordinal).ShouldBeFalse();
-    }
 
     [Fact]
     public void Rows_round_trip_in_start_order_with_quoting()
@@ -142,7 +221,7 @@ public sealed class TabularExporterTests
     {
         var model = ExportSamples.Model() with { Events = [] };
 
-        var csv = TestFiles.Text(new TabularExporter().Export(model)[0]);
+        var csv = EventsCsv(model);
 
         Rfc4180.Parse(csv).ShouldHaveSingleItem().ShouldBe(Header);
     }
