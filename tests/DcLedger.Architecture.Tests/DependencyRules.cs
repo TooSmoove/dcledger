@@ -37,8 +37,7 @@ internal static class DependencyRules
                 "Microsoft.Extensions.Http.Resilience"),
             ["DcLedger.Publishing"] = Set(
                 "DuckDB.NET.Data.Full",
-                "Ical.Net",
-                "System.ServiceModel.Syndication"),
+                "Ical.Net"),
             ["DcLedger.Cli"] = Set(
                 "System.CommandLine",
                 "Serilog",

@@ -15,6 +15,12 @@ public static class ExportPaths
     /// <summary>One row per event.</summary>
     public const string EventsCsv = "public/events.csv";
 
+    /// <summary>The same rows as <see cref="EventsCsv"/>, typed, with each event's documents as a list.</summary>
+    public const string EventsParquet = "public/events.parquet";
+
+    /// <summary>The RSS 2.0 feed of reviewed changes.</summary>
+    public const string Feed = "public/feed.xml";
+
     /// <summary>One jurisdiction's calendar, for example <c>public/radar/guilford.ics</c>.</summary>
     public static string JurisdictionRadar(string jurisdictionId) => $"public/radar/{jurisdictionId}.ics";
 }

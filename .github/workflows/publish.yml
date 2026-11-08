@@ -99,7 +99,7 @@ jobs:
         env:
           CLI: ${{ steps.cli.outputs.cli-path }}
         run: |
-          "$CLI" export --data build/data --status "$RUNNER_TEMP/ingest-status.json" --out build/out --format github \
+          "$CLI" export --data build/data --status "$RUNNER_TEMP/ingest-status.json" --out build/out --site-url "$SITE_URL" --format github \
             | tee "$RUNNER_TEMP/export.txt"
 
       # No npm cache: nothing restored from another run reaches the deployed files.
@@ -120,7 +120,7 @@ jobs:
         env:
           GENERATED: ${{ steps.status.outputs.generated-utc }}
         run: |
-          for file in _headers 404.html index.html radar/index.html map/index.html map-style.json radar.ics events.csv; do
+          for file in _headers 404.html index.html radar/index.html map/index.html map-style.json radar.ics feed.xml events.csv events.parquet; do
             [ -s "$file" ] || { echo "::error title=publish::dist/$file is missing or empty"; exit 1; }
           done
           grep -q '^  X-Robots-Tag: noindex$' _headers || { echo "::error title=publish::_headers lost noindex (AC11)"; exit 1; }

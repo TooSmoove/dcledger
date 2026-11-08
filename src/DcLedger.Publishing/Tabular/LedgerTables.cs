@@ -40,6 +40,34 @@ internal static class LedgerTables
         ORDER BY e.starts_utc, e.id
         """;
 
+    /// <summary>
+    /// The Parquet rows: the CSV's columns with native types (<c>starts_utc</c> a UTC timestamp, <c>sequence</c> an
+    /// integer, coordinates doubles) and the documents as one ordered list of structs instead of three joined strings.
+    /// </summary>
+    public const string EventsParquetQuery = """
+        SELECT
+            e.id,
+            e.uid,
+            e.jurisdiction_id,
+            e.body,
+            e.title,
+            e.case_number,
+            e.starts_utc,
+            e.starts_local,
+            e.status,
+            e.sequence,
+            e.label,
+            e.location_lat,
+            e.location_lon,
+            list({'url': d.url, 'retrieved_utc': d.retrieved_utc, 'sha256': d.sha256} ORDER BY ed.position) AS documents
+        FROM events AS e
+        JOIN event_documents AS ed ON ed.event_id = e.id
+        JOIN documents AS d ON d.sha256 = ed.sha256
+        GROUP BY e.id, e.uid, e.jurisdiction_id, e.body, e.title, e.case_number, e.starts_utc, e.starts_local, e.status,
+            e.sequence, e.label, e.location_lat, e.location_lon
+        ORDER BY e.starts_utc, e.id
+        """;
+
     private static readonly string[] Settings =
     [
         "SET autoinstall_known_extensions = false",

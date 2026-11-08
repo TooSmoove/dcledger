@@ -43,7 +43,7 @@ Modules follow ADR-0001; contracts follow ADR-0004.
 | DcLedger.Application | Use cases (ingest, validate, export) and ports; the hand-written validator (quality gate) |
 | DcLedger.Adapters.Legistar | Web API events and event items (API verified open, no token). EventDate + EventTime → America/New_York → UTC. |
 | DcLedger.Infrastructure | Fetcher (IHttpClientFactory, standard resilience, rate limit, robots.txt, identifying user agent, size caps); R2 store and ingest state (AWSSDK.S3 4.0.104.6, both checksum modes WHEN_REQUIRED, DisablePayloadSigning); GitHub review queue; YAML reader |
-| DcLedger.Publishing | DuckDB (DuckDB.NET.Data.Full 1.5.6.1, built in CI, never committed); JSON, CSV, ICS (Ical.Net 5.2.3 + pinned VTIMEZONE), RSS (System.ServiceModel.Syndication), Parquet |
+| DcLedger.Publishing | DuckDB (DuckDB.NET.Data.Full 1.5.6.1, built in CI, never committed); JSON, CSV, ICS (Ical.Net 5.2.3 + pinned VTIMEZONE), RSS (System.Xml `XmlWriter`), Parquet |
 | DcLedger.Cli | System.CommandLine 2.0.13: `ingest`, `validate`, `export`, `archive-document`. Published as linux-x64. Only composition root. |
 | Review queue | GitHub Issue with neutral placeholder title, case number, hash, retrieval and first-seen times, ready-to-paste YAML (incl. document row). Never the original title. |
 | `data/` YAML | Canonical records, one file each |
@@ -104,7 +104,7 @@ Data: CC BY 4.0. Basemap: ODbL Produced Work in a separate bucket with OSM attri
 | DB | DuckDB.NET.Data.Full 1.5.6.1 (engine 1.5.6) | S7: natives for linux-x64/win-x64; Parquet offline |
 | Object storage | AWSSDK.S3 4.0.104.6; no ForcePathStyle | S2/S3 against live R2 |
 | iCal | Ical.Net 5.2.3 + pinned VTIMEZONE injected before the first VEVENT; never `FromSystemTimeZone` | S6 |
-| RSS | System.ServiceModel.Syndication 10.0.x | NuGet, MIT |
+| RSS | System.Xml `XmlWriter` (in the runtime) | Replaced System.ServiceModel.Syndication (#30): no extra package, and exact control of the bytes |
 | Validation | Hand-written C# | JsonSchema.Net dropped |
 | Tests | xunit.v3 4.0.2, Verify.XunitV3 31.25.0, Shouldly 4.3.0, WireMock.Net.Minimal 2.19.0 | S10 (`dotnet run` and `dotnet test` in MTP mode) |
 | Site | Astro 7.4.2 | S14: escaping verified, zero script off-map |
@@ -167,3 +167,8 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - GitHub skipped 83% of an hourly probe's slots and 37% of the 6-hour ingest's; the 6-hour schedule left 4 of 25 gaps over 12 hours (up to 13.4 h). Ingest is now scheduled hourly, whose probe's longest gap was 10.8 h. Publish stays every 6 hours.
   - An external trigger (for example a Cloudflare Worker calling `workflow_dispatch`) is the fallback if hourly gaps reach 12 hours; it needs an ADR.
   - `spikes/`, `spikes.yml` and the `cron-skew` probe are removed.
+- **Nov 8, 2026 — RSS feed and Parquet export (issue #30, AC5):**
+  - `public/feed.xml`: one RSS 2.0 item per event revision. Export keeps no history, so the GUID is the calendar UID plus `sequence`, which every published change raises (#29); a change or cancellation arrives as a new item. Every date comes from the ledger (`pubDate` the newest document retrieval, `lastBuildDate` the newest `pubDate`), so the same ledger gives the same bytes. `dcl export --site-url` sets the absolute links.
+  - Written with the runtime's `XmlWriter` instead of System.ServiceModel.Syndication: one dependency fewer, and the output is fully controlled.
+  - `public/events.parquet`: the CSV's rows with native types and documents as a list of structs, via DuckDB `COPY` (snappy, one thread, byte-identical across runs).
+  - Local actions (decisions) are not feed items yet.

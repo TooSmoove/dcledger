@@ -8,6 +8,8 @@ public sealed class ExportCommandTests : IDisposable
     private static readonly string[] ExpectedFiles =
     [
         "public/events.csv",
+        "public/events.parquet",
+        "public/feed.xml",
         "public/radar.ics",
         "public/radar/fixture-city.ics",
         "public/radar/fixture-county.ics",
@@ -42,6 +44,33 @@ public sealed class ExportCommandTests : IDisposable
         {
             File.ReadAllBytes(Path.Combine(second, file)).SequenceEqual(File.ReadAllBytes(Path.Combine(first, file))).ShouldBeTrue(file);
         }
+    }
+
+    [Fact]
+    public async Task Feed_links_follow_the_site_url()
+    {
+        var defaults = Path.Combine(_temp, "defaults");
+        var preview = Path.Combine(_temp, "preview");
+
+        (await ExportAsync(Fixture(), Status(), defaults)).Code.ShouldBe(ExitCodes.Ok);
+        (await ExportAsync(Fixture(), Status(), preview, "--site-url", "https://preview.example.org")).Code.ShouldBe(ExitCodes.Ok);
+
+        File.ReadAllText(Path.Combine(defaults, "public", "feed.xml")).ShouldContain("<link>https://ncdcledger.org/radar/</link>");
+        File.ReadAllText(Path.Combine(preview, "public", "feed.xml")).ShouldContain("<link>https://preview.example.org/radar/</link>");
+    }
+
+    [Theory]
+    [InlineData("not a url")]
+    [InlineData("ftp://ncdcledger.org")]
+    public async Task Site_url_must_be_absolute_http(string siteUrl)
+    {
+        var output = Path.Combine(_temp, "out");
+
+        var (code, _, stderr) = await ExportAsync(Fixture(), Status(), output, "--site-url", siteUrl);
+
+        code.ShouldBe(ExitCodes.Usage);
+        stderr.ShouldContain("--site-url must be an absolute http(s) URL");
+        Directory.Exists(output).ShouldBeFalse();
     }
 
     [Fact]

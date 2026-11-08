@@ -81,7 +81,8 @@ document_ids: [<sha256>]
 Ingest comments on a meeting's review issue when the platform moves it, hints at a cancellation, withdraws its agenda or
 stops listing it (`docs/ingest.md`). It never changes the ledger itself. Once the meeting page confirms the change:
 
-- **Cancelled:** set `status: cancelled` and raise `sequence` by 1. Keep the file, `id` and `platform_meeting_id`: the
+- **Cancelled:** set `status: cancelled` and raise `sequence` by 1. Archive the notice that confirms it and add it to
+  `document_ids`: that's the provenance, and it dates the feed item and calendar update to when you found it. Keep the file, `id` and `platform_meeting_id`: the
   calendar UID is built from the jurisdiction, platform and meeting ID, so subscribers' calendars mark the existing event
   cancelled instead of dropping it, and /radar shows "Cancelled".
 - **Rescheduled:** set the new `starts_at`, with the Eastern offset in effect on the new date, and raise `sequence` by 1.
