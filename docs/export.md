@@ -17,8 +17,8 @@ With `--out out` from the repository root, the site build finds its data at `out
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per jurisdiction, even before it has events. |
 | `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision, newest first (see below). |
-| `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order. BOM, formula guard and data dictionary come in #31. |
-| `public/events.parquet` | The CSV's rows with native types: `starts_utc` a UTC timestamp, `sequence` an integer, coordinates doubles, and `documents` one list of `{url, retrieved_utc, sha256}` in the record's order. Written by DuckDB `COPY` (snappy). |
+| `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order. UTF-8 with BOM and a formula guard on text cells (SPEC AC7). Every column: `docs/data-dictionary.md`. |
+| `public/events.parquet` | The CSV's rows with native types: `starts_utc` a UTC timestamp, `sequence` an integer, coordinates doubles, and `documents` one list of `{url, retrieved_utc, sha256}` in the record's order. Written by DuckDB `COPY` (snappy); values unguarded. |
 
 Files under `public/` are served as they are, at the same paths under the site's root. Existing files of the same name
 are replaced; nothing is deleted, so use a fresh `--out` for a clean set.

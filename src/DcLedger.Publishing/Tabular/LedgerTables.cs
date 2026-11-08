@@ -6,32 +6,35 @@ using DuckDB.NET.Data;
 namespace DcLedger.Publishing.Tabular;
 
 /// <summary>
-/// Loads the export model into DuckDB tables (ADR-0002: DuckDB exists only to produce CSV, and Parquet in R29).
+/// Loads the export model into DuckDB tables (ADR-0002: DuckDB exists only to produce CSV and Parquet).
 /// UTC instants are plain TIMESTAMPs, so nothing depends on ICU or the machine's time zone (spike S7). The connection
 /// runs on one thread, keeps insertion order and never downloads an extension, so a query gives the same rows in the
 /// same order on every run.
 /// </summary>
 internal static class LedgerTables
 {
-    /// <summary>One row per event, documents joined in the record's order, space-separated (URLs can't contain spaces).</summary>
+    /// <summary>
+    /// One row per event, documents joined in the record's order, space-separated (URLs can't contain spaces). Every text
+    /// column goes through <c>csv_text</c> (see <see cref="CsvTextMacro"/>); numbers stay numbers.
+    /// </summary>
     public const string EventsCsvQuery = """
         SELECT
-            e.id,
-            e.uid,
-            e.jurisdiction_id,
-            e.body,
-            e.title,
-            e.case_number,
-            strftime(e.starts_utc, '%Y-%m-%dT%H:%M:%SZ') AS starts_utc,
-            e.starts_local,
-            e.status,
+            csv_text(e.id) AS id,
+            csv_text(e.uid) AS uid,
+            csv_text(e.jurisdiction_id) AS jurisdiction_id,
+            csv_text(e.body) AS body,
+            csv_text(e.title) AS title,
+            csv_text(e.case_number) AS case_number,
+            csv_text(strftime(e.starts_utc, '%Y-%m-%dT%H:%M:%SZ')) AS starts_utc,
+            csv_text(e.starts_local) AS starts_local,
+            csv_text(e.status) AS status,
             e.sequence,
-            e.label,
+            csv_text(e.label) AS label,
             e.location_lat,
             e.location_lon,
-            string_agg(d.url, ' ' ORDER BY ed.position) AS document_urls,
-            string_agg(strftime(d.retrieved_utc, '%Y-%m-%dT%H:%M:%SZ'), ' ' ORDER BY ed.position) AS document_retrieved_utc,
-            string_agg(d.sha256, ' ' ORDER BY ed.position) AS document_sha256
+            csv_text(string_agg(d.url, ' ' ORDER BY ed.position)) AS document_urls,
+            csv_text(string_agg(strftime(d.retrieved_utc, '%Y-%m-%dT%H:%M:%SZ'), ' ' ORDER BY ed.position)) AS document_retrieved_utc,
+            csv_text(string_agg(d.sha256, ' ' ORDER BY ed.position)) AS document_sha256
         FROM events AS e
         JOIN event_documents AS ed ON ed.event_id = e.id
         JOIN documents AS d ON d.sha256 = ed.sha256
@@ -74,7 +77,17 @@ internal static class LedgerTables
         "SET autoload_known_extensions = false",
         "SET threads = 1",
         "SET preserve_insertion_order = true",
+        CsvTextMacro,
     ];
+
+    /// <summary>
+    /// The CSV formula guard (SPEC AC7, OWASP "CSV injection"): a text cell starting with <c>=</c>, <c>+</c>, <c>-</c>,
+    /// <c>@</c>, tab or CR gets a leading apostrophe, so a spreadsheet shows it as text instead of running it. A cell
+    /// already starting with an apostrophe gets one too, so the rule reverses exactly: drop one leading apostrophe from
+    /// any text cell that has one (docs/data-dictionary.md). CSV only; Parquet keeps the values as they are.
+    /// </summary>
+    internal const string CsvTextMacro =
+        """CREATE MACRO csv_text(value) AS CASE WHEN left(value, 1) IN ('=', '+', '-', '@', chr(9), chr(13), '''') THEN '''' || value ELSE value END""";
 
     private static readonly string[] Schema =
     [
