@@ -151,13 +151,43 @@ test('jurisdiction pages show freshness with a text stale flag and link their fe
   assert.match(radar, /Stale: no successful check in 48 hours/, 'the radar shows it too');
 });
 
-test('the radar links the calendar and CSV, and the build carries them (feeds)', async () => {
+test('the radar links the calendar, feed, CSV and Parquet, and the build carries them (feeds)', async () => {
   assert.match(radar, /href="\/radar.ics"/);
+  assert.match(radar, /href="\/feed.xml"/);
   assert.match(radar, /href="\/events.csv"/);
-  for (const file of ['radar.ics', 'events.csv', 'radar/guilford.ics']) {
+  assert.match(radar, /href="\/events.parquet"/);
+  for (const file of [
+    'radar.ics',
+    'feed.xml',
+    'events.csv',
+    'events.parquet',
+    'radar/guilford.ics',
+  ]) {
     assert.ok(existsSync(join(dist, file)), file);
   }
   assert.match(await readFile(join(dist, 'radar.ics'), 'utf8'), /^BEGIN:VCALENDAR\r\n/);
+  assert.match(
+    await readFile(join(dist, 'feed.xml'), 'utf8'),
+    /^<\?xml version="1.0" encoding="utf-8"\?>\n<rss version="2.0"/,
+  );
+  assert.equal(
+    (await readFile(join(dist, 'events.parquet'))).subarray(0, 4).toString('latin1'),
+    'PAR1',
+  );
+});
+
+test('every page advertises the feed for readers that discover it', () => {
+  for (const file of [
+    'radar/index.html',
+    'about/index.html',
+    'jurisdictions/guilford/index.html',
+  ]) {
+    assert.match(
+      page(file),
+      /<link rel="alternate" type="application\/rss\+xml" title="NC Data Center Ledger: Hearing Radar" href="\/feed.xml"/,
+      file,
+    );
+  }
 });
 
 test('the about page tells site operators how to block the fetcher', () => {

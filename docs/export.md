@@ -16,7 +16,9 @@ With `--out out` from the repository root, the site build finds its data at `out
 | `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance and `location` (`{"lat", "lon"}` or null), and every local action (see below). Mirrored by `site/src/content.config.ts`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per jurisdiction, even before it has events. |
+| `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision, newest first (see below). |
 | `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order. BOM, formula guard and data dictionary come in #31. |
+| `public/events.parquet` | The CSV's rows with native types: `starts_utc` a UTC timestamp, `sequence` an integer, coordinates doubles, and `documents` one list of `{url, retrieved_utc, sha256}` in the record's order. Written by DuckDB `COPY` (snappy). |
 
 Files under `public/` are served as they are, at the same paths under the site's root. Existing files of the same name
 are replaced; nothing is deleted, so use a fresh `--out` for a clean set.
@@ -27,8 +29,18 @@ cancelled meeting gets `STATUS:CANCELLED` and "Cancelled: " in front of its titl
 time of the event's documents, so an unchanged event keeps the same bytes on every publish. The description lists each
 source with its retrieval time (Eastern) and SHA-256 (SPEC AC2).
 
-**Same input, same bytes:** every file depends only on the ledger and the ingest status. JSON is LF, calendars and CSV
-are CRLF, all UTF-8; nothing depends on the machine's culture or time zone. Tests check this under several cultures.
+**Feed:** export keeps no history, so each event is one item for its current revision. The GUID is the calendar UID
+plus `/` and `sequence` (`isPermaLink="false"`); every published change raises `sequence` (`SEQUENCE_NOT_RAISED`), so
+a change, including a cancellation, reaches readers as a new item and an unchanged event keeps its GUID. Titles start
+with "Cancelled: " or "Updated: " (sequence above 0); the description is escaped HTML with the time in Eastern, the
+case number, the label and every source with its retrieval time and SHA-256 (SPEC AC2). `pubDate` is the newest
+retrieval of the event's documents, like the calendars' `DTSTAMP`, and `lastBuildDate` the newest `pubDate`, so the
+feed changes only when the ledger does. A cancellation sorts as new when the notice that confirms it is archived and
+added to `document_ids`. Links are absolute: `--site-url` (default `https://ncdcledger.org`; publish passes its
+`SITE_URL`). Written with `XmlWriter`, UTF-8 without BOM, LF.
+
+**Same input, same bytes:** every file depends only on the ledger, the ingest status and `--site-url`. JSON and the feed
+are LF, calendars and CSV are CRLF, all UTF-8; Parquet is byte-identical across runs of the same DuckDB version; nothing depends on the machine's culture or time zone. Tests check this under several cultures.
 
 **Actions** (issue #25): `events.json` lists every local action, ordered by decision date then ID, after the events.
 The key was added without bumping `schema_version`, because a reader that ignores it loses nothing (ADR-0004):

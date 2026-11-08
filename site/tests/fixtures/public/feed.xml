@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>NC Data Center Ledger: Hearing Radar</title>
+    <link>https://ncdcledger.org/radar/</link>
+    <description>Fixture feed for the site build tests.</description>
+    <language>en-us</language>
+    <ttl>360</ttl>
+    <atom:link href="https://ncdcledger.org/feed.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

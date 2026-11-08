@@ -1,5 +1,6 @@
 using System.Globalization;
 using DcLedger.Application;
+using DcLedger.Publishing.Feed;
 using DcLedger.Publishing.Ics;
 using DcLedger.Publishing.SiteData;
 using DcLedger.Publishing.Tabular;
@@ -37,7 +38,7 @@ public sealed class DeterminismTests
     private static List<ExportFile> Export()
     {
         var model = ExportSamples.Model();
-        IExporter[] exporters = [new SiteDataExporter(), new RadarCalendarExporter(), new TabularExporter()];
+        IExporter[] exporters = [new SiteDataExporter(), new RadarCalendarExporter(), new FeedExporter(new Uri("https://ncdcledger.org")), new TabularExporter()];
         return [.. exporters.SelectMany(exporter => exporter.Export(model))];
     }
 

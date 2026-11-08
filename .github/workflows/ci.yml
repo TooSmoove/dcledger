@@ -291,7 +291,7 @@ jobs:
           # Export loads DuckDB's native library from the self-contained output (#23 runs this binary).
           "$CLI" export --data tests/fixtures/ledger/export --status tests/fixtures/ingest-status/valid.json \
             --out "$RUNNER_TEMP/export-smoke" 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
-          test -s "$RUNNER_TEMP/export-smoke/public/events.csv"
+          for file in events.csv events.parquet feed.xml; do test -s "$RUNNER_TEMP/export-smoke/public/$file"; done
       - name: Pack (deterministic tarball; keeps the executable bit)
         id: pack
         run: |

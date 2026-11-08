@@ -2,6 +2,7 @@ using System.CommandLine;
 using DcLedger.Application;
 using DcLedger.Infrastructure.Export;
 using DcLedger.Infrastructure.Ledger;
+using DcLedger.Publishing.Feed;
 using DcLedger.Publishing.Ics;
 using DcLedger.Publishing.SiteData;
 using DcLedger.Publishing.Tabular;
@@ -9,14 +10,18 @@ using DcLedger.Publishing.Tabular;
 namespace DcLedger.Cli;
 
 /// <summary>
-/// <c>dcl export --data &lt;dir&gt; --status &lt;file&gt; --out &lt;dir&gt;</c> (issue #20, ADR-0004): the site data, calendars
-/// and CSV from the validated ledger. Exit 0 when the files were written, 1 when the ledger fails the quality gate
+/// <c>dcl export --data &lt;dir&gt; --status &lt;file&gt; --out &lt;dir&gt;</c> (issue #20, ADR-0004): the site data, calendars,
+/// feed, CSV and Parquet from the validated ledger. Exit 0 when the files were written, 1 when the ledger fails the quality gate
 /// (nothing is written), 2 for bad arguments or an unusable ingest status.
 /// </summary>
 internal static class ExportCommand
 {
+    /// <summary>The site's public origin; the feed's links are absolute (#30).</summary>
+    private const string DefaultSiteUrl = "https://ncdcledger.org";
+
     /// <summary>Every exporter, in the order they run. Their files are written in path order.</summary>
-    private static readonly IExporter[] Exporters = [new SiteDataExporter(), new RadarCalendarExporter(), new TabularExporter()];
+    private static IExporter[] Exporters(Uri siteUrl) =>
+        [new SiteDataExporter(), new RadarCalendarExporter(), new FeedExporter(siteUrl), new TabularExporter()];
 
     internal static Command Create(TextWriter output, TextWriter error)
     {
@@ -41,23 +46,38 @@ internal static class ExportCommand
             DefaultValueFactory = _ => "text",
         };
         format.AcceptOnlyFromAmong("text", "github");
+        var siteUrl = new Option<string>("--site-url")
+        {
+            Description = "The site's public origin, for the feed's absolute links.",
+            DefaultValueFactory = _ => DefaultSiteUrl,
+        };
 
-        var command = new Command("export", "Write the site data, calendars and CSV from the validated ledger.") { data, status, outDirectory, format };
+        var command = new Command("export", "Write the site data, calendars, feed, CSV and Parquet from the validated ledger.")
+        {
+            data, status, outDirectory, format, siteUrl,
+        };
         command.SetAction(parseResult => Run(
             parseResult.GetValue(data)!,
             parseResult.GetValue(status)!,
             parseResult.GetValue(outDirectory)!,
+            parseResult.GetValue(siteUrl)!,
             parseResult.GetValue(format) == "github",
             output,
             error));
         return command;
     }
 
-    private static int Run(string dataDirectory, string statusFile, string outDirectory, bool github, TextWriter output, TextWriter error)
+    private static int Run(string dataDirectory, string statusFile, string outDirectory, string siteUrlText, bool github, TextWriter output, TextWriter error)
     {
         if (!Directory.Exists(dataDirectory))
         {
             error.WriteLine($"Data directory not found: {dataDirectory}");
+            return ExitCodes.Usage;
+        }
+
+        if (!Uri.TryCreate(siteUrlText, UriKind.Absolute, out var siteUrl) || (siteUrl.Scheme != Uri.UriSchemeHttps && siteUrl.Scheme != Uri.UriSchemeHttp))
+        {
+            error.WriteLine($"--site-url must be an absolute http(s) URL: {siteUrlText}");
             return ExitCodes.Usage;
         }
 
@@ -72,7 +92,7 @@ internal static class ExportCommand
             return ExitCodes.Usage;
         }
 
-        var report = new ExportLedger(new YamlLedgerReader(), Exporters, new DirectoryExportSink(outDirectory)).Run(dataDirectory, status);
+        var report = new ExportLedger(new YamlLedgerReader(), Exporters(siteUrl), new DirectoryExportSink(outDirectory)).Run(dataDirectory, status);
         if (!report.Exported)
         {
             LedgerProblems.Print(report.Validation.Errors, dataDirectory, github, output);

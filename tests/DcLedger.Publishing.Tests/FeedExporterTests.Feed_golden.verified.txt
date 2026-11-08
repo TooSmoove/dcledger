@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>NC Data Center Ledger: Hearing Radar</title>
+    <link>https://ncdcledger.org/radar/</link>
+    <description>Reviewed North Carolina local-government meetings about data centers, each linked to its official source. A new item appears for each new meeting and each published change, including cancellations.</description>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 30 Oct 2026 14:05:00 +0000</lastBuildDate>
+    <ttl>360</ttl>
+    <atom:link href="https://ncdcledger.org/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Café district text amendment: data centers (Fixture City)</title>
+      <link>https://ncdcledger.org/items/fixture-city-council-2026-11-03/</link>
+      <guid isPermaLink="false">c5cfda1b012cf5d9dd43c49409b0265d5f805a3fa2edd5e26e323b7314d7e9c0@dcledger/0</guid>
+      <pubDate>Fri, 30 Oct 2026 14:05:00 +0000</pubDate>
+      <description>&lt;p&gt;Fixture City, City Council: Tuesday, November 3, 2026, 6:00 PM Eastern.&lt;/p&gt;&lt;p&gt;Confirmed (official record)&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;a href="https://fixture-city.example.org/council/2026-11-03-agenda.pdf"&gt;https://fixture-city.example.org/council/2026-11-03-agenda.pdf&lt;/a&gt; (retrieved 2026-10-30T10:05:00-04:00, SHA-256 89627e98c053f9b60815c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269)&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>Data center moratorium decision (Fixture County)</title>
+      <link>https://ncdcledger.org/items/fixture-county-boc-2026-11-05/</link>
+      <guid isPermaLink="false">7c581de9724d225dc55aee93df1a1310f85058e23d3201f485534e06cf47eb4c@dcledger/0</guid>
+      <pubDate>Wed, 28 Oct 2026 12:47:03 +0000</pubDate>
+      <description>&lt;p&gt;Fixture County, Board of Commissioners: Thursday, November 5, 2026, 5:30 PM Eastern.&lt;/p&gt;&lt;p&gt;Confirmed (official record)&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;a href="https://fixture-county.example.org/agendas/1600.pdf"&gt;https://fixture-county.example.org/agendas/1600.pdf&lt;/a&gt; (retrieved 2026-10-28T08:47:03-04:00, SHA-256 98e5cc1df59b5bffbdd8f02fa81cf65ef97dfc6b7f062cbeec875c6411f25ea9)&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>Cancelled: Rezoning hearing, "Project Example"; phase 2 (Fixture County)</title>
+      <link>https://ncdcledger.org/items/fixture-county-boc-2026-10-15/</link>
+      <guid isPermaLink="false">c366773aa8e5ea3400e0f5e92832b29e2b039d072dcb39b0377fafca937ddab6@dcledger/1</guid>
+      <pubDate>Sun, 11 Oct 2026 09:30:00 +0000</pubDate>
+      <description>&lt;p&gt;Fixture County, Board of Commissioners: Thursday, October 15, 2026, 5:30 PM Eastern.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Cancelled.&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;Case: Z-26-01&lt;/p&gt;&lt;p&gt;Confirmed (official record)&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;a href="https://news.example.org/2026/10/fixture-county-hearing"&gt;https://news.example.org/2026/10/fixture-county-hearing&lt;/a&gt; (retrieved 2026-10-11T05:30:00-04:00, SHA-256 fba97dc11de08b93c327ec5be8dd73bd8999230a61bd3116367e80eb848e7a50)&lt;/li&gt;&lt;li&gt;&lt;a href="https://fixture-county.example.org/agendas/1599.pdf"&gt;https://fixture-county.example.org/agendas/1599.pdf&lt;/a&gt; (retrieved 2026-10-10T08:00:00-04:00, SHA-256 6ed4fc9a22e94cfaa7a43db736257d21fcaf5b9e06320184d00df2f1e576520c)&lt;/li&gt;&lt;/ul&gt;</description>
+    </item>
+  </channel>
+</rss>
