@@ -58,7 +58,7 @@ public sealed class EndToEndSmokeTests : IDisposable
         var validate = await DclRunner.RunAsync("validate", "--data", data);
         validate.Code.ShouldBe(ExitCodes.Ok, validate.Output + validate.Error);
 
-        // A rerun six hours later (the ingest cadence) finds the same agenda and opens nothing (WS-AC2).
+        // A later rerun finds the same agenda and opens nothing (WS-AC2).
         _time.Now = SecondRun;
         var second = await IngestAsync(data, "e2e-2");
         second.Code.ShouldBe(ExitCodes.Ok, second.Error);

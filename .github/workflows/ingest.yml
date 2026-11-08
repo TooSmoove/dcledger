@@ -9,7 +9,7 @@ run-name: ${{ inputs.dry-run && 'ingest (dry run)' || 'ingest' }}
 
 on:
   schedule:
-    - cron: "17 */6 * * *" # every 6 h at :17; spike S5 (#4) decides whether this becomes every 4 h
+    - cron: "17 * * * *" # hourly at :17: GitHub skips most scheduled runs, and hourly kept gaps under 12 h (AC9; spike S5, docs/spikes/2026-11-08-cron-skew.md)
   workflow_dispatch:
     inputs:
       jurisdiction:
