@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Script canary</title>
+  </head>
+  <body>
+    <!-- Canary for the no-script rule (tests/quality.test.mjs): a non-map page that ships a script. -->
+    <script type="module" src="/_astro/anything.js"></script>
+  </body>
+</html>

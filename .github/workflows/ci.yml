@@ -88,6 +88,8 @@ jobs:
           PUBLIC_BASEMAP_URL: https://basemap.example.org/basemap/nc.pmtiles
         run: npm run build 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
       - run: npm test 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+      - name: axe on every page, light and dark, phone and desktop (SPEC AC12; a planted canary must fail first)
+        run: CHROME_PATH="$(command -v google-chrome)" npm run a11y 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
       - name: Lighthouse mobile on /map and /radar (SPEC AC12, spike S18)
         run: npm run lighthouse 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
       - name: Keep the Lighthouse reports

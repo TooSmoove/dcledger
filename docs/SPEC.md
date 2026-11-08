@@ -179,3 +179,6 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - Actions gain an optional `sequence` (default 0, so existing records stay valid), raised by every published change; the revision check (`--previous-data`) enforces it with `SEQUENCE_NOT_RAISED`, and an action's `jurisdiction_id` is frozen (`JURISDICTION_CHANGED`). A hash of the published fields was rejected as the change signal: it would turn typo fixes into feed items and work differently from events.
   - Each decision revision is a feed item (GUID `action:{id}/{sequence}`), merged with event items newest first.
   - `public/actions.csv` (same BOM, RFC 4180 and formula guard as `events.csv`) and `public/actions.parquet` (typed; `decided_on` a DATE). `events.json` actions gain `sequence` (schema version 1, additive).
+- **Nov 8, 2026 — Quality gates (issue #33, AC12):**
+  - ci runs axe-core 4.14.0 in Chrome (playwright-core 1.64.1, no browser download) on every built page, in light and dark color schemes at phone and desktop widths, and fails on any critical or serious violation; before auditing `dist/` it must see the violations planted in a canary page.
+  - Raw HTML is banned in `src/` (`set:html`, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`), and the no-script rule and the Lighthouse thresholds each have a canary or guard test (`site/README.md`).

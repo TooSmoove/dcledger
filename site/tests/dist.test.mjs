@@ -7,6 +7,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { hasScriptTag } from '../scripts/quality/static-checks.mjs';
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 const src = fileURLToPath(new URL('../src/', import.meta.url));
@@ -216,7 +217,7 @@ test('every page is marked noindex, the header file says so too, and there is no
 
 test('no page but the map ships a script tag (AC12)', () => {
   for (const { name, html } of pages.filter((p) => !scriptPages.has(p.name))) {
-    assert.doesNotMatch(html, /<script/i, name);
+    assert.equal(hasScriptTag(html), false, name);
   }
 });
 

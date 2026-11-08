@@ -14,9 +14,26 @@ npm test              # node:test over the built site and the data contract
 npm run test:e2e      # the end-to-end smoke test's site half (after the .NET half wrote ../out/, see below)
 npm run check         # astro check (types)
 npm run lighthouse    # Lighthouse mobile on /map and /radar; fails below 90 (run after build)
+npm run a11y          # axe on every page; fails on any critical or serious issue (run after build; needs Chrome)
 npm run format:check  # prettier
 npm run dev           # local preview at http://localhost:4321
 ```
+
+## Quality gates (AC12)
+
+ci fails the build when any of these breaks. Each one is checked against a fixture that breaks it on purpose
+(`tests/fixtures/quality/violations/`), so a gate that silently stops detecting fails too.
+
+| Gate                                                                                                                                             | Where                                      | Canary                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| axe: zero critical or serious issues on every page of `dist/`, in light and dark, at 390 px and 1280 px (WCAG 2.2 A/AA plus best practices)      | `npm run a11y` (`scripts/quality/axe.mjs`) | `violations/index.html`: axe must report all four planted rules before `dist/` is audited      |
+| No page but `/map` ships a `<script>`                                                                                                            | `tests/dist.test.mjs`                      | `violations/script-page.html.txt` (`tests/quality.test.mjs`)                                   |
+| No raw HTML from components or client scripts: `set:html`, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write` are banned in `src/` | `tests/quality.test.mjs`                   | `violations/unsafe-component.astro.txt`                                                        |
+| Lighthouse mobile performance and accessibility ≥ 0.9 on `/radar` and `/map`                                                                     | `npm run lighthouse`                       | `tests/quality.test.mjs` fails if `lighthouserc.json` loosens either threshold or drops a page |
+
+`npm run a11y` uses `CHROME_PATH` when set, otherwise Playwright's `chrome` channel (Google Chrome, as on GitHub's
+runners). Ledger text reaches pages only through Astro's escaping; if a page ever needs real markup from data, render
+it from structured fields instead of lifting the ban.
 
 ## The end-to-end smoke test
 
