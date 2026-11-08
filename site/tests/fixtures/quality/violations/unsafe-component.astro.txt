@@ -1,0 +1,10 @@
+---
+// Canary for the raw-HTML ban (tests/quality.test.mjs). Named .txt so astro check and the build never load it.
+const { item } = Astro.props;
+---
+<p set:html={item.title} />
+<script>
+  document.querySelector('p').innerHTML = location.hash;
+  document.body.insertAdjacentHTML('beforeend', location.search);
+  document.write(document.referrer);
+</script>

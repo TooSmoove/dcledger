@@ -1,0 +1,18 @@
+<!-- The axe gate's canary (scripts/quality/axe.mjs): every violation here is planted on purpose. If axe stops
+     reporting any of them, the gate is broken and fails. No lang (html-has-lang), an image without alt (image-alt),
+     an unnamed button (button-name), and grey on grey (color-contrast). -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Accessibility canary</title>
+  </head>
+  <body>
+    <main>
+      <h1>Canary</h1>
+      <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="40" height="40" />
+      <button type="button"></button>
+      <p style="color: #999; background: #aaa">This text has far too little contrast.</p>
+    </main>
+  </body>
+</html>
