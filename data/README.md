@@ -46,6 +46,7 @@ retrieved_at: 2026-10-27T14:00:00Z
 media_type: application/pdf
 bytes: 123456
 source_type: official         # official | news
+retrieval: manual             # optional: only for a file a person saved (see below); left out means fetched
 
 # events/<id>.yaml  (example values)
 id: fixture-county-boc-2026-11-05
@@ -108,7 +109,7 @@ page. Record every vote on the item, including a continuance or a tabling (`cont
    the page's https URL and who published it. For a Legistar decision, use the meeting item's action-detail page
    (`official`). It keeps the bytes in the private bucket and prints the `documents/` record in the run summary.
    Locally, `dcl archive-document --url <url> --source-type official --dry-run` prints the same record without storing
-   anything.
+   anything. If the source answers HTTP 403 to programs, see the next section.
 2. **Label it mechanically.** `confirmed_official` once the platform's own record of the action (the action-detail page)
    is archived; until then, `reported_news` backed by an archived news story. When the official record arrives, add its
    document, change the label and raise `sequence` by 1 in a new PR; the action's ID stays the same.
@@ -135,7 +136,8 @@ Vance post PDF lists. Their meetings are entered by hand, until #96 automates th
    when you found nothing. That timestamp is a statement that someone looked, so never set it ahead of time. The site
    shows it as "last checked" and flags the jurisdiction stale after **7 days** without a check (48 hours for
    automated ones; SPEC AC10).
-3. **Each item becomes an event.** Archive the agenda or notice with **archive-document** (`official`), then add
+3. **Each item becomes an event.** Archive the agenda or notice with **archive-document** (`official`; for eSCRIBE,
+   which blocks programs, save it in a browser and use `--file`, see "Archiving a file saved in a browser"), then add
    `events/<id>.yaml` as usual, with:
    - `platform: manual`;
    - `platform_meeting_id`: the platform's own ID for the meeting (for eSCRIBE, the `Id=` value in the meeting page's
@@ -144,3 +146,28 @@ Vance post PDF lists. Their meetings are entered by hand, until #96 automates th
    - a neutral title of your own, and `location` only for a publicly known project site.
 4. **Decisions** are `actions/` records like any other (see "Recording a decision"). Without an event in the ledger,
    leave out `event_id`; the decision then shows on the jurisdiction's page and in the feed.
+
+## Archiving a file saved in a browser
+
+Some sources only serve browsers. Greensboro's eSCRIBE portal puts every document download behind a Cloudflare
+"Verifying your browser" check, so the archive-document workflow gets HTTP 403. We don't try to get past that check.
+Instead, a person saves the public file, and `--file` records that a person saved it (issue #101).
+
+1. **Save the file.** Open the document in a browser (a private window proves it's public) and save it, e.g. the
+   minutes PDF. Note its URL from the address bar, such as
+   `https://pub-greensboro-nc.escribemeetings.com/FileStream.ashx?DocumentId=75288`. Don't edit the file, and archive it
+   soon: its last-modified time becomes `retrieved_at`.
+2. **Archive it from your computer.** The workflow can't take a file, and raw documents must never be committed. Set the
+   four bucket variables (`R2_ACCOUNT_ID`, `R2_PRIVATE_BUCKET`, `R2_PRIVATE_ACCESS_KEY_ID`, `R2_PRIVATE_SECRET_ACCESS_KEY`;
+   the same values as the repository secrets) and run:
+
+   ```sh
+   dotnet run --project src/DcLedger.Cli -- archive-document --file "minutes.pdf" --url "<the URL>" --source-type official
+   ```
+
+   Add `--dry-run` first to check the record without storing anything (no variables needed). On Windows, set the
+   variables with `set R2_ACCOUNT_ID=...` in Command Prompt or `$env:R2_ACCOUNT_ID="..."` in PowerShell.
+3. **Add the printed record.** It is the usual `documents/` record plus `retrieval: manual`. The command also prints the
+   `retrieved_at` it used. If that isn't when you saved the file (say the file was copied or edited), save it again.
+4. **Label as usual.** The publisher is what decides the label, not who saved the file: a manual copy of an official
+   record (`source_type: official`) can back `confirmed_official`.

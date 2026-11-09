@@ -30,6 +30,19 @@ public enum SourceType
     News,
 }
 
+/// <summary>How a document's bytes were obtained (issue #101).</summary>
+public enum Retrieval
+{
+    /// <summary>The tool downloaded them from the document's URL.</summary>
+    Fetched,
+
+    /// <summary>
+    /// A person saved them from the URL in a browser and handed the file to <c>dcl archive-document --file</c>, because the
+    /// source only serves browsers (Greensboro's eSCRIBE challenges every program).
+    /// </summary>
+    Manual,
+}
+
 /// <summary>What kind of decision a local action is. Extend by adding members; the YAML tokens are fixed in <see cref="EnumTokens"/>.</summary>
 public enum ActionType
 {

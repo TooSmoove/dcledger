@@ -28,6 +28,13 @@ public sealed class EnumTokensTests
     }
 
     [Fact]
+    public void Retrieval_tokens_are_fixed()
+    {
+        Retrieval.Fetched.ToToken().ShouldBe("fetched");
+        Retrieval.Manual.ToToken().ShouldBe("manual");
+    }
+
+    [Fact]
     public void Action_type_tokens_are_fixed()
     {
         ActionType.Moratorium.ToToken().ShouldBe("moratorium");
@@ -52,6 +59,7 @@ public sealed class EnumTokensTests
         Enum.GetValues<EventStatus>().Select(value => value.ToToken()).ShouldBeUnique();
         Enum.GetValues<EvidenceLabel>().Select(value => value.ToToken()).ShouldBeUnique();
         Enum.GetValues<SourceType>().Select(value => value.ToToken()).ShouldBeUnique();
+        Enum.GetValues<Retrieval>().Select(value => value.ToToken()).ShouldBeUnique();
         Enum.GetValues<ActionType>().Select(value => value.ToToken()).ShouldBeUnique();
         Enum.GetValues<ActionOutcome>().Select(value => value.ToToken()).ShouldBeUnique();
     }
@@ -62,6 +70,7 @@ public sealed class EnumTokensTests
         Should.Throw<ArgumentOutOfRangeException>(() => ((EventStatus)99).ToToken());
         Should.Throw<ArgumentOutOfRangeException>(() => ((EvidenceLabel)99).ToToken());
         Should.Throw<ArgumentOutOfRangeException>(() => ((SourceType)99).ToToken());
+        Should.Throw<ArgumentOutOfRangeException>(() => ((Retrieval)99).ToToken());
         Should.Throw<ArgumentOutOfRangeException>(() => ((ActionType)99).ToToken());
         Should.Throw<ArgumentOutOfRangeException>(() => ((ActionOutcome)99).ToToken());
     }

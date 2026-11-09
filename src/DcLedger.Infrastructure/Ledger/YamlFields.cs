@@ -157,6 +157,25 @@ internal sealed partial class YamlFields
         return null;
     }
 
+    /// <summary>An optional fixed token: <paramref name="absent"/> when the key is left out; reported when it isn't allowed.</summary>
+    public TEnum OptionalChoice<TEnum>(string key, IReadOnlyDictionary<string, TEnum> allowed, TEnum absent)
+        where TEnum : struct, Enum
+    {
+        var value = Optional(key);
+        if (value is null)
+        {
+            return absent;
+        }
+
+        if (allowed.TryGetValue(value, out var choice))
+        {
+            return choice;
+        }
+
+        Add(ValidationRule.InvalidValue, $"'{key}' must be one of: {string.Join(", ", allowed.Keys)}.");
+        return absent;
+    }
+
     public Sha256Hash? Hash(string key)
     {
         var value = Required(key);

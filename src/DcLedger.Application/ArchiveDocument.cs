@@ -6,7 +6,17 @@ namespace DcLedger.Application;
 /// <param name="Url">The public https URL to retrieve, for example a platform's action-detail page or a news story.</param>
 /// <param name="SourceType">Who published it; decides whether it can back a <c>confirmed_official</c> label (SPEC AC6).</param>
 /// <param name="DryRun">Retrieve and hash only; store nothing.</param>
-public sealed record ArchiveRequest(Uri Url, SourceType SourceType, bool DryRun);
+/// <param name="Copy">
+/// A copy a person saved from <paramref name="Url"/> in a browser, for sources that serve only browsers (issue #101). When
+/// given, nothing is fetched and the record says <see cref="Retrieval.Manual"/>.
+/// </param>
+public sealed record ArchiveRequest(Uri Url, SourceType SourceType, bool DryRun, SavedCopy? Copy = null);
+
+/// <summary>A document a person saved in a browser (issue #101).</summary>
+/// <param name="Content">The file's bytes, exactly as saved.</param>
+/// <param name="FileName">The file's name, used only to guess the media type of non-PDF files.</param>
+/// <param name="SavedAtUtc">When the browser saved it (the file's last-modified time); recorded as the retrieval time.</param>
+public sealed record SavedCopy(ReadOnlyMemory<byte> Content, string FileName, DateTimeOffset SavedAtUtc);
 
 /// <summary>The outcome of <see cref="ArchiveDocument.RunAsync"/>.</summary>
 /// <param name="Document">The ledger record for the retrieved bytes, when retrieval succeeded.</param>
@@ -21,8 +31,9 @@ public sealed record ArchiveResult(Document? Document, bool Created, string? Err
 /// <summary>
 /// Retrieves one document by hand and keeps its bytes in the private bucket under their SHA-256, the same way ingest keeps
 /// agendas (ADR-0002, ADR-0003), so a manually entered record has the provenance SPEC AC2 asks for. Used for sources
-/// ingest doesn't read, such as a decision's action-detail page or a news story (issue #25). Fetch and storage
-/// failures are results, not exceptions (ADR-0005).
+/// ingest doesn't read, such as a decision's action-detail page or a news story (issue #25), or from a copy a person saved
+/// in a browser when the source blocks programs (issue #101). Fetch and storage failures are results, not exceptions
+/// (ADR-0005).
 /// </summary>
 public sealed class ArchiveDocument(IFetcher fetcher, IDocumentStore store)
 {
@@ -38,13 +49,26 @@ public sealed class ArchiveDocument(IFetcher fetcher, IDocumentStore store)
         }
 
         FetchedResource fetched;
-        try
+        if (request.Copy is { } copy)
         {
-            fetched = await fetcher.GetAsync(request.Url, cancellationToken).ConfigureAwait(false);
+            if (copy.Content.IsEmpty)
+            {
+                return new ArchiveResult(null, false, "The file is empty.");
+            }
+
+            fetched = new FetchedResource(
+                copy.Content, MediaTypeGuess.Of(copy.Content.Span, copy.FileName), request.Url, copy.SavedAtUtc, Sha256Hash.Compute(copy.Content.Span));
         }
-        catch (FetchFailedException exception)
+        else
         {
-            return new ArchiveResult(null, false, $"Retrieval failed ({exception.Failure}): {exception.Message}");
+            try
+            {
+                fetched = await fetcher.GetAsync(request.Url, cancellationToken).ConfigureAwait(false);
+            }
+            catch (FetchFailedException exception)
+            {
+                return new ArchiveResult(null, false, $"Retrieval failed ({exception.Failure}): {exception.Message}");
+            }
         }
 
         var created = false;
@@ -69,6 +93,7 @@ public sealed class ArchiveDocument(IFetcher fetcher, IDocumentStore store)
             MediaType = string.IsNullOrWhiteSpace(fetched.MediaType) ? UnknownMediaType : fetched.MediaType,
             Bytes = fetched.Content.Length,
             SourceType = request.SourceType,
+            Retrieval = request.Copy is null ? Retrieval.Fetched : Retrieval.Manual,
         };
         return new ArchiveResult(document, created, null);
     }

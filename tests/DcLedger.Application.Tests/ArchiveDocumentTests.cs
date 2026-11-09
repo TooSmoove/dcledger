@@ -129,6 +129,73 @@ public sealed class ArchiveDocumentTests
         DocumentRecordYaml.PathFor(Sha256Hash.Compute(Page)).ShouldBe($"data/documents/{Sha256Hash.Compute(Page).Value}.yaml");
     }
 
+    [Fact]
+    public async Task A_saved_copy_is_stored_without_fetching_and_marked_manual()
+    {
+        var pdf = Encoding.ASCII.GetBytes("%PDF-1.7 fixture minutes");
+        var savedAt = new DateTimeOffset(2026, 11, 9, 22, 40, 12, TimeSpan.Zero).AddTicks(9999);
+        var minutes = new Uri("https://fixture-city.example.org/FileStream.ashx?DocumentId=1");
+
+        var result = await new ArchiveDocument(_fetcher, _store).RunAsync(
+            new ArchiveRequest(minutes, SourceType.Official, DryRun: false, new SavedCopy(pdf, "minutes.pdf", savedAt)), CancellationToken.None);
+
+        result.Succeeded.ShouldBeTrue();
+        _fetcher.Requests.ShouldBeEmpty();
+        var document = result.Document.ShouldNotBeNull();
+        document.Id.ShouldBe(Sha256Hash.Compute(pdf));
+        document.Url.ShouldBe(minutes);
+        document.RetrievedAtUtc.ShouldBe(new DateTimeOffset(2026, 11, 9, 22, 40, 12, TimeSpan.Zero));
+        document.MediaType.ShouldBe("application/pdf");
+        document.Bytes.ShouldBe(pdf.Length);
+        document.Retrieval.ShouldBe(Retrieval.Manual);
+        _store.Documents.Keys.ShouldBe([document.Id]);
+    }
+
+    [Fact]
+    public async Task A_fetched_document_is_marked_fetched()
+    {
+        (await Archive(SourceType.Official)).Document.ShouldNotBeNull().Retrieval.ShouldBe(Retrieval.Fetched);
+    }
+
+    [Fact]
+    public async Task An_empty_saved_copy_is_refused()
+    {
+        var result = await new ArchiveDocument(_fetcher, _store).RunAsync(
+            new ArchiveRequest(ActionPage, SourceType.Official, DryRun: false, new SavedCopy(Array.Empty<byte>(), "minutes.pdf", _time.GetUtcNow())),
+            CancellationToken.None);
+
+        result.Succeeded.ShouldBeFalse();
+        result.Error.ShouldBe("The file is empty.");
+        _store.Documents.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_manual_record_says_so_and_a_fetched_one_leaves_the_key_out()
+    {
+        var id = Sha256Hash.Compute(Page);
+        var at = new DateTimeOffset(2026, 11, 6, 13, 0, 0, TimeSpan.Zero);
+
+        var manual = DocumentRecordYaml.Lines(id, ActionPage, at, "application/pdf", 42, SourceType.Official, Retrieval.Manual);
+        var fetched = DocumentRecordYaml.Lines(id, ActionPage, at, "application/pdf", 42, SourceType.Official, Retrieval.Fetched);
+
+        manual[manual.Count - 1].ShouldBe("retrieval: manual");
+        fetched.Count.ShouldBe(manual.Count - 1);
+        fetched[fetched.Count - 1].ShouldBe("source_type: official");
+    }
+
+    [Theory]
+    [InlineData("%PDF-1.4 rest", "saved.bin", "application/pdf")]
+    [InlineData("%PDF-1.4 rest", "minutes.html", "application/pdf")]
+    [InlineData("<html></html>", "minutes.HTML", "text/html")]
+    [InlineData("<html></html>", "minutes.htm", "text/html")]
+    [InlineData("plain words", "minutes.txt", "text/plain")]
+    [InlineData("not really a pdf", "minutes.pdf", "application/octet-stream")]
+    [InlineData("anything", "minutes", "application/octet-stream")]
+    public void A_saved_file_s_media_type_comes_from_its_bytes_then_its_extension(string content, string fileName, string expected)
+    {
+        MediaTypeGuess.Of(Encoding.ASCII.GetBytes(content), fileName).ShouldBe(expected);
+    }
+
     private Task<ArchiveResult> Archive(SourceType sourceType) =>
         new ArchiveDocument(_fetcher, _store).RunAsync(new ArchiveRequest(ActionPage, sourceType, DryRun: false), CancellationToken.None);
 }
