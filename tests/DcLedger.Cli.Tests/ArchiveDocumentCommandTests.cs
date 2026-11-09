@@ -119,6 +119,85 @@ public sealed class ArchiveDocumentCommandTests : IDisposable
             "Configuration: Missing environment variables: R2_ACCOUNT_ID, R2_PRIVATE_BUCKET, R2_PRIVATE_ACCESS_KEY_ID, R2_PRIVATE_SECRET_ACCESS_KEY.");
     }
 
+    [Fact]
+    public async Task A_saved_file_is_stored_without_fetching_and_its_record_says_manual()
+    {
+        const string Minutes = "https://fixture-city.example.org/FileStream.ashx?DocumentId=1";
+        var pdf = Encoding.ASCII.GetBytes("%PDF-1.7 fixture minutes");
+        var savedAt = new DateTime(2026, 11, 9, 22, 40, 12, DateTimeKind.Utc);
+        var path = SaveFile("minutes.pdf", pdf, savedAt);
+
+        var result = await ArchiveAsync("--url", Minutes, "--source-type", "official", "--file", path);
+
+        result.Code.ShouldBe(ExitCodes.Ok, result.Error);
+        _fetcher.Requests.ShouldBeEmpty();
+        var sha256 = Sha256Hash.Compute(pdf);
+        _store.Documents.Keys.ShouldBe([sha256]);
+        result.Output.ShouldContain($"Read minutes.pdf, saved from {Minutes}: {pdf.Length} bytes, stored in the private bucket.");
+        result.Output.ShouldContain("retrieved_at is the file's last-modified time, 2026-11-09T22:40:12Z; check that's when you saved it.");
+
+        // The printed record, pasted as is, loads and validates, and can back a confirmed_official label.
+        var record = result.Output[(result.Output.IndexOf("id: ", StringComparison.Ordinal))..];
+        record.ShouldContain("retrieval: manual");
+        var documents = Path.Combine(_temp, "ledger", "documents");
+        Directory.CreateDirectory(documents);
+        await File.WriteAllTextAsync(Path.Combine(documents, $"{sha256.Value}.yaml"), record, TestContext.Current.CancellationToken);
+        var snapshot = new YamlLedgerReader().Load(Path.Combine(_temp, "ledger"));
+        LedgerValidator.Validate(snapshot, []).ShouldBeEmpty();
+        var document = snapshot.Documents.ShouldHaveSingleItem().Record;
+        document.Url.ShouldBe(new Uri(Minutes));
+        document.RetrievedAtUtc.ShouldBe(new DateTimeOffset(savedAt));
+        document.MediaType.ShouldBe("application/pdf");
+        document.SourceType.ShouldBe(SourceType.Official);
+        document.Retrieval.ShouldBe(Retrieval.Manual);
+    }
+
+    [Fact]
+    public async Task A_saved_file_can_be_dry_run()
+    {
+        var path = SaveFile("minutes.pdf", Encoding.ASCII.GetBytes("%PDF-1.7 x"), DateTime.UtcNow.AddMinutes(-5));
+
+        var result = await ArchiveAsync("--url", Url, "--source-type", "official", "--file", path, "--dry-run");
+
+        result.Code.ShouldBe(ExitCodes.Ok, result.Error);
+        result.Output.ShouldContain("not stored (dry run).");
+        _store.Documents.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_missing_file_is_a_usage_error()
+    {
+        var result = await ArchiveAsync("--url", Url, "--source-type", "official", "--file", Path.Combine(_temp, "nope.pdf"));
+
+        result.Code.ShouldBe(ExitCodes.Usage);
+        result.Error.ShouldContain("doesn't exist.");
+        _composedDryRun.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task An_empty_file_is_a_usage_error()
+    {
+        var path = SaveFile("empty.pdf", [], DateTime.UtcNow.AddMinutes(-5));
+
+        var result = await ArchiveAsync("--url", Url, "--source-type", "official", "--file", path);
+
+        result.Code.ShouldBe(ExitCodes.Usage);
+        result.Error.ShouldContain("empty.pdf is empty.");
+        _store.Documents.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_file_modified_in_the_future_is_a_usage_error()
+    {
+        var path = SaveFile("minutes.pdf", Encoding.ASCII.GetBytes("%PDF-1.7 x"), DateTime.UtcNow.AddDays(1));
+
+        var result = await ArchiveAsync("--url", Url, "--source-type", "official", "--file", path);
+
+        result.Code.ShouldBe(ExitCodes.Usage);
+        result.Error.ShouldContain("was last modified in the future");
+        _store.Documents.ShouldBeEmpty();
+    }
+
     public void Dispose()
     {
         Directory.Delete(_temp, recursive: true);
@@ -129,6 +208,14 @@ public sealed class ArchiveDocumentCommandTests : IDisposable
         DclRunner.RunWithAsync(
             (output, error) => CliApp.CreateRootCommand(output, error, _ => throw new InvalidOperationException("not ingest"), Compose),
             ["archive-document", .. args]);
+
+    private string SaveFile(string name, byte[] content, DateTime lastWriteUtc)
+    {
+        var path = Path.Combine(_temp, name);
+        File.WriteAllBytes(path, content);
+        File.SetLastWriteTimeUtc(path, lastWriteUtc);
+        return path;
+    }
 
     private ServiceProvider Compose(bool dryRun)
     {

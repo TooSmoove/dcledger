@@ -42,6 +42,12 @@ public sealed record Document
 
     /// <summary>Who published it.</summary>
     public required SourceType SourceType { get; init; }
+
+    /// <summary>
+    /// How the bytes were obtained. <see cref="Retrieval.Manual"/> means a person saved them from <see cref="Url"/> in a
+    /// browser at <see cref="RetrievedAtUtc"/>; the YAML leaves the key out for <see cref="Retrieval.Fetched"/>.
+    /// </summary>
+    public Retrieval Retrieval { get; init; } = Retrieval.Fetched;
 }
 
 /// <summary>A reviewed meeting or hearing on the radar. Named LedgerEvent to avoid the C# <c>event</c> keyword.</summary>

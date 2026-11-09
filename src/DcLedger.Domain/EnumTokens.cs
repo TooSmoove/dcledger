@@ -30,6 +30,14 @@ public static class EnumTokens
         _ => throw new ArgumentOutOfRangeException(nameof(sourceType), sourceType, "Unknown source type."),
     };
 
+    /// <summary>Returns <c>fetched</c> or <c>manual</c>.</summary>
+    public static string ToToken(this Retrieval retrieval) => retrieval switch
+    {
+        Retrieval.Fetched => "fetched",
+        Retrieval.Manual => "manual",
+        _ => throw new ArgumentOutOfRangeException(nameof(retrieval), retrieval, "Unknown retrieval."),
+    };
+
     /// <summary>Returns <c>moratorium</c>, <c>rezoning</c>, <c>text_amendment</c> or <c>resolution</c>.</summary>
     public static string ToToken(this ActionType actionType) => actionType switch
     {

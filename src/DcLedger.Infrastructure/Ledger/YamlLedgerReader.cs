@@ -22,6 +22,7 @@ public sealed class YamlLedgerReader : ILedgerReader
     // YAML values are the same fixed tokens the exports use (Domain), so the two can't drift apart.
     private static readonly Dictionary<string, Platform> Platforms = ByToken<Platform>(PlatformExtensions.ToToken);
     private static readonly Dictionary<string, SourceType> SourceTypes = ByToken<SourceType>(EnumTokens.ToToken);
+    private static readonly Dictionary<string, Retrieval> Retrievals = ByToken<Retrieval>(EnumTokens.ToToken);
     private static readonly Dictionary<string, EventStatus> Statuses = ByToken<EventStatus>(EnumTokens.ToToken);
     private static readonly Dictionary<string, EvidenceLabel> Labels = ByToken<EvidenceLabel>(EnumTokens.ToToken);
     private static readonly Dictionary<string, ActionType> ActionTypes = ByToken<ActionType>(EnumTokens.ToToken);
@@ -181,6 +182,7 @@ public sealed class YamlLedgerReader : ILedgerReader
         var mediaType = f.Required("media_type");
         var bytes = f.WholeNumber("bytes");
         var sourceType = f.Choice("source_type", SourceTypes);
+        var retrieval = f.OptionalChoice("retrieval", Retrievals, Retrieval.Fetched);
 
         return id is null || url is null || retrievedAt is null || mediaType is null || bytes is null || sourceType is null
             ? null
@@ -192,6 +194,7 @@ public sealed class YamlLedgerReader : ILedgerReader
                 MediaType = mediaType,
                 Bytes = bytes.Value,
                 SourceType = sourceType.Value,
+                Retrieval = retrieval,
             };
     }
 

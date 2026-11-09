@@ -209,6 +209,41 @@ public sealed class YamlLedgerReaderTests
         RuleFor($"documents/{Doc}.yaml", yaml).ShouldBe(ValidationRule.InvalidValue);
     }
 
+    [Theory]
+    [InlineData("", Retrieval.Fetched)]
+    [InlineData("retrieval: fetched\n", Retrieval.Fetched)]
+    [InlineData("retrieval: manual\n", Retrieval.Manual)]
+    public void Document_retrieval_is_fetched_unless_it_says_manual(string line, Retrieval expected)
+    {
+        var yaml = $"""
+            id: {Doc}
+            url: https://example.org/agenda.pdf
+            retrieved_at: 2026-10-25T21:17:05Z
+            media_type: application/pdf
+            bytes: 27
+            source_type: official
+
+            """ + line;
+
+        Load($"documents/{Doc}.yaml", yaml).Documents.ShouldHaveSingleItem().Record.Retrieval.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Document_retrieval_outside_the_vocabulary_is_rejected()
+    {
+        var yaml = $"""
+            id: {Doc}
+            url: https://example.org/agenda.pdf
+            retrieved_at: 2026-10-25T21:17:05Z
+            media_type: application/pdf
+            bytes: 27
+            source_type: official
+            retrieval: browser
+            """;
+
+        RuleFor($"documents/{Doc}.yaml", yaml).ShouldBe(ValidationRule.InvalidValue);
+    }
+
     [Fact]
     public void Action_reads_its_meeting_type_outcome_and_vote()
     {
