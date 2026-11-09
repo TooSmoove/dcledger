@@ -50,7 +50,9 @@ public sealed class SiteDataExporterTests
         var jurisdictions = root.GetProperty("jurisdictions").EnumerateArray().ToList();
         jurisdictions.Select(j => j.GetProperty("id").GetString()).ShouldBe([ExportSamples.City.Id, ExportSamples.County.Id]);
         jurisdictions[0].GetProperty("stale").GetBoolean().ShouldBeTrue();
+        jurisdictions[0].GetProperty("stale_after_hours").GetInt32().ShouldBe(168, "manual: 7 days");
         jurisdictions[1].GetProperty("stale").GetBoolean().ShouldBeFalse();
+        jurisdictions[1].GetProperty("stale_after_hours").GetInt32().ShouldBe(48, "automated: 48 hours");
         jurisdictions[1].GetProperty("last_checked_utc").GetString().ShouldBe("2026-11-05T12:17:43Z");
 
         var october15 = root.GetProperty("events")[0];

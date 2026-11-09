@@ -31,7 +31,11 @@ const decisions = byDecisionNewestFirst(
     <a href="/radar/">← Hearing Radar</a>
   </p>
   <h1>{data.name}</h1>
-  <Freshness lastCheckedUtc={data.last_checked_utc} stale={data.stale} />
+  <Freshness
+    lastCheckedUtc={data.last_checked_utc}
+    stale={data.stale}
+    staleAfterHours={data.stale_after_hours}
+  />
   <p class="feeds">
     Subscribe: <a href={`/radar/${id}.ics`}>calendar (iCal) for {data.name}</a>
   </p>

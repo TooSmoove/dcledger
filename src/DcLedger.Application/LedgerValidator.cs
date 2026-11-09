@@ -20,6 +20,11 @@ public static class LedgerValidator
 
         var errors = new List<ValidationError>(snapshot.LoadErrors);
         var jurisdictionIds = snapshot.Jurisdictions.Select(j => j.Record.Id).ToHashSet(StringComparer.Ordinal);
+        var platforms = new Dictionary<string, Platform>(StringComparer.Ordinal);
+        foreach (var (_, jurisdiction) in snapshot.Jurisdictions)
+        {
+            platforms.TryAdd(jurisdiction.Id, jurisdiction.Platform); // a duplicate also fails ID_MISMATCH below
+        }
         var events = new Dictionary<string, LedgerEvent>(StringComparer.Ordinal);
         foreach (var (_, ledgerEvent) in snapshot.Events)
         {
@@ -47,6 +52,7 @@ public static class LedgerValidator
         {
             CheckId(errors, file, ledgerEvent.Id);
             CheckJurisdiction(errors, file, ledgerEvent.Id, ledgerEvent.JurisdictionId, jurisdictionIds);
+            CheckEventPlatform(errors, file, ledgerEvent, platforms);
             CheckEvidence(errors, file, ledgerEvent.Id, ledgerEvent.DocumentIds, ledgerEvent.Label, documents);
             CheckStartTime(errors, file, ledgerEvent);
             CheckLocation(errors, file, ledgerEvent);
@@ -92,6 +98,25 @@ public static class LedgerValidator
         {
             errors.Add(new ValidationError(file, jurisdiction.Id, ValidationRule.InvalidValue,
                 "legistar_client is only allowed when platform is legistar."));
+        }
+
+        if (jurisdiction.Platform != Platform.Manual && jurisdiction.LastManualCheckUtc is not null)
+        {
+            errors.Add(new ValidationError(file, jurisdiction.Id, ValidationRule.InvalidValue,
+                "last_manual_check_utc is only allowed when platform is manual; an automated jurisdiction's last check comes from ingest."));
+        }
+    }
+
+    /// <summary>
+    /// An event's platform is its jurisdiction's (issue #27): the calendar UID is built from it, and a manual
+    /// jurisdiction's meetings are entered by hand, so an event claiming another platform is a mistake.
+    /// </summary>
+    private static void CheckEventPlatform(List<ValidationError> errors, string file, LedgerEvent ledgerEvent, Dictionary<string, Platform> platforms)
+    {
+        if (platforms.TryGetValue(ledgerEvent.JurisdictionId, out var platform) && platform != ledgerEvent.Platform)
+        {
+            errors.Add(new ValidationError(file, ledgerEvent.Id, ValidationRule.PlatformMismatch,
+                $"platform is {ledgerEvent.Platform.ToToken()}, but jurisdiction '{ledgerEvent.JurisdictionId}' is {platform.ToToken()}."));
         }
     }
 

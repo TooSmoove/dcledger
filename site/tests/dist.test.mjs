@@ -147,9 +147,21 @@ test('jurisdiction pages show freshness with a text stale flag and link their fe
   );
 
   const stale = page('jurisdictions/fixture-city/index.html');
-  assert.match(stale, /Stale: no successful check in 48 hours/);
-  assert.match(page('jurisdictions/never-checked/index.html'), /Never checked\.[\s\S]*Stale:/);
-  assert.match(radar, /Stale: no successful check in 48 hours/, 'the radar shows it too');
+  assert.match(
+    stale,
+    /Stale: no successful check in 7 days/,
+    'checked by hand: 7 days (issue #27)',
+  );
+  assert.match(
+    page('jurisdictions/never-checked/index.html'),
+    /Never checked\.[\s\S]*Stale: no successful check in 48 hours/,
+  );
+  assert.match(radar, /Stale: no successful check in 7 days/, 'the radar shows it too');
+  assert.match(
+    radar,
+    /Stale: no successful check in 48 hours/,
+    "with each jurisdiction's own threshold",
+  );
 });
 
 test('the radar links the calendar, feed and downloads, and the build carries them (feeds)', async () => {

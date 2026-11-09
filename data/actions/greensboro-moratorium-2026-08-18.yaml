@@ -1,0 +1,13 @@
+# The Greensboro Thread (archived ac94053e…, published Aug 19, 2026, "Tuesday"): a 180-day moratorium on new data
+# centers drawing over 10 MW, adopted 8-0 with Mayor Pro Tem Denise Roth recused. The proposal had been 120 days;
+# check the eSCRIBE minutes for whether the length changed at this meeting (adopted_amended) or before it (adopted),
+# and confirm the date. Then add the minutes, switch to confirmed_official and raise sequence.
+id: greensboro-moratorium-2026-08-18
+jurisdiction_id: greensboro
+action_type: moratorium
+outcome: adopted
+decided_on: 2026-08-18
+votes: "8-0"
+label: reported_news
+document_ids:
+  - ac94053e1201551bb957f970400fb22c353e65fcac66a038b0d14881f343330d

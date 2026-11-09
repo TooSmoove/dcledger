@@ -212,6 +212,36 @@ public sealed class LedgerValidatorTests
 
     private static string Rule(LedgerSnapshot snapshot) => Validate(snapshot).ShouldHaveSingleItem().Rule;
 
+    [Fact]
+    public void An_event_must_be_on_its_jurisdictions_platform()
+    {
+        var problem = Validate(Snapshot(ledgerEvent: Event() with { Platform = Platform.Manual })).ShouldHaveSingleItem();
+
+        problem.Rule.ShouldBe(ValidationRule.PlatformMismatch);
+        problem.Message.ShouldBe("platform is manual, but jurisdiction 'fixture' is legistar.");
+    }
+
+    [Fact]
+    public void A_manual_jurisdictions_events_are_manual()
+    {
+        var manual = Jurisdiction() with { Platform = Platform.Manual, LegistarClient = null, Bodies = [] };
+
+        Validate(Snapshot(manual, Event() with { Platform = Platform.Manual })).ShouldBeEmpty();
+        Rule(Snapshot(manual, Event())).ShouldBe(ValidationRule.PlatformMismatch);
+    }
+
+    [Fact]
+    public void Only_a_manual_jurisdiction_records_a_manual_check()
+    {
+        var checkedAt = new DateTimeOffset(2026, 11, 8, 14, 0, 0, TimeSpan.Zero);
+        var manual = Jurisdiction() with { Platform = Platform.Manual, LegistarClient = null, Bodies = [], LastManualCheckUtc = checkedAt };
+
+        Validate(Snapshot(manual, Event() with { Platform = Platform.Manual })).ShouldBeEmpty();
+        var problem = Validate(Snapshot(Jurisdiction() with { LastManualCheckUtc = checkedAt })).ShouldHaveSingleItem();
+        problem.Rule.ShouldBe(ValidationRule.InvalidValue);
+        problem.Message.ShouldStartWith("last_manual_check_utc is only allowed when platform is manual");
+    }
+
     private static LedgerSnapshot Snapshot(Jurisdiction? jurisdiction = null, LedgerEvent? ledgerEvent = null, LocalAction? action = null)
     {
         const string eventFile = "events/fixture-boc-2026-11-05.yaml";

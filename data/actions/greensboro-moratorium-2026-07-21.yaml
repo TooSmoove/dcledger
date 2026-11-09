@@ -1,0 +1,12 @@
+# YES! Weekly (archived 145dff1d…): a motion by Council Member Crystal Black to impose a moratorium on approving new
+# data centers failed 5-4 at the July 21, 2026 meeting (4 for, 5 against). Confirm against the eSCRIBE minutes, then
+# add them, switch to confirmed_official and raise sequence.
+id: greensboro-moratorium-2026-07-21
+jurisdiction_id: greensboro
+action_type: moratorium
+outcome: failed
+decided_on: 2026-07-21
+votes: "4-5"
+label: reported_news
+document_ids:
+  - 145dff1d4264ec5a6d44e026e92d00a6e53d7de74526a1b5d4c184ef3a2af60c

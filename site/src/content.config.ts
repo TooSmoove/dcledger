@@ -34,6 +34,8 @@ const jurisdictions = defineCollection({
     name: z.string(),
     last_checked_utc: z.iso.datetime().nullable(),
     stale: z.boolean(),
+    // 48, or 168 for a jurisdiction checked by hand (issue #27); defaults for an events.json written before the field.
+    stale_after_hours: z.number().int().positive().default(48),
   }),
 });
 

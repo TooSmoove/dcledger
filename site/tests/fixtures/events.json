@@ -5,20 +5,23 @@
     {
       "id": "fixture-city",
       "name": "Fixture City",
-      "last_checked_utc": "2026-10-22T14:00:00Z",
-      "stale": true
+      "last_checked_utc": "2026-10-15T14:00:00Z",
+      "stale": true,
+      "stale_after_hours": 168
     },
     {
       "id": "guilford",
       "name": "Guilford County",
       "last_checked_utc": "2026-10-25T20:17:00Z",
-      "stale": false
+      "stale": false,
+      "stale_after_hours": 48
     },
     {
       "id": "never-checked",
       "name": "Never Checked County",
       "last_checked_utc": null,
-      "stale": true
+      "stale": true,
+      "stale_after_hours": 48
     }
   ],
   "events": [

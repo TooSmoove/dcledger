@@ -1,14 +1,15 @@
 ---
-// "Last checked" in Eastern plus a text-and-icon stale flag after 48 hours (SPEC AC10). The flag is words, not
-// only an icon or a color.
-import { easternText } from '../lib/radar.js';
+// "Last checked" in Eastern plus a text-and-icon stale flag after 48 hours, or 7 days for a jurisdiction checked by
+// hand (SPEC AC10, issue #27). The flag is words, not only an icon or a color.
+import { easternText, staleWindowText } from '../lib/radar.js';
 
 interface Props {
   lastCheckedUtc: string | null;
   stale: boolean;
+  staleAfterHours: number;
 }
 
-const { lastCheckedUtc, stale } = Astro.props;
+const { lastCheckedUtc, stale, staleAfterHours } = Astro.props;
 ---
 
 <p>
@@ -22,7 +23,8 @@ const { lastCheckedUtc, stale } = Astro.props;
   {stale && (
     <span class="flag">
       {' '}
-      <span aria-hidden="true">⚠</span> Stale: no successful check in 48 hours.
+      <span aria-hidden="true">⚠</span> Stale: no successful check in{' '}
+      {staleWindowText(staleAfterHours)}.
     </span>
   )}
 </p>

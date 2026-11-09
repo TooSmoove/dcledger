@@ -34,8 +34,14 @@ public sealed record ExportJurisdiction
     /// </summary>
     public DateTimeOffset? LastCheckedUtc { get; init; }
 
-    /// <summary>True after 48 hours without a successful check (<see cref="Freshness"/>).</summary>
+    /// <summary>
+    /// True after <see cref="StaleAfter"/> without a successful check (<see cref="Freshness"/>), or when a manual
+    /// check is dated after the export.
+    /// </summary>
     public required bool Stale { get; init; }
+
+    /// <summary>The threshold that applies: 48 hours when automated, 7 days when checked by hand.</summary>
+    public TimeSpan StaleAfter { get; init; } = Freshness.StaleAfter;
 }
 
 /// <summary>An event with its jurisdiction and documents resolved.</summary>

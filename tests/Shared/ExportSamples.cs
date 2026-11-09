@@ -31,7 +31,7 @@ internal static class ExportSamples
         Id = "fixture-city",
         Name = "Fixture City",
         Platform = Platform.Manual,
-        LastManualCheckUtc = Utc(2026, 11, 2, 9, 0, 0), // 77 h before GeneratedUtc: stale
+        LastManualCheckUtc = Utc(2026, 10, 27, 9, 0, 0), // 9 days before GeneratedUtc: stale even at the manual 7 days
     };
 
     public static readonly Document CountyAgenda1599 = Doc("fixture county agenda 1599", "https://fixture-county.example.org/agendas/1599.pdf", Utc(2026, 10, 10, 12, 0, 0), "application/pdf", 123456, SourceType.Official);
