@@ -21,5 +21,8 @@
     <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <!-- Minimal: the full package pulls json-everything (OSMF EULA), GraphQL, ProtoBuf and OpenTelemetry (spike S10). -->
     <PackageVersion Include="WireMock.Net.Minimal" Version="2.30.0" />
+    <!-- Transitive pin (#105): WireMock pulls 2.3.0, flagged by GHSA-6527-9fp8-r4x6 and with no patched 2.x release.
+         Tests only. Drop the pin once WireMock depends on a fixed version. -->
+    <PackageVersion Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.15" />
   </ItemGroup>
 </Project>

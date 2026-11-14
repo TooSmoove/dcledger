@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@protomaps/basemaps": "5.7.2",
-    "astro": "7.4.4",
+    "astro": "7.4.12",
     "maplibre-gl": "6.16.0",
     "pmtiles": "4.5.0"
   },
