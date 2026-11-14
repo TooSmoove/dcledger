@@ -152,7 +152,7 @@ Where each manual jurisdiction posts (#94):
 | Jurisdiction | Where to look | `platform_meeting_id` |
 |---|---|---|
 | Greensboro | eSCRIBE, `pub-greensboro-nc.escribemeetings.com` (save documents in a browser: `--file`) | the meeting page's `Id=` value |
-| Stokes | the county website's yearly Board of Commissioners agenda pages; PDFs on `cms9files.revize.com/stokescountync` | no platform ID: the meeting's date and kind, e.g. `"2026-12-07 regular"` |
+| Stokes | the county website's yearly Board of Commissioners agenda pages; PDFs on `cms9files.revize.com/stokescountync`, which the archive workflow can fetch (checked Nov 14, 2026) | no platform ID: the meeting's date and kind, e.g. `"2026-12-07 regular"` |
 | Vance | `vancecounty.org/departments/board-of-commissioners`, "MASTER-File" PDF packets. Its robots.txt disallows all robots, so the workflow refuses its URLs: save in a browser and use `--file` | same as Stokes |
 
 Whatever you choose for a platform without IDs, keep it stable: it can't change once published.
