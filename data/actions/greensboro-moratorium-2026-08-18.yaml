@@ -1,15 +1,18 @@
-# The Greensboro Thread (archived ac94053e…, published Aug 19, 2026, "Tuesday"): a 180-day moratorium on new data
-# centers drawing over 10 MW, adopted 8-0 with Mayor Pro Tem Denise Roth recused. The proposal had been 120 days.
-# Not yet confirmed: the minutes of the regular Aug 18 meeting (archived 0759dfed…) only call the moratorium "recently
-# adopted" and record no vote on it. News reports and meeting summaries point to a special meeting on Aug 17
-# (public hearing, recessed) reconvened on Aug 18, where the length was amended to 180 days. Archive that meeting's
-# minutes, then set outcome (adopted_amended if amended there), decided_on, votes, the label and sequence from them.
+# Minutes of the City Council special meeting of Aug 17, 2026, recessed and reconvened Aug 18 at 5:32 p.m. (archived
+# 6664fb8d…, pages 10-11). On Aug 18 the council amended its Aug 3 motion "by striking the reference to a moratorium
+# not exceeding 120 days ... and substituting a moratorium period of 180 days" (voice vote, 8-0), then adopted "the
+# moratorium ordinance establishing a temporary development moratorium applicable to data center facilities with
+# electrical power demand exceeding 10 megawatts for a period of 180 days. The motion carried by voice vote. 8-0
+# Mayor Pro-Tem Roth was recused." The Greensboro Thread's report (ac94053e…) matches. The regular Aug 18 minutes
+# (0759dfed…) record no vote on it.
 id: greensboro-moratorium-2026-08-18
 jurisdiction_id: greensboro
 action_type: moratorium
-outcome: adopted
+outcome: adopted_amended
 decided_on: 2026-08-18
 votes: "8-0"
-label: reported_news
+sequence: 1
+label: confirmed_official
 document_ids:
+  - 6664fb8d53149c280316c893e0804ce35545ba994a4c19870ce6fda4c0e11161
   - ac94053e1201551bb957f970400fb22c353e65fcac66a038b0d14881f343330d
