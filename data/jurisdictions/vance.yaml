@@ -1,6 +1,8 @@
 # Vance County posts Board of Commissioners agendas as "MASTER-File" PDF packets on its WordPress site
 # (vancecounty.org/departments/board-of-commissioners), with no vendor platform, so its meetings are entered by hand
 # (#94; data/README.md, "Entering a manual jurisdiction"). Add last_manual_check_utc after each check.
+# Its robots.txt disallows all robots (checked Nov 14, 2026): archive documents with --file, never the workflow, and
+# don't automate it (#96).
 id: vance
 name: Vance County
 platform: manual
