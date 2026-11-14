@@ -1,0 +1,16 @@
+# Minutes of the Aug 3, 2026 City Council meeting (archived 5efa77fd…, item G, pages 35-36). The council voted 9-0, by
+# roll call, to reconsider the July 21 vote, and Councilmember Thurm moved to amend the original motion: staff to
+# "initiate the proceedings under N.C.G.S. 160D-107 for a temporary development moratorium applicable to a data
+# center facility with an electrical power demand exceeding 10 megawatts", with a hearing on "a moratorium ordinance
+# not to exceed 120 days". The minutes record no vote on the amended motion, so votes is left out (the 9-0 is the
+# reconsideration). That it passed is in the Aug 17-18 special-meeting minutes (6664fb8d…), which amend "the
+# Council's prior motion of August 3, 2026" to 180 days.
+id: greensboro-moratorium-2026-08-03
+jurisdiction_id: greensboro
+action_type: moratorium
+outcome: adopted_amended
+decided_on: 2026-08-03
+label: confirmed_official
+document_ids:
+  - 5efa77fd44c2298fd81b9b411fd34b84cddc01c741b49844e4419a47fc2cc9a7
+  - 6664fb8d53149c280316c893e0804ce35545ba994a4c19870ce6fda4c0e11161
