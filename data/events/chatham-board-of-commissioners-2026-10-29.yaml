@@ -1,0 +1,17 @@
+# Review issue #110. Agenda items 26-0656 (apply for a zoning text amendment for data centers) and 26-0655 (schedule a
+# legislative public hearing on Nov 30, 2026 on those amendments) were both listed for a vote. Outcomes go in actions/
+# once the minutes are posted.
+id: chatham-board-of-commissioners-2026-10-29
+jurisdiction_id: chatham
+platform: legistar
+platform_meeting_id: "1487"
+body: "Board of Commissioners"
+title: "Votes on starting data center zoning text amendments and setting a Nov. 30 public hearing"
+case_number: "26-0656" # also on this agenda: 26-0655
+starts_at: 2026-10-29T14:30:00-04:00
+status: scheduled
+sequence: 0
+label: confirmed_official
+document_ids:
+  - 71200486eb90f574fb35d71ac3fb2ea60b37db38bdd28fcf247ff682cbb37c78
+first_seen_utc: 2026-11-14T17:42:52Z
