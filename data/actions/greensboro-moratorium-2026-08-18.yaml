@@ -1,7 +1,9 @@
 # The Greensboro Thread (archived ac94053e…, published Aug 19, 2026, "Tuesday"): a 180-day moratorium on new data
-# centers drawing over 10 MW, adopted 8-0 with Mayor Pro Tem Denise Roth recused. The proposal had been 120 days;
-# check the eSCRIBE minutes for whether the length changed at this meeting (adopted_amended) or before it (adopted),
-# and confirm the date. Then add the minutes, switch to confirmed_official and raise sequence.
+# centers drawing over 10 MW, adopted 8-0 with Mayor Pro Tem Denise Roth recused. The proposal had been 120 days.
+# Not yet confirmed: the minutes of the regular Aug 18 meeting (archived 0759dfed…) only call the moratorium "recently
+# adopted" and record no vote on it. News reports and meeting summaries point to a special meeting on Aug 17
+# (public hearing, recessed) reconvened on Aug 18, where the length was amended to 180 days. Archive that meeting's
+# minutes, then set outcome (adopted_amended if amended there), decided_on, votes, the label and sequence from them.
 id: greensboro-moratorium-2026-08-18
 jurisdiction_id: greensboro
 action_type: moratorium
