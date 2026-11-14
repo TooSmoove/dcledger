@@ -1,0 +1,8 @@
+# Stokes County posts Board of Commissioners agendas and minutes as PDFs on yearly pages of its website (served from
+# cms9files.revize.com/stokescountync), with no vendor platform, so its meetings are entered by hand (#94;
+# data/README.md, "Entering a manual jurisdiction"). Add last_manual_check_utc after each check.
+id: stokes
+name: Stokes County
+platform: manual
+bodies:
+  - Board of Commissioners

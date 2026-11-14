@@ -1,0 +1,8 @@
+id: chatham
+name: Chatham County
+platform: legistar
+legistar_client: chathamnc
+# The only meeting body in the Legistar API (checked Nov 14, 2026, with meetings posted for Nov 16 and 17); work
+# sessions are listed under it too (#94).
+bodies:
+  - Board of Commissioners
