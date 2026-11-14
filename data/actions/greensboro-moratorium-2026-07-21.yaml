@@ -1,12 +1,15 @@
-# YES! Weekly (archived 145dff1d…): a motion by Council Member Crystal Black to impose a moratorium on approving new
-# data centers failed 5-4 at the July 21, 2026 meeting (4 for, 5 against). Confirm against the eSCRIBE minutes, then
-# add them, switch to confirmed_official and raise sequence.
+# Minutes of the July 21, 2026 City Council meeting (archived 3cdfb3ab…, item I): "Councilmember Black, seconded by
+# Councilmember Crawford, moved to begin the moratorium process regarding data centers. Ayes: Councilmembers Parker,
+# Crawford, Allen, and Black. Nays: Mayor Abuzuaiter, Mayor Pro-Tem Roth, Councilmembers Thurm, Holston, and
+# Marshall. The motion failed by a vote of 5–4." YES! Weekly's report (145dff1d…) matches.
 id: greensboro-moratorium-2026-07-21
 jurisdiction_id: greensboro
 action_type: moratorium
 outcome: failed
 decided_on: 2026-07-21
 votes: "4-5"
-label: reported_news
+sequence: 1
+label: confirmed_official
 document_ids:
+  - 3cdfb3abd23a1fb2a7e5e5d11f0d129a30492a8e6ed8a0ea0e6a0c2cdfdb64bf
   - 145dff1d4264ec5a6d44e026e92d00a6e53d7de74526a1b5d4c184ef3a2af60c
