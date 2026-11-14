@@ -1,0 +1,13 @@
+# WFAE (archived 2a9f4504…, Sept 14, 2026): the Board of Commissioners approved, 3-2 on Monday night, the rezoning of
+# about 1,800 acres in Walnut Cove for the Project Delta data center (Engineered Land Solutions). The same 3-2 approval
+# in January was voided after a lawsuit. Confirm against the approved minutes, then add them, switch to
+# confirmed_official and raise sequence.
+id: stokes-rezoning-2026-09-14
+jurisdiction_id: stokes
+action_type: rezoning
+outcome: adopted
+decided_on: 2026-09-14
+votes: "3-2"
+label: reported_news
+document_ids:
+  - 2a9f4504ec4cb7c5bdb692527976fdbe0dcf68604bb76985048bcb8359b0d3de

@@ -14,8 +14,8 @@ dc-ledger gives them one 30-day Hearing Radar, published as a web page, iCal, RS
 Due live and unlisted by **Sun Nov 22, 2026**.
 
 - **AC1 Coverage:** Given date D, when /radar is built, it lists every reviewed item in [D, D+30 days], sorted by start time, for:
-  - Guilford County BOC and Winston-Salem City Council (automated ingest)
-  - Greensboro City Council (manual YAML entry)
+  - Guilford County BOC, Winston-Salem City Council and Chatham County BOC (automated ingest)
+  - Greensboro City Council, Stokes County BOC and Vance County BOC (manual YAML entry; Chatham, Stokes and Vance amended in, issue #94)
 - **AC2 Provenance:** Every public item shows the source URL, the retrieval time (stored in UTC, shown in Eastern with offset) and the SHA-256 of the retrieved bytes. The gate fails any record missing one of these.
 - **AC3 iCal across DST:**
   - An Oct 15, 2026 5:30 p.m. meeting serializes as `DTSTART;TZID=America/New_York:20261015T173000` and resolves to 21:30Z.
@@ -65,7 +65,7 @@ Modules follow ADR-0001; contracts follow ADR-0004.
 
 ## D. Out of scope for v0.1
 
-- **Coverage:** jurisdictions beyond the three; eSCRIBE adapter (plan week 6); automated NC DAQ, Forsyth EAP, NCUC, NCGA ingest (manual entries only); parcels and GIS layers.
+- **Coverage:** jurisdictions beyond the six in AC1 (the Davidson, Halifax and Person stretch candidates of #94 included); eSCRIBE adapter (plan week 6); automated NC DAQ, Forsyth EAP, NCUC, NCGA ingest (manual entries only); parcels and GIS layers.
 - **Records:** `fact`, `project`, `entity`, `correction` (no AC needs them).
 - **Features:** project/entity pages; search and filter UI; DuckDB-WASM; PDF extraction (PdfPig deferred); HTML or iCal fallback adapter and AngleSharp (the Legistar API is open); email, accounts, notifications, analytics; any LLM or AI.
 - **Publishing:** public mirror of agenda packets; versioned data releases, Frictionless, Zenodo; SEO and indexing.
@@ -190,3 +190,6 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - Greensboro's eSCRIBE puts every document download (`FileStream.ashx`) behind a Cloudflare managed challenge. Programs get HTTP 403 whatever their user agent, cookies or network; the home page and robots.txt don't block us. We don't defeat the challenge.
   - `dcl archive-document --file <path> --url <source URL>` keeps a copy a person saved in a browser: same hashing, bucket and record, with `retrieved_at` from the file's last-modified time. It runs locally; the workflow can't take a file.
   - Documents gain an optional `retrieval: manual` (absent means `fetched`, so existing records are unchanged). The publisher, not who saved the file, decides the label: a manual official copy can back `confirmed_official`. Exports don't carry `retrieval` yet.
+- **Nov 14, 2026 — Rural jurisdictions (issue #94, AC1, §D):**
+  - Chatham County joins on Legistar (client `chathamnc`, existing adapter); Stokes and Vance join as `platform: manual`, since both post PDF agendas on their own sites. The top three of the Nov 3 rural research doc; new hyperscale siting is concentrated outside the Triad trio.
+  - Backfilled as `reported_news` until minutes are archived: Stokes's Sept 14 Project Delta rezoning (3-2) and July 13 rejection of a six-month moratorium; Vance's April 6 continuance and April 20 approval of the Natelli rezoning on U.S. 158.

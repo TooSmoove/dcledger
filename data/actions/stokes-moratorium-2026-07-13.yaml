@@ -1,0 +1,11 @@
+# Public Radio East (archived a67d7d48…, published Tuesday July 14, 2026): at "the meeting Monday night" the Board of
+# Commissioners rejected the six-month pause on data center development that the planning board had recommended. No
+# tally reported. The date is inferred from "Monday night"; confirm it and the vote against the minutes.
+id: stokes-moratorium-2026-07-13
+jurisdiction_id: stokes
+action_type: moratorium
+outcome: failed
+decided_on: 2026-07-13
+label: reported_news
+document_ids:
+  - a67d7d485620a944a79ab3152ae7e119b03be127be5dbac0a6981023f745ebf3
