@@ -8,7 +8,7 @@ using YamlDotNet.RepresentationModel;
 namespace DcLedger.Infrastructure.Ledger;
 
 /// <summary>
-/// Reads <c>data/</c>: one YAML file per record in jurisdictions/, documents/, events/ and actions/ (ADR-0002).
+/// Reads <c>data/</c>: one YAML file per record in jurisdictions/, documents/, events/, actions/ and corrections/ (ADR-0002).
 /// Files are capped at 64 KB, must hold exactly one mapping, may not use anchors or aliases, and may only use
 /// known keys. Bad files are reported and skipped; this reader never throws for bad data (ADR-0005).
 /// </summary>
@@ -17,7 +17,7 @@ public sealed class YamlLedgerReader : ILedgerReader
     /// <summary>Per-file size cap.</summary>
     public const int MaxFileBytes = 64 * 1024;
 
-    private static readonly string[] Folders = ["jurisdictions", "documents", "events", "actions"];
+    private static readonly string[] Folders = ["jurisdictions", "documents", "events", "actions", "corrections"];
 
     // YAML values are the same fixed tokens the exports use (Domain), so the two can't drift apart.
     private static readonly Dictionary<string, Platform> Platforms = ByToken<Platform>(PlatformExtensions.ToToken);
@@ -51,6 +51,7 @@ public sealed class YamlLedgerReader : ILedgerReader
         var documents = new List<LoadedRecord<Document>>();
         var events = new List<LoadedRecord<LedgerEvent>>();
         var actions = new List<LoadedRecord<LocalAction>>();
+        var corrections = new List<LoadedRecord<Correction>>();
 
         foreach (var folder in Folders)
         {
@@ -87,8 +88,11 @@ public sealed class YamlLedgerReader : ILedgerReader
                     case "events":
                         Keep(events, relative, fields, ReadEvent(fields));
                         break;
-                    default:
+                    case "actions":
                         Keep(actions, relative, fields, ReadAction(fields));
+                        break;
+                    default:
+                        Keep(corrections, relative, fields, ReadCorrection(fields));
                         break;
                 }
             }
@@ -100,6 +104,7 @@ public sealed class YamlLedgerReader : ILedgerReader
             Documents = documents,
             Events = events,
             Actions = actions,
+            Corrections = corrections,
             LoadErrors = errors,
             RecordFiles = files,
         };
@@ -306,6 +311,29 @@ public sealed class YamlLedgerReader : ILedgerReader
         SuccessorId = f.OptionalSlug("successor_id"),
         Status = f.OptionalChoice("status", ActionStatuses),
     };
+
+    /// <summary>One corrections log entry (issue #117).</summary>
+    private static Correction? ReadCorrection(YamlFields f)
+    {
+        var id = f.RecordId = f.Slug("id");
+        var reportedOn = f.Date("reported_on");
+        var correctedOn = f.Date("corrected_on");
+        var recordIds = f.Slugs("record_ids");
+        var summary = f.RequiredLine("summary", Correction.MaxSummaryLength);
+        var issue = f.OptionalWholeNumber("issue", int.MaxValue);
+
+        return id is null || reportedOn is null || correctedOn is null || summary is null
+            ? null
+            : new Correction
+            {
+                Id = id,
+                ReportedOn = reportedOn.Value,
+                CorrectedOn = correctedOn.Value,
+                RecordIds = recordIds,
+                Summary = summary,
+                Issue = issue is null ? null : (int)issue.Value,
+            };
+    }
 
     private static Dictionary<string, T> ByToken<T>(Func<T, string> token)
         where T : struct, Enum =>

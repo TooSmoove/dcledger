@@ -14,6 +14,7 @@ With `--out out` from the repository root, the site build finds its data at `out
 | File | Contents |
 |---|---|
 | `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance (each document's `url`, `retrieved_utc`, `sha256` and `retrieval`) and `location` (`{"lat", "lon"}` or null), and every local action (see below). Mirrored by `site/src/content.config.ts`. |
+| `site-data/corrections.json` | The corrections log for `/methodology/` (issue #117): `schema_version` 1, `opened_on`, and every entry from `data/corrections/` oldest first, each with `id`, `reported_on`, `corrected_on`, `record_ids`, `summary` and `issue` (a number or null). Written even when the log is empty. Site data only: not served, not downloadable, and not part of "Stability" below. Mirrored by `site/src/lib/corrections.js`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per watched jurisdiction, even before it has events. A jurisdiction that isn't watched (issue #115) gets none. |
 | `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision and per decision revision, newest first (see below). |
@@ -79,8 +80,9 @@ breaks them. This section is the promise, from v0.1.0 on (issue #116). `CHANGELO
 **These don't change:**
 
 - **Record IDs:** event, decision (local action) and jurisdiction IDs, and document IDs (the SHA-256 of the bytes).
-- **Page addresses:** `/radar/`, `/map/`, `/about/`, `/items/{event id}/`, `/jurisdictions/{jurisdiction id}/`, and
-  the `#decision-{decision id}` anchor on a jurisdiction page.
+- **Page addresses:** `/radar/`, `/map/`, `/about/`, `/methodology/`, `/items/{event id}/`,
+  `/jurisdictions/{jurisdiction id}/`, the `#decision-{decision id}` anchor on a jurisdiction page, and the
+  `#correction-{correction id}` anchor on the methodology page.
 - **Calendar and feed identity:** each event's calendar UID (a hash of jurisdiction, platform and platform meeting
   ID) and each feed GUID (`{UID}/{sequence}` for an event revision, `action:{id}/{sequence}` for a decision
   revision).

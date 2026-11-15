@@ -17,6 +17,9 @@ The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcled
   Eastern time, each linked to its official source with the retrieval time and SHA-256 of the copy kept.
 - **Pages** for each meeting (`/items/{id}/`) and jurisdiction (`/jurisdictions/{id}/`), a map with an equivalent
   table (`/map/`), and an about page (`/about/`).
+- **Methodology and corrections** (`/methodology/`): how items get in, what the labels mean, provenance, coverage,
+  who publishes the ledger, how to cite an item, how to report a mistake, and a dated corrections log that opens
+  Nov 22, 2026 (#117).
 - **Coverage:** Guilford County, Winston-Salem and Chatham County (automated Legistar ingest), and Greensboro, Stokes
   County and Vance County (entered by hand). Each jurisdiction states its coverage tier; all six are `watched`.
 - **Decisions** (local actions) on meeting and jurisdiction pages, with outcome, vote and sourcing label, and, for an

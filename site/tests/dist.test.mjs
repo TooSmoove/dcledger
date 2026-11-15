@@ -46,6 +46,7 @@ test('the build produced the home, radar, about, 404, item and jurisdiction page
     'index.html',
     'radar/index.html',
     'about/index.html',
+    'methodology/index.html',
     '404.html',
     'items/fixture-guilford-boc-2026-11-05/index.html',
     'items/fixture-escaping-check/index.html',
@@ -233,6 +234,7 @@ test('published page addresses and files never disappear or move (docs/export.md
     'radar/index.html',
     'map/index.html',
     'about/index.html',
+    'methodology/index.html',
     'items/fixture-guilford-boc-2026-11-05/index.html',
     'jurisdictions/guilford/index.html',
   ];
@@ -533,4 +535,94 @@ test('no component renders raw HTML with set:html', async () => {
 
 test('the home page links the radar', () => {
   assert.match(page('index.html'), /href="\/radar\/"/);
+});
+
+// /methodology/ (issue #117). The fixture log has two entries: Nov 24 (an issue and three records) and Nov 22 (page
+// wording only, no issue).
+const methodology = page('methodology/index.html');
+const logHtml = methodology.slice(methodology.indexOf('id="log"'));
+
+test('every page links the methodology page from its footer, and about links it too (#117)', () => {
+  for (const { name, html } of pages) {
+    const footer = html.slice(html.indexOf('<footer'));
+    assert.match(footer, /<a href="\/methodology\/">Methodology and corrections<\/a>/, name);
+  }
+  assert.match(page('about/index.html'), /href="\/methodology\/#corrections"/);
+});
+
+test('the methodology page answers how items get in, the labels, provenance, coverage and citing (#117)', () => {
+  for (const id of [
+    'how-items-get-in',
+    'labels',
+    'provenance',
+    'coverage',
+    'publisher',
+    'cite',
+    'corrections',
+  ]) {
+    assert.match(methodology, new RegExp(`<h2 id="${id}"`), id);
+  }
+  assert.match(methodology, /Reported \(news\)/);
+  assert.match(methodology, /Confirmed \(official record\)/);
+  assert.match(
+    methodology,
+    /Saved by a person in a browser \(the source does not allow automated downloads\)/,
+  );
+  assert.match(methodology, /Coverage: decisions only\./);
+  assert.match(methodology, /not evidence it did not happen/);
+  assert.match(methodology, /at least every 6\s+hours/);
+  assert.match(methodology, /within 48 hours/);
+});
+
+test('the worked citation names a real item, its source, retrieval time and SHA-256 (#117)', () => {
+  const citation = methodology.slice(methodology.indexOf('class="citation"'));
+  assert.match(citation, /https:\/\/ncdcledger.org\/items\/fixture-guilford-boc-2026-12-17\//);
+  assert.match(citation, /retrieved Sun, Oct 25, 2026, 5:17 PM EDT, SHA-256 3{64}\./);
+});
+
+test('the corrections log opens with its date and lists entries newest first (#117)', () => {
+  assert.match(logHtml, /<p>Log opened Nov 22, 2026\.<\/p>/);
+  const vote = logHtml.indexOf('id="correction-2026-11-24-fixture-guilford-vote-count"');
+  const wording = logHtml.indexOf('id="correction-2026-11-22-fixture-methodology-interval"');
+  assert.ok(vote > 0 && wording > vote, 'Nov 24 before Nov 22');
+  assert.match(logHtml, /<time datetime="2026-11-24">Tue, Nov 24, 2026<\/time>/);
+  assert.match(logHtml, /<time datetime="2026-11-23">Mon, Nov 23, 2026<\/time>/);
+});
+
+test('a log entry links its issue and every record it changed (#117)', () => {
+  const vote = logHtml.slice(
+    0,
+    logHtml.indexOf('id="correction-2026-11-22-fixture-methodology-interval"'),
+  );
+  assert.match(
+    vote,
+    /href="https:\/\/github.com\/TooSmoove\/dcledger\/issues\/131">issue #131<\/a>/,
+  );
+  assert.match(
+    vote,
+    /href="\/jurisdictions\/guilford\/#decision-fixture-guilford-moratorium-2026-11-05"/,
+  );
+  assert.match(vote, /href="\/items\/fixture-guilford-boc-2026-11-05\/"/);
+  assert.match(vote, /href="\/jurisdictions\/guilford\/"/);
+  assert.match(vote, /the &lt;minutes&gt; show 8-1 &amp; one absence/, 'summary text is escaped');
+  const wording = logHtml.slice(
+    logHtml.indexOf('id="correction-2026-11-22-fixture-methodology-interval"'),
+  );
+  assert.doesNotMatch(wording.slice(0, wording.indexOf('</li>')), /issue #|Changed:/);
+});
+
+test('the report link opens the correction form (#117)', () => {
+  assert.match(
+    methodology,
+    /href="https:\/\/github.com\/TooSmoove\/dcledger\/issues\/new\?template=correction.yml"/,
+  );
+});
+
+test("the disclosure is the owner's wording, not the placeholder (#117)", () => {
+  // Fails on purpose until site/src/owner/disclosure.md is written from docs/wording-bank.md.
+  assert.doesNotMatch(
+    methodology,
+    /OWNER-WORDING-REQUIRED/,
+    'Write "Who publishes this" in site/src/owner/disclosure.md (templates: docs/wording-bank.md).',
+  );
 });
