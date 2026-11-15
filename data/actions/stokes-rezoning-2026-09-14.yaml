@@ -2,6 +2,9 @@
 # about 1,800 acres in Walnut Cove for the Project Delta data center (Engineered Land Solutions). The same 3-2 approval
 # in January was voided after a lawsuit. Confirm against the approved minutes, then add them, switch to
 # confirmed_official and raise sequence.
+# Nov 14, 2026 (#112): no minutes posted yet. The county's Granicus list
+# (stokescountync.granicus.com/ViewPublisher.php?view_id=1) shows only an agenda and a packet for Sep 14, 2026
+# (clip_id=807) and for the Sep 8 hearing (clip_id=806); minutes are posted through Aug 24.
 id: stokes-rezoning-2026-09-14
 jurisdiction_id: stokes
 action_type: rezoning

@@ -1,6 +1,10 @@
 # Public Radio East (archived a67d7d48…, published Tuesday July 14, 2026): at "the meeting Monday night" the Board of
 # Commissioners rejected the six-month pause on data center development that the planning board had recommended. No
 # tally reported. The date is inferred from "Monday night"; confirm it and the vote against the minutes.
+# Nov 14, 2026 (#112): the county's Granicus list (stokescountync.granicus.com/ViewPublisher.php?view_id=1) has a
+# Board of County Commissioners meeting on Jul 13, 2026 at 6:00 PM with minutes posted
+# (MinutesViewer.php?view_id=1&clip_id=799). Not read or archived yet: Granicus's robots.txt disallows all robots, so
+# a person saves them in a browser and archives with --file.
 id: stokes-moratorium-2026-07-13
 jurisdiction_id: stokes
 action_type: moratorium
