@@ -101,6 +101,21 @@ The last nine columns are a decision's terms (issue #115). They are filled only 
 never summarized, on one line of at most 500 characters. A term taken from a news report stays under the decision's
 `reported_news` label until the official text is archived.
 
+## Vocabularies
+
+These columns take only the values listed. A value keeps its meaning once published; new values may be added, so
+treat one you don't know as "other" rather than an error (`docs/export.md`, "Stability").
+
+| Column | File | Values |
+|---|---|---|
+| `status` | `events.csv`, `events.parquet` | `scheduled`, `cancelled` |
+| `label` | events and actions | `reported_news`, `confirmed_official` |
+| `document_retrieval` (`retrieval` in Parquet) | events and actions | `fetched`, `manual` |
+| `action_type` | actions | `moratorium`, `rezoning`, `text_amendment`, `resolution` |
+| `outcome` | actions | `adopted`, `adopted_amended`, `failed`, `continued`, `tabled` |
+| `status` | `actions.csv`, `actions.parquet` | `in_effect`, `expired`, `superseded`, `repealed` |
+| `coverage_tier` | a jurisdiction (on the site and in `events.json`) | `watched`, `decisions`, `registered` |
+
 ## Changes
 
 New columns are added at the end. Existing columns aren't renamed, retyped or removed without a note here and in the

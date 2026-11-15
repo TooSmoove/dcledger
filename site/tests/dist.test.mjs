@@ -226,6 +226,56 @@ test('the radar links the calendar, feed and downloads, and the build carries th
   }
 });
 
+test('published page addresses and files never disappear or move (docs/export.md, Stability, #116)', () => {
+  // Spelled out, not derived from the build: renaming a page or a file fails here. New ones may be added. A breaking
+  // change updates this list, docs/export.md and CHANGELOG.md together, 90 days after announcing it.
+  const frozenPages = [
+    'radar/index.html',
+    'map/index.html',
+    'about/index.html',
+    'items/fixture-guilford-boc-2026-11-05/index.html',
+    'jurisdictions/guilford/index.html',
+  ];
+  const frozenFiles = [
+    'radar.ics',
+    'radar/guilford.ics',
+    'feed.xml',
+    'events.csv',
+    'events.parquet',
+    'actions.csv',
+    'actions.parquet',
+  ];
+  assert.deepEqual(
+    frozenPages.filter((name) => !names.includes(name)),
+    [],
+    'pages',
+  );
+  assert.deepEqual(
+    frozenFiles.filter((file) => !existsSync(join(dist, file))),
+    [],
+    'files',
+  );
+  assert.match(
+    page('jurisdictions/guilford/index.html'),
+    /id="decision-fixture-guilford-moratorium-2026-11-05"/,
+    'the #decision-{id} anchor',
+  );
+});
+
+test('the about page links the stability promise, the data dictionary and the changelog (#116)', () => {
+  const about = page('about/index.html');
+  assert.match(
+    about,
+    /href="https:\/\/github.com\/TooSmoove\/dcledger\/blob\/main\/docs\/export.md#stability"/,
+  );
+  assert.match(
+    about,
+    /href="https:\/\/github.com\/TooSmoove\/dcledger\/blob\/main\/docs\/data-dictionary.md"/,
+  );
+  assert.match(about, /href="https:\/\/github.com\/TooSmoove\/dcledger\/blob\/main\/CHANGELOG.md"/);
+  assert.match(about, /announced at least 90 days ahead/);
+});
+
 test('every page advertises the feed for readers that discover it', () => {
   for (const file of [
     'radar/index.html',
