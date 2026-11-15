@@ -1,0 +1,13 @@
+# Forsyth County posts Board of Commissioners agendas, packets and adopted minutes on CivicWeb (iCompass/Diligent),
+# coforsythnc.civicweb.net: agendas under Portal → Meetings, minutes in the Document Center (Minutes → Board of
+# Commissioners Meeting → 2026). Monday briefings have agendas but no posted minutes since 2021 (checked Nov 15, 2026).
+# Its robots.txt disallows all robots (checked Nov 15, 2026, #118): archive documents with --file, never the workflow.
+# Decisions only (#118): no hearing watch, so no events and no last_manual_check_utc. Watching it waits for #96/#114.
+# Held, not recorded: the Sept 28, 2026 briefing's "Data Center discussion" item (coverage reported a moratorium
+# proposal failing 5-2). No official record states what the action was; revisit if the county posts briefing minutes.
+id: forsyth
+name: Forsyth County
+platform: manual
+coverage_tier: decisions
+bodies:
+  - Board of Commissioners

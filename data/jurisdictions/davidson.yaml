@@ -1,0 +1,11 @@
+# Davidson County posts Board of Commissioners agendas, voting records and approved minutes on AgendaSuite (Provox),
+# agendasuite.org/iip/davidson, linked from co.davidson.nc.us/487/County-Commissioners. Its CivicPlus Agenda Center
+# carries only the Planning Board, Board of Adjustment and Board of Health (checked Nov 15, 2026, #118).
+# agendasuite.org has no robots.txt (HTTP 404, checked Nov 15, 2026), so the archive-document workflow can fetch it.
+# Decisions only (#118): no hearing watch, so no events and no last_manual_check_utc. Watching it waits for #96/#114.
+id: davidson
+name: Davidson County
+platform: manual
+coverage_tier: decisions
+bodies:
+  - Board of Commissioners
