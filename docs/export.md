@@ -71,6 +71,41 @@ can be before `votes` is known (added Nov 6, 2026, still schema version 1; the s
 (added Nov 15, 2026 for events and actions alike, still schema version 1; the site treats a missing key as `fetched`). The calendars and the
 CSV list meetings only; a decision shows on the site, on its meeting's page and its jurisdiction's page.
 
+## Stability
+
+Once someone subscribes to a calendar, bookmarks a download or cites an item, changing its address or its shape
+breaks them. This section is the promise, from v0.1.0 on (issue #116). `CHANGELOG.md` records every change to it.
+
+**These don't change:**
+
+- **Record IDs:** event, decision (local action) and jurisdiction IDs, and document IDs (the SHA-256 of the bytes).
+- **Page addresses:** `/radar/`, `/map/`, `/about/`, `/items/{event id}/`, `/jurisdictions/{jurisdiction id}/`, and
+  the `#decision-{decision id}` anchor on a jurisdiction page.
+- **Calendar and feed identity:** each event's calendar UID (a hash of jurisdiction, platform and platform meeting
+  ID) and each feed GUID (`{UID}/{sequence}` for an event revision, `action:{id}/{sequence}` for a decision
+  revision).
+- **File paths:** `/radar.ics`, `/radar/{jurisdiction id}.ics`, `/feed.xml`, `/events.csv`, `/events.parquet`,
+  `/actions.csv` and `/actions.parquet`.
+- **Columns:** the name, order, type and meaning of every column in the CSV and Parquet files
+  (`docs/data-dictionary.md`), and the keys and types of `events.json` within its `schema_version`.
+- **Vocabularies:** a published value keeps its meaning (`docs/data-dictionary.md`, "Vocabularies").
+
+**These can happen at any time, because they don't break a reader:**
+
+- New columns, added at the end; new keys in `events.json`; new files, pages and feeds.
+- New values in a vocabulary. Readers should treat a value they don't know as "other", not as an error.
+- New records, and corrections to a record's values. A published correction raises the record's `sequence`, so
+  calendars and feed readers see it.
+
+**A breaking change** renames, removes, reorders or retypes anything in the first list. It is announced in
+`CHANGELOG.md` at least **90 days** before it ships, saying what changes, when, and what to use instead.
+`events.json` also bumps `schema_version` (ADR-0004). A record is never renamed. If one has to be removed (for
+example, a duplicate entered by mistake), the CHANGELOG lists it.
+
+**Held by tests:** the frozen public paths (`PublicContractTests` in .NET and the site's `dist` tests), the data
+dictionary against the exporters' headers and Parquet columns, and the dictionary's vocabularies against the code's
+tokens. A change that breaks the promise fails CI until the test, the dictionary and the CHANGELOG all say so.
+
 ## The ingest status (`--status`)
 
 Publish builds `ingest-status.json` from ingest run history with `tools/ingest_status.py` ([publish.md](publish.md)), so export never calls GitHub (ADR-0004):

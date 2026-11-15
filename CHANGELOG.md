@@ -1,0 +1,37 @@
+# Changelog
+
+Changes to what NC Data Center Ledger publishes: its pages, calendars, feed and downloads. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
+
+What may change and what may not is in [`docs/export.md`, "Stability"](docs/export.md#stability). A breaking change is
+listed here at least 90 days before it ships, with what to use instead. Column-level detail is in
+[`docs/data-dictionary.md`](docs/data-dictionary.md).
+
+## [Unreleased]
+
+The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcledger.org>.
+
+### Added
+
+- **Hearing Radar** (`/radar/`): every reviewed meeting and hearing about data centers in the next 30 days, in
+  Eastern time, each linked to its official source with the retrieval time and SHA-256 of the copy kept.
+- **Pages** for each meeting (`/items/{id}/`) and jurisdiction (`/jurisdictions/{id}/`), a map with an equivalent
+  table (`/map/`), and an about page (`/about/`).
+- **Coverage:** Guilford County, Winston-Salem and Chatham County (automated Legistar ingest), and Greensboro, Stokes
+  County and Vance County (entered by hand). Each jurisdiction states its coverage tier; all six are `watched`.
+- **Decisions** (local actions) on meeting and jurisdiction pages, with outcome, vote and sourcing label, and, for an
+  adopted decision, the terms its archived text states: threshold, scope, start and expiry dates, early termination,
+  exemptions, a successor and a status.
+- **Calendars:** `/radar.ics` and `/radar/{jurisdiction}.ics` for each watched jurisdiction. UIDs are stable, and a
+  cancelled meeting keeps its UID with `STATUS:CANCELLED`.
+- **Feed:** `/feed.xml` (RSS 2.0), one item per reviewed change to a meeting or a decision.
+- **Downloads:** `/events.csv` and `/events.parquet` (one row per meeting), `/actions.csv` and `/actions.parquet`
+  (one row per decision). The CSVs are UTF-8 with a BOM, RFC 4180, with a formula guard on text cells.
+- **Columns added during the week before release** (they are part of the v0.1.0 contract):
+  - `document_retrieval` as the last column of `events.csv` and `actions.csv`, and `retrieval` as the last field of
+    the Parquet `documents` struct: whether each copy was fetched by our program or saved by a person (#113).
+  - `instrument_number`, `threshold`, `scope`, `effective_on`, `expires_on`, `early_termination`, `exemptions`,
+    `successor_id` and `status` after `document_retrieval` in `actions.csv`, and after `documents` in
+    `actions.parquet` (#115).
+- **Stability promise** for IDs, page addresses, UIDs, feed GUIDs, file paths, columns and vocabularies, held by
+  tests (#116).
