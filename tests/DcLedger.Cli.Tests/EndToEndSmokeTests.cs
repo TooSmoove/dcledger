@@ -84,7 +84,7 @@ public sealed class EndToEndSmokeTests : IDisposable
         rows.Length.ShouldBe(2); // the header and the event
         rows[1].ShouldStartWith(
             $"{EventId},{uid},guilford,Board of Commissioners,{ReviewedTitle},2026-439,2026-10-15T21:30:00Z,2026-10-15T17:30:00-04:00,scheduled,0,confirmed_official,");
-        rows[1].ShouldEndWith($",{agenda}");
+        rows[1].ShouldEndWith($",{agenda},fetched"); // ingest downloaded the agenda itself (document_retrieval, issue #113)
     }
 
     public void Dispose()
