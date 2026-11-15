@@ -404,7 +404,7 @@ public sealed class TabularExporterTests
             var row = ReadParquet(
                 "SELECT instrument_number, typeof(effective_on), expires_on, early_termination, successor_id, status FROM parquet", path)
                 .ShouldHaveSingleItem();
-            var columns = ReadParquet("SELECT name FROM (DESCRIBE SELECT * FROM parquet)", path).Select(column => (string)column[0]!).ToList();
+            var columns = ReadParquet("SELECT column_name FROM (DESCRIBE SELECT * FROM parquet)", path).Select(column => (string)column[0]!).ToList();
 
             row[0].ShouldBe("=26-01", "Parquet keeps values unguarded");
             row[1].ShouldBe("DATE");
