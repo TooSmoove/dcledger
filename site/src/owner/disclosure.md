@@ -16,6 +16,6 @@ and storage.
 
 ### Relationships
 
-Neither Smoove Software Solutions nor Keith Sellers has a financial or advisory relationship with any data
+Smoove Software Solutions has no financial or advisory relationship with any data
 center developer or operator, utility, landowner in a recorded case, local government, or advocacy group on these
 issues.
