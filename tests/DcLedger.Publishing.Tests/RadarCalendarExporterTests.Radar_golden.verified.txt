@@ -39,7 +39,8 @@ BEGIN:VEVENT
 DESCRIPTION:Fixture City\, City Council\nSource: https://fixture-city.examp
  le.org/council/2026-11-03-agenda.pdf (retrieved 2026-10-30T10:05:00-04:00\
  , SHA-256 89627e98c053f9b60815c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269
- )
+ ). Saved by a person in a browser (the source does not allow automated dow
+ nloads).
 DTSTAMP:20261030T140500Z
 DTSTART;TZID=America/New_York:20261103T180000
 SEQUENCE:0

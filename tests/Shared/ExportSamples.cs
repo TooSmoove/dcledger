@@ -11,7 +11,8 @@ namespace DcLedger.Testing;
 /// Oct 15, 2026 (EDT) with a title full of CSV and iCalendar specials, one on Nov 3 with non-ASCII text, and the
 /// Nov 5, 2026 decision (EST), so every export crosses the Nov 1 daylight-saving change (SPEC AC3). Only the Nov 5
 /// item has a location, so exports show both a point and its absence. One action records the Nov 5 decision, backed by
-/// a document that no event lists.
+/// a document that no event lists. The city's agenda was saved by a person (<see cref="Retrieval.Manual"/>, issue #113);
+/// every other document was fetched.
 /// </summary>
 internal static class ExportSamples
 {
@@ -40,7 +41,7 @@ internal static class ExportSamples
 
     public static readonly Document CountyAgenda1600 = Doc("fixture county agenda 1600", "https://fixture-county.example.org/agendas/1600.pdf", Utc(2026, 10, 28, 12, 47, 3), "application/pdf", 98765, SourceType.Official);
 
-    public static readonly Document CityAgenda = Doc("fixture city agenda 2026-11-03", "https://fixture-city.example.org/council/2026-11-03-agenda.pdf", Utc(2026, 10, 30, 14, 5, 0), "application/pdf", 4567, SourceType.Official);
+    public static readonly Document CityAgenda = Doc("fixture city agenda 2026-11-03", "https://fixture-city.example.org/council/2026-11-03-agenda.pdf", Utc(2026, 10, 30, 14, 5, 0), "application/pdf", 4567, SourceType.Official) with { Retrieval = Retrieval.Manual };
 
     public static readonly Document CountyActionDetail1600 = Doc("fixture county action detail 1600", "https://fixture-county.example.org/meetings/1600/actions/7", Utc(2026, 11, 6, 13, 0, 0), "text/html", 8765, SourceType.Official);
 

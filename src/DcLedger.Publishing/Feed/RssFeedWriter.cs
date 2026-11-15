@@ -161,7 +161,10 @@ internal static class RssFeedWriter
         return html.ToString();
     }
 
-    /// <summary>Every source with its retrieval time (Eastern) and SHA-256 (SPEC AC2), as a list.</summary>
+    /// <summary>
+    /// Every source with its retrieval time (Eastern) and SHA-256 (SPEC AC2), as a list. A copy a person saved says so
+    /// (<see cref="RetrievalNote"/>).
+    /// </summary>
     private static void AppendSources(StringBuilder html, IReadOnlyList<Document> documents)
     {
         html.Append("<ul>");
@@ -169,7 +172,7 @@ internal static class RssFeedWriter
         {
             var url = Html(document.Url.AbsoluteUri);
             html.Append(CultureInfo.InvariantCulture,
-                $"<li><a href=\"{url}\">{url}</a> (retrieved {IsoTime.Eastern(document.RetrievedAtUtc)}, SHA-256 {document.Id.Value})</li>");
+                $"<li><a href=\"{url}\">{url}</a> (retrieved {IsoTime.Eastern(document.RetrievedAtUtc)}, SHA-256 {document.Id.Value}){Html(RetrievalNote.After(document))}</li>");
         }
 
         html.Append("</ul>");

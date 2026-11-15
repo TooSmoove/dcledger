@@ -193,3 +193,8 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
 - **Nov 14, 2026 — Rural jurisdictions (issue #94, AC1, §D):**
   - Chatham County joins on Legistar (client `chathamnc`, existing adapter); Stokes and Vance join as `platform: manual`, since both post PDF agendas on their own sites. The top three of the Nov 3 rural research doc; new hyperscale siting is concentrated outside the Triad trio.
   - Backfilled as `reported_news` until minutes are archived: Stokes's Sept 14 Project Delta rezoning (3-2) and July 13 rejection of a six-month moratorium; Vance's April 6 continuance and April 20 approval of the Natelli rezoning on U.S. 158.
+- **Nov 15, 2026 — Showing how a document was retrieved (issue #113, AC2):**
+  - Exports now carry a document's `retrieval`: `events.csv` and `actions.csv` gain a last column `document_retrieval` (space-separated `fetched` or `manual`, in the record's order); the Parquet `documents` struct gains `retrieval` as its last field; every document in `events.json` gains `retrieval` (schema version 1, additive; ADR-0004 amended).
+  - Beside a source a person saved, item and jurisdiction pages, the feed and the calendars say "Saved by a person in a browser (the source does not allow automated downloads)." in text. A fetched copy gets no note.
+  - The wording differs from the issue's "the source blocks automated downloads": Vance's and Stokes's copies were saved by hand because each site's robots.txt disallows robots and the fetcher honors it, which is a refusal, not a technical block.
+  - No record changed, so no `sequence` was raised: feed items for decisions with a hand-saved source keep their GUIDs and gain the sentence in place.

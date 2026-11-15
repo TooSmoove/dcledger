@@ -13,12 +13,12 @@ With `--out out` from the repository root, the site build finds its data at `out
 
 | File | Contents |
 |---|---|
-| `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance and `location` (`{"lat", "lon"}` or null), and every local action (see below). Mirrored by `site/src/content.config.ts`. |
+| `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance (each document's `url`, `retrieved_utc`, `sha256` and `retrieval`) and `location` (`{"lat", "lon"}` or null), and every local action (see below). Mirrored by `site/src/content.config.ts`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per jurisdiction, even before it has events. |
 | `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision and per decision revision, newest first (see below). |
-| `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order. UTF-8 with BOM and a formula guard on text cells (SPEC AC7). Every column: `docs/data-dictionary.md`. |
-| `public/events.parquet` | The CSV's rows with native types: `starts_utc` a UTC timestamp, `sequence` an integer, coordinates doubles, and `documents` one list of `{url, retrieved_utc, sha256}` in the record's order. Written by DuckDB `COPY` (snappy); values unguarded. |
+| `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order, ending with `document_retrieval` (`fetched` or `manual` for each). UTF-8 with BOM and a formula guard on text cells (SPEC AC7). Every column: `docs/data-dictionary.md`. |
+| `public/events.parquet` | The CSV's rows with native types: `starts_utc` a UTC timestamp, `sequence` an integer, coordinates doubles, and `documents` one list of `{url, retrieved_utc, sha256, retrieval}` in the record's order. Written by DuckDB `COPY` (snappy); values unguarded. |
 | `public/actions.csv`, `public/actions.parquet` | One row per local action (decision), same rules as the events' pair (#90). Columns: `docs/data-dictionary.md`. |
 
 Files under `public/` are served as they are, at the same paths under the site's root. Existing files of the same name
@@ -28,13 +28,15 @@ are replaced; nothing is deleted, so use a fresh `--out` for a clean set.
 the UID is the hash of jurisdiction, platform and meeting ID and never changes; `SEQUENCE` comes from the record; a
 cancelled meeting gets `STATUS:CANCELLED` and "Cancelled: " in front of its title; a located one gets `GEO` (6 decimals). `DTSTAMP` is the newest retrieval
 time of the event's documents, so an unchanged event keeps the same bytes on every publish. The description lists each
-source with its retrieval time (Eastern) and SHA-256 (SPEC AC2).
+source with its retrieval time (Eastern) and SHA-256 (SPEC AC2). A source a person saved in a browser (`retrieval: manual`)
+is followed by "Saved by a person in a browser (the source does not allow automated downloads)."; a fetched one by nothing (issue #113).
 
 **Feed:** export keeps no history, so each event is one item for its current revision. The GUID is the calendar UID
 plus `/` and `sequence` (`isPermaLink="false"`); every published change raises `sequence` (`SEQUENCE_NOT_RAISED`), so
 a change, including a cancellation, reaches readers as a new item and an unchanged event keeps its GUID. Titles start
 with "Cancelled: " or "Updated: " (sequence above 0); the description is escaped HTML with the time in Eastern, the
-case number, the label and every source with its retrieval time and SHA-256 (SPEC AC2). `pubDate` is the newest
+case number, the label and every source with its retrieval time and SHA-256 (SPEC AC2), with the same sentence as the
+calendars after a source a person saved. `pubDate` is the newest
 retrieval of the event's documents, like the calendars' `DTSTAMP`, and `lastBuildDate` the newest `pubDate`, so the
 feed changes only when the ledger does. A cancellation sorts as new when the notice that confirms it is archived and
 added to `document_ids`. Links are absolute: `--site-url` (default `https://ncdcledger.org`; publish passes its
@@ -60,12 +62,13 @@ The key was added without bumping `schema_version`, because a reader that ignore
   "unanimous": false,
   "sequence": 0,
   "label": "confirmed_official",
-  "documents": [{ "url": "…", "retrieved_utc": "…", "sha256": "…" }]
+  "documents": [{ "url": "…", "retrieved_utc": "…", "sha256": "…", "retrieval": "fetched" }]
 }
 ```
 
 `event_id` and `votes` may be null. `unanimous` is always a boolean: true when the vote was reported unanimous, which
-can be before `votes` is known (added Nov 6, 2026, still schema version 1; the site treats a missing key as false). `decided_on` is a date, not a time, so it carries no offset. The calendars and the
+can be before `votes` is known (added Nov 6, 2026, still schema version 1; the site treats a missing key as false). `decided_on` is a date, not a time, so it carries no offset. Each document's `retrieval` is `fetched` or `manual`
+(added Nov 15, 2026 for events and actions alike, still schema version 1; the site treats a missing key as `fetched`). The calendars and the
 CSV list meetings only; a decision shows on the site, on its meeting's page and its jurisdiction's page.
 
 ## The ingest status (`--status`)

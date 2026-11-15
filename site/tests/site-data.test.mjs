@@ -46,6 +46,16 @@ test('actions are read from the actions array', () => {
   );
 });
 
+test('every fixture document says how it was retrieved, and two were saved by hand (#113)', () => {
+  const { events, actions } = parseSiteData(fixture);
+  const retrievals = [...events, ...actions].flatMap((item) =>
+    item.documents.map((document) => document.retrieval),
+  );
+  assert.equal(retrievals.length, 8);
+  assert.deepEqual([...new Set(retrievals)].sort(), ['fetched', 'manual']);
+  assert.equal(retrievals.filter((retrieval) => retrieval === 'manual').length, 2);
+});
+
 test('a schema 1 file written before actions existed has none', () => {
   const { actions: _ignored, ...older } = JSON.parse(fixture);
   assert.deepEqual(actionsFrom(JSON.stringify(older)), []);

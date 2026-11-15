@@ -179,5 +179,8 @@ Instead, a person saves the public file, and `--file` records that a person save
    variables with `set R2_ACCOUNT_ID=...` in Command Prompt or `$env:R2_ACCOUNT_ID="..."` in PowerShell.
 3. **Add the printed record.** It is the usual `documents/` record plus `retrieval: manual`. The command also prints the
    `retrieved_at` it used. If that isn't when you saved the file (say the file was copied or edited), save it again.
-4. **Label as usual.** The publisher is what decides the label, not who saved the file: a manual copy of an official
+4. **What readers see.** The exports carry it (`document_retrieval` in the CSVs, `retrieval` in Parquet and
+   `events.json`; `docs/data-dictionary.md`), and the site, the feed and the calendars say beside that source:
+   "Saved by a person in a browser (the source does not allow automated downloads)." A fetched copy gets no note (issue #113).
+5. **Label as usual.** The publisher is what decides the label, not who saved the file: a manual copy of an official
    record (`source_type: official`) can back `confirmed_official`.

@@ -1,10 +1,16 @@
 ---
 // One item's provenance (SPEC AC2): each source URL, when it was retrieved (Eastern, with its zone) and the SHA-256 of
-// the bytes kept. Shared by events and decisions so both show sources the same way.
-import { easternIso, easternText } from '../lib/radar.js';
+// the bytes kept. A copy a person saved in a browser says so in words (issue #113); a fetched one says nothing more.
+// Shared by events and decisions so both show sources the same way.
+import { easternIso, easternText, retrievalText } from '../lib/radar.js';
 
 interface Props {
-  documents: { url: string; retrieved_utc: string; sha256: string }[];
+  documents: {
+    url: string;
+    retrieved_utc: string;
+    sha256: string;
+    retrieval: 'fetched' | 'manual';
+  }[];
 }
 
 const { documents } = Astro.props;
@@ -26,6 +32,12 @@ const { documents } = Astro.props;
             {easternText(document.retrieved_utc)}
           </time>
         </dd>
+        {retrievalText(document.retrieval) !== null && (
+          <>
+            <dt>How retrieved</dt>
+            <dd>{retrievalText(document.retrieval)}.</dd>
+          </>
+        )}
         <dt>SHA-256</dt>
         <dd>
           <code>{document.sha256}</code>

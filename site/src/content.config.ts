@@ -4,8 +4,16 @@ import { z } from 'astro/zod';
 import { SITE_DATA_FILE, actionsFrom, eventsFrom, jurisdictionsFrom } from './lib/site-data.js';
 
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
+// retrieval (issue #113): how the copy was obtained. Defaults for an events.json written before the field.
 const documents = z
-  .array(z.object({ url: z.url(), retrieved_utc: z.iso.datetime(), sha256 }))
+  .array(
+    z.object({
+      url: z.url(),
+      retrieved_utc: z.iso.datetime(),
+      sha256,
+      retrieval: z.enum(['fetched', 'manual']).default('fetched'),
+    }),
+  )
   .min(1);
 
 const events = defineCollection({

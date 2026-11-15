@@ -12,6 +12,7 @@ import {
   inWindow,
   labelText,
   outcomeText,
+  retrievalText,
   statusText,
   votesText,
   voteText,
@@ -27,6 +28,16 @@ test('Eastern ISO text matches what the exporter writes as starts_local', () => 
   assert.equal(easternIso('2026-11-05T22:30:00Z'), '2026-11-05T17:30:00-05:00');
   assert.equal(easternIso('2026-11-01T05:30:00Z'), '2026-11-01T01:30:00-04:00');
   assert.equal(easternIso('2026-11-01T06:30:00Z'), '2026-11-01T01:30:00-05:00');
+});
+
+test('a copy a person saved says so; a fetched one says nothing; unknown tokens throw (#113)', () => {
+  assert.equal(
+    retrievalText('manual'),
+    'Saved by a person in a browser (the source does not allow automated downloads)',
+  );
+  assert.equal(retrievalText('fetched'), null);
+  assert.throws(() => retrievalText('browser'), /Unknown retrieval "browser"/);
+  assert.throws(() => retrievalText(undefined), /Unknown retrieval/);
 });
 
 test('only UTC instants are accepted', () => {

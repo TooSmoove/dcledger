@@ -35,12 +35,14 @@
         {
           "url": "https://news.example.org/2026/10/fixture-county-hearing",
           "retrieved_utc": "2026-10-11T09:30:00Z",
-          "sha256": "fba97dc11de08b93c327ec5be8dd73bd8999230a61bd3116367e80eb848e7a50"
+          "sha256": "fba97dc11de08b93c327ec5be8dd73bd8999230a61bd3116367e80eb848e7a50",
+          "retrieval": "fetched"
         },
         {
           "url": "https://fixture-county.example.org/agendas/1599.pdf",
           "retrieved_utc": "2026-10-10T12:00:00Z",
-          "sha256": "6ed4fc9a22e94cfaa7a43db736257d21fcaf5b9e06320184d00df2f1e576520c"
+          "sha256": "6ed4fc9a22e94cfaa7a43db736257d21fcaf5b9e06320184d00df2f1e576520c",
+          "retrieval": "fetched"
         }
       ]
     },
@@ -61,7 +63,8 @@
         {
           "url": "https://fixture-city.example.org/council/2026-11-03-agenda.pdf",
           "retrieved_utc": "2026-10-30T14:05:00Z",
-          "sha256": "89627e98c053f9b60815c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269"
+          "sha256": "89627e98c053f9b60815c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269",
+          "retrieval": "manual"
         }
       ]
     },
@@ -85,7 +88,8 @@
         {
           "url": "https://fixture-county.example.org/agendas/1600.pdf",
           "retrieved_utc": "2026-10-28T12:47:03Z",
-          "sha256": "98e5cc1df59b5bffbdd8f02fa81cf65ef97dfc6b7f062cbeec875c6411f25ea9"
+          "sha256": "98e5cc1df59b5bffbdd8f02fa81cf65ef97dfc6b7f062cbeec875c6411f25ea9",
+          "retrieval": "fetched"
         }
       ]
     }
@@ -106,7 +110,8 @@
         {
           "url": "https://fixture-county.example.org/meetings/1600/actions/7",
           "retrieved_utc": "2026-11-06T13:00:00Z",
-          "sha256": "de7880f9f6f1a7ad5eb2807c6960856ee17f04ea2d117706fb1425cd9c1cacb4"
+          "sha256": "de7880f9f6f1a7ad5eb2807c6960856ee17f04ea2d117706fb1425cd9c1cacb4",
+          "retrieval": "fetched"
         }
       ]
     }

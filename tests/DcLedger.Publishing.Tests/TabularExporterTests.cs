@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using DcLedger.Application;
+using DcLedger.Domain;
 using DcLedger.Publishing.Tabular;
 using DcLedger.Testing;
 using DuckDB.NET.Data;
@@ -14,15 +15,20 @@ public sealed class TabularExporterTests
     private static readonly string[] Header =
     [
         "id", "uid", "jurisdiction_id", "body", "title", "case_number", "starts_utc", "starts_local", "status", "sequence",
-        "label", "location_lat", "location_lon", "document_urls", "document_retrieved_utc", "document_sha256",
+        "label", "location_lat", "location_lon", "document_urls", "document_retrieved_utc", "document_sha256", "document_retrieval",
     ];
 
     private static readonly byte[] Utf8Bom = [0xEF, 0xBB, 0xBF];
 
+    /// <summary>The first document of each sample event, in start order: only the city's agenda was saved by a person.</summary>
+    private static readonly string[] SampleRetrievals = ["fetched", "manual", "fetched"];
+
+    private static readonly string[] SecondOfTwoSavedByHand = ["fetched manual", "manual", "fetched"];
+
     private static readonly string[] ActionsHeader =
     [
         "id", "jurisdiction_id", "event_id", "action_type", "outcome", "decided_on", "votes", "unanimous", "sequence", "label",
-        "document_urls", "document_retrieved_utc", "document_sha256",
+        "document_urls", "document_retrieved_utc", "document_sha256", "document_retrieval",
     ];
 
     /// <summary>The CSV as text, without its BOM (asserted on the bytes below).</summary>
@@ -268,11 +274,68 @@ public sealed class TabularExporterTests
         october15[13].ShouldBe("https://news.example.org/2026/10/fixture-county-hearing https://fixture-county.example.org/agendas/1599.pdf");
         october15[14].ShouldBe("2026-10-11T09:30:00Z 2026-10-10T12:00:00Z");
         october15[15].ShouldBe($"{ExportSamples.NewsStory.Id.Value} {ExportSamples.CountyAgenda1599.Id.Value}");
+        october15[16].ShouldBe("fetched fetched");
 
         rows[2][4].ShouldBe(ExportSamples.November3.Title);
         rows[3][5].ShouldBe(string.Empty);
         (october15[11], october15[12]).ShouldBe((string.Empty, string.Empty));
         (rows[3][11], rows[3][12]).ShouldBe(("36.0726", "-79.792"));
+    }
+
+    [Fact]
+    public void Document_retrieval_is_the_last_column_and_lines_up_with_the_other_document_columns()
+    {
+        // The second of two documents is the hand-saved one, so a swapped order would show.
+        var sample = ExportSamples.Model();
+        var model = sample with
+        {
+            Events = [.. sample.Events.Select(item => item.Event.Id == ExportSamples.October15.Id
+                ? item with { Documents = [item.Documents[0], item.Documents[1] with { Retrieval = Retrieval.Manual }] }
+                : item)],
+        };
+
+        var rows = Rfc4180.Parse(EventsCsv(model));
+
+        Header[^1].ShouldBe("document_retrieval", "new columns are appended (docs/data-dictionary.md)");
+        rows[0].ShouldBe(Header);
+        rows.Skip(1).Select(row => row[16]).ShouldBe(SecondOfTwoSavedByHand);
+        rows[1][15].ShouldBe($"{ExportSamples.NewsStory.Id.Value} {ExportSamples.CountyAgenda1599.Id.Value}", "the same order as the hashes");
+    }
+
+    [Fact]
+    public void Parquet_documents_say_how_each_was_retrieved()
+    {
+        var rows = ReadParquet("SELECT documents[1].retrieval, typeof(documents) FROM parquet ORDER BY starts_utc");
+
+        rows.Select(row => (string)row[0]!).ShouldBe(SampleRetrievals);
+        rows[0][1].ShouldBe("STRUCT(url VARCHAR, retrieved_utc TIMESTAMP, sha256 VARCHAR, retrieval VARCHAR)[]", "retrieval is the struct's last field");
+    }
+
+    [Fact]
+    public void Actions_say_how_each_document_was_retrieved_in_csv_and_parquet()
+    {
+        var sample = ExportSamples.Model();
+        var model = sample with
+        {
+            Actions = [.. sample.Actions.Select(item => item with { Documents = [.. item.Documents.Select(document => document with { Retrieval = Retrieval.Manual })] })],
+        };
+        var files = new TabularExporter().Export(model);
+        var directory = Directory.CreateTempSubdirectory("dcl-parquet-");
+        try
+        {
+            var path = Path.Combine(directory.FullName, "actions.parquet");
+            File.WriteAllBytes(path, TestFiles.Single(files, ExportPaths.ActionsParquet).Content.ToArray());
+
+            var rows = Rfc4180.Parse(TestFiles.Text(TestFiles.Single(files, ExportPaths.ActionsCsv)).TrimStart('\uFEFF'));
+            rows[0].ShouldBe(ActionsHeader);
+            rows.Skip(1).ShouldHaveSingleItem()[13].ShouldBe("manual");
+            ReadParquet("SELECT documents[1].retrieval FROM parquet", path).ShouldHaveSingleItem()[0].ShouldBe("manual");
+            Rfc4180.Parse(ActionsCsv())[1][13].ShouldBe("fetched", "the sample's action detail was fetched");
+        }
+        finally
+        {
+            directory.Delete(recursive: true);
+        }
     }
 
     [Fact]
