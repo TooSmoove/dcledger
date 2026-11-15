@@ -11,7 +11,7 @@ Carolina. One person maintains it.
 
 ### Funding
 
-The project has no outside funding. Smoove Software Solutions/Keith Sellers pays its costs, which are hosting, a domain
+The project has no outside funding. Smoove Software Solutions pays its costs, which are hosting, a domain
 and storage.
 
 ### Relationships
