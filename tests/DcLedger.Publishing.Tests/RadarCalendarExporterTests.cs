@@ -1,5 +1,6 @@
 using System.Text;
 using DcLedger.Application;
+using DcLedger.Domain;
 using DcLedger.Publishing.Ics;
 using DcLedger.Testing;
 using Ical.Net.CalendarComponents;
