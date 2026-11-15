@@ -17,13 +17,18 @@
 # adopted at 180 days, was found there.
 # The city's Nov 9 release (News/23241) was no longer available when a person tried to save it that night.
 # www.greensboro-nc.gov answers HTTP 403 to the archive workflow, so its pages are saved in a browser (--file).
+# Terms (#115, Nov 15, 2026), each only as an archived document states it: threshold and scope as worded in the
+# Aug 17-18 minutes (6664fb8d…); expires_on from the Aug 18 release (5ccd8e17…, "until Sunday, February 14, 2027");
+# status from the Nov 5 release (04e565d7…, the period "concludes on February 14 of next year"). No archived document
+# states the start date, the ordinance number, early termination or exemptions, so those are left out until the
+# adopted ordinance is archived (#112). sequence went from 2 to 3 for the terms.
 id: greensboro-moratorium-2026-08-18
 jurisdiction_id: greensboro
 action_type: moratorium
 outcome: adopted_amended
 decided_on: 2026-08-18
 votes: "8-0"
-sequence: 2
+sequence: 3
 label: confirmed_official
 document_ids:
   - 6664fb8d53149c280316c893e0804ce35545ba994a4c19870ce6fda4c0e11161
@@ -31,3 +36,7 @@ document_ids:
   - 642c75fd4f69a0553c54ea03d4f17c3764cfd8fd12d1373b13b3e76703094d76
   - 04e565d713a032895773e5f5c0cfacbdae83d9038d9425c85e31797f365f56a1
   - ac94053e1201551bb957f970400fb22c353e65fcac66a038b0d14881f343330d
+threshold: "electrical power demand exceeding 10 megawatts"
+scope: "temporary development moratorium applicable to data center facilities"
+expires_on: 2027-02-14
+status: in_effect
