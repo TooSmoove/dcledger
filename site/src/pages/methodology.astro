@@ -1,0 +1,231 @@
+---
+// How an item gets in, who publishes this, and what happens when it is wrong (issue #117): methodology, disclosure,
+// how to cite, and the corrections log. Static, no script (AC12). Wording that depends on the data (labels, tiers,
+// the manual-retrieval sentence) comes from the same constants the rest of the site uses, so the page can't drift
+// from what item pages say.
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { Content as Disclosure } from '../owner/disclosure.md';
+import { readCorrections, newestFirst, recordHref, issueHref } from '../lib/corrections.js';
+import { SITE_URL, citationText, logOpenedText } from '../lib/methodology.js';
+import {
+  MANUAL_RETRIEVAL_TEXT,
+  coverageText,
+  dateText,
+  easternText,
+  labelText,
+} from '../lib/radar.js';
+
+const log = await readCorrections();
+const entries = newestFirst(log.corrections);
+
+const events = await getCollection('events');
+const jurisdictions = await getCollection('jurisdictions');
+const actions = await getCollection('actions');
+const records = {
+  events: new Set(events.map((e) => e.id)),
+  jurisdictions: new Set(jurisdictions.map((j) => j.id)),
+  actions: new Map(actions.map((a) => [a.id, a.data.jurisdiction_id])),
+};
+const names = new Map(jurisdictions.map((j) => [j.id, j.data.name]));
+
+// The worked citation uses a real item: the latest confirmed one, else the latest of any label.
+const byLatest = [...events].sort((a, b) => b.data.starts_utc.localeCompare(a.data.starts_utc));
+const example =
+  byLatest.find((e) => e.data.label === 'confirmed_official' && e.data.status === 'scheduled') ??
+  byLatest[0];
+const citation =
+  example &&
+  citationText({
+    siteUrl: SITE_URL,
+    id: example.id,
+    title: example.data.title,
+    jurisdiction: names.get(example.data.jurisdiction_id) ?? example.data.jurisdiction_id,
+    startsText: easternText(example.data.starts_utc),
+    document: {
+      url: example.data.documents[0].url,
+      retrievedText: easternText(example.data.documents[0].retrieved_utc),
+      sha256: example.data.documents[0].sha256,
+    },
+  });
+
+const newIssue = 'https://github.com/TooSmoove/dcledger/issues/new?template=correction.yml';
+---
+
+<Base title="Methodology and corrections">
+  <h1>Methodology and corrections</h1>
+  <p>
+    How an item gets into this ledger, who publishes it, how to cite it, and what happens when
+    something in it is wrong.
+  </p>
+  <nav aria-label="On this page">
+    <ul>
+      <li>
+        <a href="#how-items-get-in">How items get in</a>
+      </li>
+      <li>
+        <a href="#labels">What the labels mean</a>
+      </li>
+      <li>
+        <a href="#provenance">Where each item comes from</a>
+      </li>
+      <li>
+        <a href="#coverage">What is covered</a>
+      </li>
+      <li>
+        <a href="#publisher">Who publishes this</a>
+      </li>
+      <li>
+        <a href="#cite">How to cite</a>
+      </li>
+      <li>
+        <a href="#corrections">Corrections</a>
+      </li>
+    </ul>
+  </nav>
+
+  <h2 id="how-items-get-in">How items get in</h2>
+  <ul>
+    <li>
+      For jurisdictions on an agenda platform we can read, a program checks for new agendas about
+      once an hour. GitHub skips some scheduled runs, so the longest gap we measured between checks
+      was just under 11 hours.
+    </li>
+    <li>
+      When a check finds an agenda item that may concern a data center, it opens a review task in
+      the same run. Nothing it finds is published at that point.
+    </li>
+    <li>
+      Where the official site blocks programs, a person checks it instead. Those jurisdictions show
+      as stale if they go 7 days without a check.
+    </li>
+    <li>
+      A person reviews every item before it is public. They write the title in neutral words; the
+      original agenda title and the names of petitioners and property owners are never published.
+    </li>
+    <li>
+      Only reviewed records merged into the ledger are published; the site is built from nothing
+      else. The site and its downloads are rebuilt after every merged change, and at least every 6
+      hours.
+    </li>
+  </ul>
+
+  <h2 id="labels">What the labels mean</h2>
+  <p>Every item carries exactly one of two labels.</p>
+  <dl>
+    <dt>{labelText('reported_news')}</dt>
+    <dd>The item rests on a news report. We have not yet kept an official record that shows it.</dd>
+    <dt>{labelText('confirmed_official')}</dt>
+    <dd>
+      At least one of the item's sources is an official record, such as an agenda, minutes, an
+      ordinance or a case page, from the government's own site.
+    </dd>
+  </dl>
+  <p>
+    An item moves from reported to confirmed when we keep a copy of an official record that shows
+    it. Another news report does not move it. When a label or anything else in a published item
+    changes, the change shows up in the feed and calendars as an update.
+  </p>
+
+  <h2 id="provenance">Where each item comes from</h2>
+  <p>
+    Every item lists its sources. For each one you see the address we took it from, when we took it
+    (Eastern time), and the SHA-256 hash of the exact copy we kept. If you download the same file
+    and its SHA-256 matches, you have the copy we used.
+  </p>
+  <p>
+    Some official sites block automated downloads. A person then saves the file in a browser, and
+    the item says: "{MANUAL_RETRIEVAL_TEXT}." The address, time and hash work the same way.
+  </p>
+  <p>
+    We keep the documents in private storage and do not republish them. The source address is where
+    to read them.
+  </p>
+
+  <h2 id="coverage">What is covered</h2>
+  <p>Each jurisdiction's page states how closely it is covered:</p>
+  <ul>
+    <li>{coverageText('watched')}</li>
+    <li>{coverageText('decisions')}</li>
+    <li>{coverageText('registered')}</li>
+  </ul>
+  <p>
+    If something is not in the ledger, that is not evidence it did not happen. A body can meet, hear
+    or decide something we have not found or not yet recorded.
+  </p>
+
+  <h2 id="publisher">Who publishes this</h2>
+  <div class="disclosure">
+    <Disclosure />
+  </div>
+
+  <h2 id="cite">How to cite</h2>
+  <p>
+    Cite the item's page address, plus the source address, retrieval time and SHA-256 of the
+    document you relied on. Item addresses do not change.
+  </p>
+  {citation && (
+    <>
+      <p>For example:</p>
+      <blockquote class="citation">
+        <p>{citation}</p>
+      </blockquote>
+    </>
+  )}
+
+  <h2 id="corrections">Corrections</h2>
+  <p>
+    To report a mistake, <a href={newIssue}>open a correction on GitHub</a>. Say which item is wrong
+    and, if you can, point to the record that shows it. A contact address is planned.
+  </p>
+  <p>
+    We act on every report within 48 hours: we correct the record, or we reply on the report with
+    what we found and why the record stands, or, when a fix depends on a record not yet posted, what
+    we are waiting for and when. Every correction is listed below with the date it was reported and
+    the date it was fixed. Entries are never removed.
+  </p>
+
+  <h3 id="log">Corrections log</h3>
+  <p>{logOpenedText(log.opened_on)}</p>
+  {entries.length === 0 ? (
+    <p>No corrections yet.</p>
+  ) : (
+    <ol class="log" reversed>
+      {entries.map((entry) => (
+        <li id={`correction-${entry.id}`}>
+          <p>
+            <strong>
+              Corrected <time datetime={entry.corrected_on}>{dateText(entry.corrected_on)}</time>.
+            </strong>{' '}
+            {entry.summary}
+          </p>
+          <p class="muted">
+            Reported <time datetime={entry.reported_on}>{dateText(entry.reported_on)}</time>
+            {entry.issue !== null && (
+              <>
+                {' '}
+                in <a href={issueHref(entry.issue)}>issue #{entry.issue}</a>
+              </>
+            )}
+            .
+            {entry.record_ids.length > 0 && (
+              <>
+                {' '}
+                Changed:{' '}
+                {entry.record_ids.map((id, i) => (
+                  <>
+                    {i > 0 && ', '}
+                    <a href={recordHref(id, records)}>
+                      <code>{id}</code>
+                    </a>
+                  </>
+                ))}
+                .
+              </>
+            )}
+          </p>
+        </li>
+      ))}
+    </ol>
+  )}
+</Base>

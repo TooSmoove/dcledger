@@ -75,4 +75,10 @@ public static class ValidationRule
     /// jurisdiction or decided earlier.
     /// </summary>
     public const string TermsInvalid = "TERMS_INVALID";
+
+    /// <summary>
+    /// A corrections log entry contradicts itself or the log (issue #117): corrected before it was reported, dated
+    /// before the log opened, naming the same record twice, or citing issue number 0.
+    /// </summary>
+    public const string CorrectionInvalid = "CORRECTION_INVALID";
 }

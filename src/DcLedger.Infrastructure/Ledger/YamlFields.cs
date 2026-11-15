@@ -200,20 +200,35 @@ internal sealed partial class YamlFields
             return null;
         }
 
-        if (value.Length > DecisionTerms.MaxTextLength)
+        return IsOneLine(key, value, DecisionTerms.MaxTextLength, "Copy the operative words; the cited document holds the rest.") ? value : null;
+    }
+
+    /// <summary>
+    /// A required line of text, such as a correction's summary (issue #117): one line of at most
+    /// <paramref name="maxLength"/> characters, with the same rules as <see cref="TermText"/>.
+    /// </summary>
+    public string? RequiredLine(string key, int maxLength)
+    {
+        var value = Required(key);
+        return value is not null && IsOneLine(key, value, maxLength, "Say what was wrong and what it says now; the linked issue holds the rest.") ? value : null;
+    }
+
+    private bool IsOneLine(string key, string value, int maxLength, string overLengthHint)
+    {
+        if (value.Length > maxLength)
         {
             Add(ValidationRule.InvalidValue,
-                string.Create(CultureInfo.InvariantCulture, $"'{key}' is {value.Length} characters; terms are capped at {DecisionTerms.MaxTextLength}. Copy the operative words; the cited document holds the rest."));
-            return null;
+                string.Create(CultureInfo.InvariantCulture, $"'{key}' is {value.Length} characters; it is capped at {maxLength}. {overLengthHint}"));
+            return false;
         }
 
         if (value.Any(char.IsControl))
         {
             Add(ValidationRule.InvalidValue, $"'{key}' must be a single line without tabs or line breaks; use a quoted value, not a block scalar.");
-            return null;
+            return false;
         }
 
-        return value;
+        return true;
     }
 
     public Sha256Hash? Hash(string key)
@@ -224,6 +239,19 @@ internal sealed partial class YamlFields
 
     public IReadOnlyList<Sha256Hash> Hashes(string key) =>
         [.. List(key).Select(value => ToHash(key, value)).OfType<Sha256Hash>()];
+
+    /// <summary>An optional list of record IDs, such as a correction's <c>record_ids</c> (issue #117); each must be a slug.</summary>
+    public IReadOnlyList<string> Slugs(string key)
+    {
+        var values = List(key);
+        if (values.Any(value => value.Length > 100 || !SlugPattern().IsMatch(value)))
+        {
+            Add(ValidationRule.InvalidValue, $"'{key}' values must be lowercase letters, digits and single hyphens.");
+            return [];
+        }
+
+        return values;
+    }
 
     public Uri? Url(string key)
     {

@@ -9,6 +9,12 @@ public static class ExportPaths
     /// <summary>The site's data contract (ADR-0004).</summary>
     public const string SiteData = "site-data/events.json";
 
+    /// <summary>
+    /// The corrections log for the methodology page (issue #117). Site data only: not copied to the public downloads
+    /// and not part of the frozen data contract (docs/export.md).
+    /// </summary>
+    public const string SiteCorrections = "site-data/corrections.json";
+
     /// <summary>Every jurisdiction's events in one calendar.</summary>
     public const string Radar = "public/radar.ics";
 

@@ -28,6 +28,7 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 - `location` is optional: the proposed project's site, as decimal degrees with at most 6 decimals, inside North
   Carolina (`LOCATION_OUT_OF_RANGE` otherwise; usually a swapped pair or a missing minus sign). Only `lat` and `lon`:
   never a name, address or owner. It puts the item on the map.
+- A corrections log entry (`corrections/<id>.yaml`, see "Logging a correction") names only jurisdictions, events or actions that exist (`FK_MISSING`), each once; is reported on or after Nov 22, 2026, when the log opened, and corrected on or after it was reported; and cites an issue number of 1 or more (`CORRECTION_INVALID`). Its `summary` is one line of at most 500 characters (`INVALID_VALUE`). Entries are permanent like every record (`SLUG_CHANGED`).
 - Files are UTF-8, at most 64 KB, one YAML mapping, no anchors or aliases. Quote values that start with a special character or look like numbers you want kept as text.
 
 ## Shapes
@@ -226,3 +227,29 @@ Instead, a person saves the public file, and `--file` records that a person save
    "Saved by a person in a browser (the source does not allow automated downloads)." A fetched copy gets no note (issue #113).
 5. **Label as usual.** The publisher is what decides the label, not who saved the file: a manual copy of an official
    record (`source_type: official`) can back `confirmed_official`.
+
+## Logging a correction
+
+When a published record was wrong, fix the record and add an entry to the public corrections log in the same pull
+request (issue #117). The log is listed on `/methodology/#log`; entries are never removed.
+
+1. **Fix the record** and raise its `sequence`, so calendars and the feed show the update.
+2. **Add the entry** as `corrections/<id>.yaml`. Use the correction date and a short description for the ID:
+
+   ```yaml
+   # corrections/2026-11-24-guilford-vote-count.yaml
+   id: 2026-11-24-guilford-vote-count
+   reported_on: 2026-11-23        # Eastern date the report arrived or the problem was found
+   corrected_on: 2026-11-24       # Eastern date the fix merges
+   record_ids:                    # optional: the jurisdictions, events or actions changed
+     - guilford-moratorium-2026-11-05
+   summary: "The vote was recorded as 9-0; the minutes show 8-1."
+   issue: 131                     # optional: the GitHub issue it was reported in
+   ```
+
+3. **Word the summary** from `docs/wording-bank.md` ("Corrections log entries"): what was wrong and what the record
+   says now, in neutral words, with no one's name.
+4. **Reply on the issue** (`docs/wording-bank.md`, "Replies to correction reports") and close it once the fix is live.
+
+A change to the page's own wording that readers relied on gets an entry with no `record_ids`. A label moving from
+reported to confirmed because a new official record was archived is routine and gets none.

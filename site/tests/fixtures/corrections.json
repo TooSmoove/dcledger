@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "opened_on": "2026-11-22",
+  "corrections": [
+    {
+      "id": "2026-11-22-fixture-methodology-interval",
+      "reported_on": "2026-11-22",
+      "corrected_on": "2026-11-22",
+      "record_ids": [],
+      "summary": "The methodology page gave the publish interval as 12 hours; it is 6 hours.",
+      "issue": null
+    },
+    {
+      "id": "2026-11-24-fixture-guilford-vote-count",
+      "reported_on": "2026-11-23",
+      "corrected_on": "2026-11-24",
+      "record_ids": [
+        "fixture-guilford-moratorium-2026-11-05",
+        "fixture-guilford-boc-2026-11-05",
+        "guilford"
+      ],
+      "summary": "The vote was recorded as \"9-0\"; the <minutes> show 8-1 & one absence.",
+      "issue": 131
+    }
+  ]
+}

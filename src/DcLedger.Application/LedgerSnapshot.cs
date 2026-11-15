@@ -20,6 +20,9 @@ public sealed record LedgerSnapshot
     /// <summary>Local actions that parsed without errors.</summary>
     public IReadOnlyList<LoadedRecord<LocalAction>> Actions { get; init; } = [];
 
+    /// <summary>Corrections log entries that parsed without errors (issue #117).</summary>
+    public IReadOnlyList<LoadedRecord<Correction>> Corrections { get; init; } = [];
+
     /// <summary>Problems found while reading (shape, format, unknown or forbidden keys).</summary>
     public IReadOnlyList<ValidationError> LoadErrors { get; init; } = [];
 

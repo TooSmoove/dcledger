@@ -1,0 +1,7 @@
+id: 2026-11-24-fixture-county-vote-count
+reported_on: 2026-11-23
+corrected_on: 2026-11-24
+record_ids:
+  - fixture-county-moratorium-2026-11-05
+summary: "The vote was recorded as 9-0; the action detail shows 8-1."
+issue: 131
