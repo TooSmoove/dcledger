@@ -1,17 +1,20 @@
-# Public Radio East (archived a67d7d48…, published Tuesday July 14, 2026): at "the meeting Monday night" the Board of
-# Commissioners rejected the six-month pause on data center development that the planning board had recommended. No
-# tally reported. The date is inferred from "Monday night"; confirm it and the vote against the minutes.
-# Nov 14, 2026 (#112): the July 13 minutes were not found. The county's Granicus list
-# (stokescountync.granicus.com/ViewPublisher.php?view_id=1) shows a "Minutes" link for Jul 13, 2026 (clip_id=799), but
-# the file saved by hand from it that day is a one-page cover sheet for that meeting's agenda item approving the
-# minutes of April 27 to June 8. It records no decision, so it isn't added here. Minutes are approved at a later
-# meeting: look in the packets from July 27 on. Granicus's robots.txt disallows all robots, so a person saves
-# documents in a browser and archives with --file.
+# Minutes of the Monday, July 13, 2026 regular session (archived 4509029d…, saved in a browser Nov 14, 2026; all five
+# commissioners present). Discussion agenda: "Miller explained that the Planning Board had suggested for the Board of
+# Commissioners to consider a moratorium on data center development. After some discussion, the commissioners voted
+# to reject the moratorium recommendation. The item was moved to the Action agenda". Action agenda, item d, "Planning
+# Board Recommendation of a Data Center Moratorium": a motion "to approve the item as presented ... passed (3-2) with
+# Wayne Barneycastle, Brad Chandler voting against the motion."
+# votes: the minutes print 3-2 for the motion that rejected the moratorium, so it is written 2-3 here, ayes for the
+# moratorium first, as for Greensboro's failed vote of July 21 (owner decision, Nov 14, 2026). Public Radio East's
+# report (a67d7d48…) matches the outcome and gave no tally.
 id: stokes-moratorium-2026-07-13
 jurisdiction_id: stokes
 action_type: moratorium
 outcome: failed
 decided_on: 2026-07-13
-label: reported_news
+votes: "2-3"
+sequence: 1
+label: confirmed_official
 document_ids:
+  - 4509029d140b86c67a173e59e67cdc5b9850a3897a202c320ac76533e626af46
   - a67d7d485620a944a79ab3152ae7e119b03be127be5dbac0a6981023f745ebf3

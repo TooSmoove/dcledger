@@ -5,17 +5,20 @@
 # electrical power demand exceeding 10 megawatts for a period of 180 days. The motion carried by voice vote. 8-0
 # Mayor Pro-Tem Roth was recused." The Greensboro Thread's report (ac94053e…) matches. The regular Aug 18 minutes
 # (0759dfed…) record no vote on it.
+# The city's news release of Aug 18, 2026, 6:38 PM (archived 5ccd8e17…, saved in a browser Nov 14, 2026) says the
+# council "voted 8-0, with one recusal", and that the pause runs "until Sunday, February 14, 2027".
 # Nov 14, 2026 (#112): the adopted ordinance itself isn't archived yet (the minutes are; the instrument is not), nor
-# are the city's news releases of Aug 18, Aug 31, Nov 5 and Nov 9: www.greensboro-nc.gov answered HTTP 403 to the
-# archive workflow, so they are saved in a browser like eSCRIBE documents (--file).
+# are the city's releases of Aug 31, Nov 5 and Nov 9. www.greensboro-nc.gov answers HTTP 403 to the archive
+# workflow, so they are saved in a browser like eSCRIBE documents (--file).
 id: greensboro-moratorium-2026-08-18
 jurisdiction_id: greensboro
 action_type: moratorium
 outcome: adopted_amended
 decided_on: 2026-08-18
 votes: "8-0"
-sequence: 1
+sequence: 2
 label: confirmed_official
 document_ids:
   - 6664fb8d53149c280316c893e0804ce35545ba994a4c19870ce6fda4c0e11161
+  - 5ccd8e17713add78a14662abd7612857106b020d328b99487948c5818a0effa7
   - ac94053e1201551bb957f970400fb22c353e65fcac66a038b0d14881f343330d
