@@ -2,18 +2,22 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   WINDOW_DAYS,
+  actionStatusText,
   actionTypeText,
   byDecisionNewestFirst,
   byStart,
+  coverageText,
   dateText,
   easternIso,
   easternText,
   freshnessText,
   inWindow,
+  isWatched,
   labelText,
   outcomeText,
   retrievalText,
   statusText,
+  termRows,
   votesText,
   voteText,
 } from '../src/lib/radar.js';
@@ -154,4 +158,55 @@ test('decisions sort newest first, then by ID', () => {
     ]).map((e) => e.id),
     ['a', 'c', 'b'],
   );
+});
+
+test('each coverage tier is one sentence, and only watched carries the freshness promise (#115)', () => {
+  assert.match(coverageText('watched'), /^Coverage: hearings watched\./);
+  assert.match(coverageText('decisions'), /^Coverage: decisions only\./);
+  assert.match(coverageText('registered'), /^Coverage: listed only\./);
+  assert.equal(isWatched('watched'), true);
+  assert.equal(isWatched('decisions'), false);
+  assert.equal(isWatched('registered'), false);
+  assert.throws(() => coverageText('full'), /Unknown coverage tier "full"/);
+  assert.throws(() => isWatched('constructor'), /Unknown coverage tier "constructor"/);
+});
+
+test('every action status token has fixed words, matching the feed (#115)', () => {
+  assert.equal(actionStatusText('in_effect'), 'In effect');
+  assert.equal(actionStatusText('expired'), 'Expired');
+  assert.equal(actionStatusText('superseded'), 'Replaced or extended by a later decision');
+  assert.equal(actionStatusText('repealed'), 'Repealed');
+  assert.throws(() => actionStatusText('active'), /Unknown action status "active"/);
+});
+
+test('terms render in a fixed order, text quoted as written, dates as calendar dates (#115)', () => {
+  const rows = termRows({
+    instrument_number: '26-01',
+    threshold: 'electrical power demand exceeding 10 megawatts',
+    scope: 'data center facilities',
+    effective_on: '2026-11-05',
+    expires_on: '2027-02-14',
+    early_termination: 'upon adoption of text amendments',
+    exemptions: 'complete applications',
+    successor_id: 'not-a-row',
+    status: 'in_effect',
+  });
+  assert.deepEqual(rows, [
+    { label: 'Status', text: 'In effect' },
+    { label: 'Ordinance or resolution number', text: '26-01' },
+    { label: 'Threshold', text: '\u201Celectrical power demand exceeding 10 megawatts\u201D' },
+    { label: 'Covers', text: '\u201Cdata center facilities\u201D' },
+    { label: 'Effective', text: 'Thu, Nov 5, 2026', date: '2026-11-05' },
+    { label: 'Expires', text: 'Sun, Feb 14, 2027', date: '2027-02-14' },
+    { label: 'Ends earlier', text: '\u201Cupon adoption of text amendments\u201D' },
+    { label: 'Exemptions', text: '\u201Ccomplete applications\u201D' },
+  ]);
+});
+
+test('a decision without terms has no term rows, and one term gives one row (#115)', () => {
+  assert.deepEqual(termRows({}), []);
+  assert.deepEqual(termRows({ threshold: null, expires_on: '2027-02-14', status: undefined }), [
+    { label: 'Expires', text: 'Sun, Feb 14, 2027', date: '2027-02-14' },
+  ]);
+  assert.throws(() => termRows({ status: 'active' }), /Unknown action status/);
 });

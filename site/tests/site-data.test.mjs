@@ -42,6 +42,7 @@ test('actions are read from the actions array', () => {
       'fixture-guilford-moratorium-2026-11-05',
       'fixture-city-text-amendment-2026-10-20',
       'fixture-guilford-resolution-2026-11-04',
+      'fixture-decided-moratorium-2026-09-02',
     ],
   );
 });
@@ -51,7 +52,7 @@ test('every fixture document says how it was retrieved, and two were saved by ha
   const retrievals = [...events, ...actions].flatMap((item) =>
     item.documents.map((document) => document.retrieval),
   );
-  assert.equal(retrievals.length, 8);
+  assert.equal(retrievals.length, 9);
   assert.deepEqual([...new Set(retrievals)].sort(), ['fetched', 'manual']);
   assert.equal(retrievals.filter((retrieval) => retrieval === 'manual').length, 2);
 });
@@ -59,4 +60,26 @@ test('every fixture document says how it was retrieved, and two were saved by ha
 test('a schema 1 file written before actions existed has none', () => {
   const { actions: _ignored, ...older } = JSON.parse(fixture);
   assert.deepEqual(actionsFrom(JSON.stringify(older)), []);
+});
+
+test('every fixture jurisdiction states a coverage tier, and all three tiers appear (#115)', () => {
+  const tiers = parseSiteData(fixture).jurisdictions.map((j) => j.coverage_tier);
+  assert.deepEqual([...new Set(tiers)].sort(), ['decisions', 'registered', 'watched']);
+});
+
+test('every fixture decision carries each term key, null when not stated (#115)', () => {
+  const keys = [
+    'instrument_number',
+    'threshold',
+    'scope',
+    'effective_on',
+    'expires_on',
+    'early_termination',
+    'exemptions',
+    'successor_id',
+    'status',
+  ];
+  for (const action of parseSiteData(fixture).actions) {
+    assert.deepEqual(Object.keys(action).slice(-keys.length), keys, action.id);
+  }
 });

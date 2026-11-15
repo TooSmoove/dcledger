@@ -5,7 +5,14 @@ import { getCollection } from 'astro:content';
 import EventTable from '../components/EventTable.astro';
 import Freshness from '../components/Freshness.astro';
 import Base from '../layouts/Base.astro';
-import { WINDOW_DAYS, byStart, easternText, inWindow } from '../lib/radar.js';
+import {
+  WINDOW_DAYS,
+  byStart,
+  coverageText,
+  easternText,
+  inWindow,
+  isWatched,
+} from '../lib/radar.js';
 import { generatedUtc } from '../lib/site-data-file.js';
 
 const generated = await generatedUtc();
@@ -13,6 +20,9 @@ const jurisdictions = (await getCollection('jurisdictions')).sort((a, b) =>
   a.data.name.localeCompare(b.data.name, 'en'),
 );
 const names = new Map(jurisdictions.map((j) => [j.id, j.data.name]));
+// Only a watched jurisdiction has hearings to check (issue #115); the others are listed below without freshness.
+const watched = jurisdictions.filter((j) => isWatched(j.data.coverage_tier));
+const others = jurisdictions.filter((j) => !isWatched(j.data.coverage_tier));
 const events = byStart(
   (await getCollection('events')).filter((event) => inWindow(event.data, generated)),
 );
@@ -37,7 +47,7 @@ const events = byStart(
 
   <h2>Jurisdictions</h2>
   <ul>
-    {jurisdictions.map(({ id, data }) => (
+    {watched.map(({ id, data }) => (
       <li>
         <a href={`/jurisdictions/${id}/`}>{data.name}</a>
         <Freshness
@@ -48,4 +58,19 @@ const events = byStart(
       </li>
     ))}
   </ul>
+
+  {others.length > 0 && (
+    <>
+      <h2>Other jurisdictions</h2>
+      <p>Their hearings are not on the radar.</p>
+      <ul>
+        {others.map(({ id, data }) => (
+          <li>
+            <a href={`/jurisdictions/${id}/`}>{data.name}</a>
+            <p>{coverageText(data.coverage_tier)}</p>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
 </Base>

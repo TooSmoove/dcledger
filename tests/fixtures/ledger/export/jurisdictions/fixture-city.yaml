@@ -2,4 +2,5 @@
 id: fixture-city
 name: Fixture City
 platform: manual
+coverage_tier: watched
 last_manual_check_utc: 2026-10-27T09:00:00Z

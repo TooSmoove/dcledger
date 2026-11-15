@@ -44,6 +44,8 @@ const jurisdictions = defineCollection({
     stale: z.boolean(),
     // 48, or 168 for a jurisdiction checked by hand (issue #27); defaults for an events.json written before the field.
     stale_after_hours: z.number().int().positive().default(48),
+    // Issue #115; defaults for an events.json written before the field, when every jurisdiction was watched.
+    coverage_tier: z.enum(['watched', 'decisions', 'registered']).default('watched'),
   }),
 });
 
@@ -67,6 +69,17 @@ const actions = defineCollection({
     sequence: z.number().int().nonnegative().default(0),
     label: z.enum(['reported_news', 'confirmed_official']),
     documents,
+    // A decision's terms (issue #115), copied from the archived document; null when the record doesn't state one.
+    // Each defaults to null for an events.json written before the fields.
+    instrument_number: z.string().nullable().default(null),
+    threshold: z.string().nullable().default(null),
+    scope: z.string().nullable().default(null),
+    effective_on: z.iso.date().nullable().default(null),
+    expires_on: z.iso.date().nullable().default(null),
+    early_termination: z.string().nullable().default(null),
+    exemptions: z.string().nullable().default(null),
+    successor_id: z.string().nullable().default(null),
+    status: z.enum(['in_effect', 'expired', 'superseded', 'repealed']).nullable().default(null),
   }),
 });
 

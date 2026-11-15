@@ -1,5 +1,6 @@
 using System.Text;
 using DcLedger.Application;
+using DcLedger.Domain;
 using DcLedger.Publishing.Ics;
 using DcLedger.Testing;
 using Ical.Net.CalendarComponents;
@@ -35,6 +36,21 @@ public sealed class RadarCalendarExporterTests
             .ShouldBe([ExportSamples.October15.Uid, ExportSamples.November5.Uid]);
         Events(Ics(ExportPaths.JurisdictionRadar(ExportSamples.City.Id))).Select(e => e.Uid)
             .ShouldBe([ExportSamples.November3.Uid]);
+    }
+
+    [Theory]
+    [InlineData(CoverageTier.Decisions)]
+    [InlineData(CoverageTier.Registered)]
+    public void A_jurisdiction_that_is_not_watched_gets_no_calendar(CoverageTier tier)
+    {
+        var model = ExportSamples.Model();
+        var notWatched = model with
+        {
+            Jurisdictions = [.. model.Jurisdictions.Select(j => j.Jurisdiction.Id == ExportSamples.City.Id ? j with { Jurisdiction = j.Jurisdiction with { CoverageTier = tier } } : j)],
+        };
+
+        new RadarCalendarExporter().Export(notWatched).Select(file => file.Path).ShouldBe(
+            [ExportPaths.Radar, ExportPaths.JurisdictionRadar(ExportSamples.County.Id)]);
     }
 
     [Fact]

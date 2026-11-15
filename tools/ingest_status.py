@@ -43,8 +43,10 @@ MAX_PAGES = 5  # 500 runs; at every 6 hours, 30 days is about 120
 
 JOB_NAME = re.compile(r"^ingest \((?P<id>[a-z0-9]+(?:-[a-z0-9]+)*)\)$")
 REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
-# Same rule as the plan job in ingest.yml: a jurisdiction is automated when its YAML says `platform: legistar`.
+# Same rule as the plan job in ingest.yml: a jurisdiction is automated when its YAML says `platform: legistar` and
+# `coverage_tier: watched` (issue #115: the other tiers have no hearing watch, so ingest never runs for them).
 AUTOMATED = re.compile(r'^platform:[ \t]*"?legistar"?[ \t]*(#.*)?$', re.MULTILINE)
+WATCHED = re.compile(r'^coverage_tier:[ \t]*"?watched"?[ \t]*(#.*)?$', re.MULTILINE)
 
 
 def automated_jurisdictions(data_dir: Path) -> list[str]:
@@ -52,7 +54,12 @@ def automated_jurisdictions(data_dir: Path) -> list[str]:
     folder = data_dir / "jurisdictions"
     if not folder.is_dir():
         raise ConfigError(f"{folder} is not a directory")
-    return sorted(path.stem for path in folder.glob("*.yaml") if AUTOMATED.search(path.read_text(encoding="utf-8")))
+    ids = []
+    for path in folder.glob("*.yaml"):
+        text = path.read_text(encoding="utf-8")
+        if AUTOMATED.search(text) and WATCHED.search(text):
+            ids.append(path.stem)
+    return sorted(ids)
 
 
 def run_counts(run: Mapping[str, Any], repository: str) -> bool:

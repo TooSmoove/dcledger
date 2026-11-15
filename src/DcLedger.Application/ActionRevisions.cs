@@ -55,6 +55,21 @@ public static class ActionRevisions
         Revisions.Note(changed, "unanimous", was.Unanimous != now.Unanimous);
         Revisions.Note(changed, "label", was.Label != now.Label);
         Revisions.Note(changed, "document_ids", !was.DocumentIds.SequenceEqual(now.DocumentIds));
+        NoteTerms(changed, was.Terms, now.Terms);
         return changed;
+    }
+
+    /// <summary>A decision's terms and status are published on its page and in the downloads (issue #115), so each is a revision.</summary>
+    private static void NoteTerms(List<string> changed, DecisionTerms was, DecisionTerms now)
+    {
+        Revisions.Note(changed, "instrument_number", !string.Equals(was.InstrumentNumber, now.InstrumentNumber, StringComparison.Ordinal));
+        Revisions.Note(changed, "threshold", !string.Equals(was.Threshold, now.Threshold, StringComparison.Ordinal));
+        Revisions.Note(changed, "scope", !string.Equals(was.Scope, now.Scope, StringComparison.Ordinal));
+        Revisions.Note(changed, "effective_on", was.EffectiveOn != now.EffectiveOn);
+        Revisions.Note(changed, "expires_on", was.ExpiresOn != now.ExpiresOn);
+        Revisions.Note(changed, "early_termination", !string.Equals(was.EarlyTermination, now.EarlyTermination, StringComparison.Ordinal));
+        Revisions.Note(changed, "exemptions", !string.Equals(was.Exemptions, now.Exemptions, StringComparison.Ordinal));
+        Revisions.Note(changed, "successor_id", !string.Equals(was.SuccessorId, now.SuccessorId, StringComparison.Ordinal));
+        Revisions.Note(changed, "status", was.Status != now.Status);
     }
 }

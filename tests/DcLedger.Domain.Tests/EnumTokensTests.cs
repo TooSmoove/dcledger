@@ -54,6 +54,23 @@ public sealed class EnumTokensTests
     }
 
     [Fact]
+    public void Coverage_tier_tokens_are_fixed()
+    {
+        CoverageTier.Watched.ToToken().ShouldBe("watched");
+        CoverageTier.Decisions.ToToken().ShouldBe("decisions");
+        CoverageTier.Registered.ToToken().ShouldBe("registered");
+    }
+
+    [Fact]
+    public void Action_status_tokens_are_fixed()
+    {
+        ActionStatus.InEffect.ToToken().ShouldBe("in_effect");
+        ActionStatus.Expired.ToToken().ShouldBe("expired");
+        ActionStatus.Superseded.ToToken().ShouldBe("superseded");
+        ActionStatus.Repealed.ToToken().ShouldBe("repealed");
+    }
+
+    [Fact]
     public void Every_member_has_a_distinct_token()
     {
         Enum.GetValues<EventStatus>().Select(value => value.ToToken()).ShouldBeUnique();
@@ -62,6 +79,8 @@ public sealed class EnumTokensTests
         Enum.GetValues<Retrieval>().Select(value => value.ToToken()).ShouldBeUnique();
         Enum.GetValues<ActionType>().Select(value => value.ToToken()).ShouldBeUnique();
         Enum.GetValues<ActionOutcome>().Select(value => value.ToToken()).ShouldBeUnique();
+        Enum.GetValues<CoverageTier>().Select(value => value.ToToken()).ShouldBeUnique();
+        Enum.GetValues<ActionStatus>().Select(value => value.ToToken()).ShouldBeUnique();
     }
 
     [Fact]
@@ -73,5 +92,7 @@ public sealed class EnumTokensTests
         Should.Throw<ArgumentOutOfRangeException>(() => ((Retrieval)99).ToToken());
         Should.Throw<ArgumentOutOfRangeException>(() => ((ActionType)99).ToToken());
         Should.Throw<ArgumentOutOfRangeException>(() => ((ActionOutcome)99).ToToken());
+        Should.Throw<ArgumentOutOfRangeException>(() => ((CoverageTier)99).ToToken());
+        Should.Throw<ArgumentOutOfRangeException>(() => ((ActionStatus)99).ToToken());
     }
 }

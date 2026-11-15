@@ -78,3 +78,38 @@ public enum ActionOutcome
     /// <summary>Set aside without a date.</summary>
     Tabled,
 }
+
+/// <summary>
+/// How closely a jurisdiction is covered (issue #115). Stated in text on its page; the freshness promise (SPEC AC10)
+/// is made for <see cref="Watched"/> only.
+/// </summary>
+public enum CoverageTier
+{
+    /// <summary>Upcoming hearings are on the radar and decisions are recorded.</summary>
+    Watched,
+
+    /// <summary>Decisions are recorded after the fact; hearings are not watched.</summary>
+    Decisions,
+
+    /// <summary>Listed only: no hearings and no decisions.</summary>
+    Registered,
+}
+
+/// <summary>
+/// Where an adopted decision stands (issue #115). Set by a reviewer from an archived document: the gate has no clock,
+/// so nothing turns <see cref="InEffect"/> into <see cref="Expired"/> by itself.
+/// </summary>
+public enum ActionStatus
+{
+    /// <summary>In force.</summary>
+    InEffect,
+
+    /// <summary>Its stated end passed without an extension.</summary>
+    Expired,
+
+    /// <summary>Replaced or extended by a later action (<see cref="DecisionTerms.SuccessorId"/>).</summary>
+    Superseded,
+
+    /// <summary>Ended early by the body.</summary>
+    Repealed,
+}

@@ -5,6 +5,7 @@
 id: greensboro
 name: Greensboro
 platform: manual
+coverage_tier: watched
 bodies:
   - City Council
 last_manual_check_utc: 2026-11-09T01:10:00Z   

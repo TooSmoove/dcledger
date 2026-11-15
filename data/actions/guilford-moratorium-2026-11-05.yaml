@@ -5,6 +5,8 @@
 # Checked Nov 14, 2026 and not posted: the adopted ordinance (the case has no attachments), any recorded action or
 # vote (history empty, in the API too), and the minutes ("Minutes status: Draft", "Not available"). So the terms above
 # are the request as advertised, not the adopted text, and outcome stays adopted until the minutes say otherwise.
+# Terms (#115): left out until the adopted ordinance or approved minutes are archived (#112). Then fill
+# instrument_number, scope, effective_on, expires_on and early_termination as that text states them, and raise sequence.
 id: guilford-moratorium-2026-11-05
 jurisdiction_id: guilford
 event_id: guilford-board-of-commissioners-2026-11-05

@@ -205,4 +205,41 @@ public sealed class ExportModelBuilderTests
         Should.Throw<InvalidOperationException>(() => ExportModelBuilder.Build(snapshot, ExportSamples.Status()))
             .Message.ShouldContain("Validate the ledger before exporting");
     }
+
+    [Theory]
+    [InlineData(CoverageTier.Decisions)]
+    [InlineData(CoverageTier.Registered)]
+    public void A_jurisdiction_that_is_not_watched_has_no_last_check_and_is_never_stale(CoverageTier tier)
+    {
+        // The sample city's manual check is 9 days old, so it would be stale if it were watched.
+        var city = Jurisdictions(ExportSamples.City with { CoverageTier = tier }).Single(j => j.Jurisdiction.Id == ExportSamples.City.Id);
+
+        city.LastCheckedUtc.ShouldBeNull();
+        city.Stale.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void A_jurisdiction_that_is_not_watched_ignores_a_future_manual_check_without_a_warning()
+    {
+        var snapshot = WithCity(ExportSamples.City with { CoverageTier = CoverageTier.Decisions, LastManualCheckUtc = ExportSamples.GeneratedUtc.AddDays(365) });
+
+        var result = ExportModelBuilder.Build(snapshot, ExportSamples.Status());
+
+        result.Model.Jurisdictions.Single(j => j.Jurisdiction.Id == ExportSamples.City.Id).Stale.ShouldBeFalse();
+        result.Warnings.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_status_entry_for_a_jurisdiction_that_is_not_watched_is_ignored_with_a_warning()
+    {
+        var county = ExportSamples.County with { CoverageTier = CoverageTier.Decisions };
+        var snapshot = ExportSamples.Snapshot();
+        snapshot = snapshot with { Jurisdictions = [.. snapshot.Jurisdictions.Select(j => j.Record.Id == county.Id ? j with { Record = county } : j)] };
+
+        var result = ExportModelBuilder.Build(snapshot, ExportSamples.Status());
+
+        var exported = result.Model.Jurisdictions.Single(j => j.Jurisdiction.Id == county.Id);
+        (exported.LastCheckedUtc, exported.Stale).ShouldBe((null, false));
+        result.Warnings.ShouldHaveSingleItem().ShouldContain("'fixture-county'");
+    }
 }

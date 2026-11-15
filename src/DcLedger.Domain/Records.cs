@@ -20,6 +20,12 @@ public sealed record Jurisdiction
 
     /// <summary>When a reviewer last checked a manual jurisdiction's official site (SPEC AC10).</summary>
     public DateTimeOffset? LastManualCheckUtc { get; init; }
+
+    /// <summary>
+    /// How closely it is covered (issue #115). The YAML key is required; the default here keeps code that builds a
+    /// jurisdiction by hand on the tier every jurisdiction had before the key existed.
+    /// </summary>
+    public CoverageTier CoverageTier { get; init; } = CoverageTier.Watched;
 }
 
 /// <summary>A retrieved source document. Only metadata is public; the bytes stay in the private bucket (ADR-0003).</summary>
@@ -143,4 +149,7 @@ public sealed record LocalAction
 
     /// <summary>Documents that back this action.</summary>
     public required IReadOnlyList<Sha256Hash> DocumentIds { get; init; }
+
+    /// <summary>What the adopted decision says and where it stands (issue #115); <see cref="DecisionTerms.None"/> when nothing is recorded.</summary>
+    public DecisionTerms Terms { get; init; } = DecisionTerms.None;
 }

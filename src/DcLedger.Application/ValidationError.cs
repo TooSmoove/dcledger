@@ -39,7 +39,7 @@ public static class ValidationRule
     /// <summary>An item has no document, or references one that is missing or failed to load.</summary>
     public const string DocMissing = "DOC_MISSING";
 
-    /// <summary>An item references a jurisdiction that is missing or failed to load.</summary>
+    /// <summary>An item references a jurisdiction, event or action that is missing or failed to load.</summary>
     public const string FkMissing = "FK_MISSING";
 
     /// <summary>"confirmed_official" without a document from an official source (SPEC AC6).</summary>
@@ -65,4 +65,14 @@ public static class ValidationRule
 
     /// <summary>A published action's jurisdiction changed (issue #90).</summary>
     public const string JurisdictionChanged = "JURISDICTION_CHANGED";
+
+    /// <summary>A record its jurisdiction's coverage tier doesn't hold: an event outside a watched one, or an action in a registered one (issue #115).</summary>
+    public const string TierMismatch = "TIER_MISMATCH";
+
+    /// <summary>
+    /// A decision's terms contradict the record (issue #115): terms on an action that wasn't adopted, an expiry before
+    /// the start, <c>superseded</c> without a successor, or a successor that is the action itself, in another
+    /// jurisdiction or decided earlier.
+    /// </summary>
+    public const string TermsInvalid = "TERMS_INVALID";
 }

@@ -1,10 +1,12 @@
 using DcLedger.Application;
+using DcLedger.Domain;
 
 namespace DcLedger.Publishing.Ics;
 
 /// <summary>
-/// Writes <c>public/radar.ics</c> with every event and <c>public/radar/{jurisdiction}.ics</c> per jurisdiction (SPEC
-/// AC3). A jurisdiction with no events still gets a valid calendar, so people can subscribe before its first item.
+/// Writes <c>public/radar.ics</c> with every event and <c>public/radar/{jurisdiction}.ics</c> per watched jurisdiction
+/// (SPEC AC3). A watched jurisdiction with no events still gets a valid calendar, so people can subscribe before its
+/// first item. One that isn't watched (issue #115) has no hearings to subscribe to, so it gets no calendar.
 /// </summary>
 public sealed class RadarCalendarExporter : IExporter
 {
@@ -17,7 +19,7 @@ public sealed class RadarCalendarExporter : IExporter
         ArgumentNullException.ThrowIfNull(model);
 
         var files = new List<ExportFile> { new(ExportPaths.Radar, IcsCalendarWriter.Write(CalendarName, model.Events)) };
-        foreach (var item in model.Jurisdictions)
+        foreach (var item in model.Jurisdictions.Where(watched => watched.Jurisdiction.CoverageTier == CoverageTier.Watched))
         {
             var id = item.Jurisdiction.Id;
             var events = model.Events.Where(exportEvent => string.Equals(exportEvent.Event.JurisdictionId, id, StringComparison.Ordinal));

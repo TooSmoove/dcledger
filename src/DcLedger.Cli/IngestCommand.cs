@@ -147,6 +147,12 @@ internal static partial class IngestCommand
             return null;
         }
 
+        if (jurisdiction.CoverageTier != CoverageTier.Watched)
+        {
+            console.Error.WriteLine($"{jurisdiction.Id} isn't watched (coverage_tier: {jurisdiction.CoverageTier.ToToken()}), so there is nothing to ingest.");
+            return null;
+        }
+
         return jurisdiction;
     }
 

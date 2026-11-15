@@ -15,6 +15,15 @@ public sealed class SiteContractTests
 {
     private static readonly HashSet<string> Nullable = new(StringComparer.Ordinal) { "case_number", "last_checked_utc", "location", "event_id", "votes" };
 
+    /// <summary>
+    /// A decision's terms (issue #115), each null when not stated. Listed by path because an event's <c>status</c> is
+    /// never null.
+    /// </summary>
+    private static readonly HashSet<string> NullablePaths = new(
+        new[] { "instrument_number", "threshold", "scope", "effective_on", "expires_on", "early_termination", "exemptions", "successor_id", "status" }
+            .Select(key => $"$.actions[].{key}"),
+        StringComparer.Ordinal);
+
     [Fact]
     public void Exported_events_json_has_the_shape_of_the_site_fixture()
     {
@@ -42,7 +51,7 @@ public sealed class SiteContractTests
     private static void CompareShape(JsonElement expected, JsonElement actual, string path, List<string> problems)
     {
         var name = path[(path.LastIndexOf('.') + 1)..];
-        if (Nullable.Contains(name) && (expected.ValueKind == JsonValueKind.Null || actual.ValueKind == JsonValueKind.Null))
+        if ((Nullable.Contains(name) || NullablePaths.Contains(path)) && (expected.ValueKind == JsonValueKind.Null || actual.ValueKind == JsonValueKind.Null))
         {
             return;
         }

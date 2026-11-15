@@ -10,7 +10,8 @@ public static class ExportModelBuilder
 {
     /// <summary>
     /// Resolves and orders the snapshot. "Last checked" comes from <paramref name="status"/> for automated
-    /// jurisdictions and from <see cref="Jurisdiction.LastManualCheckUtc"/> for manual ones. Status entries for IDs
+    /// jurisdictions and from <see cref="Jurisdiction.LastManualCheckUtc"/> for manual ones; a jurisdiction that isn't
+    /// watched has neither a last check nor a stale flag (issue #115). Status entries for IDs
     /// that aren't automated jurisdictions are ignored with a warning, so a stale entry in the run history can't stop
     /// publishing. Throws <see cref="InvalidOperationException"/> if the snapshot wasn't validated first.
     /// </summary>
@@ -60,10 +61,16 @@ public static class ExportModelBuilder
 
     private static ExportJurisdiction Freshen(Jurisdiction jurisdiction, IngestStatus status)
     {
+        var staleAfter = Freshness.StaleAfterFor(jurisdiction.Platform);
+        if (!Freshness.AppliesTo(jurisdiction.CoverageTier))
+        {
+            // Nobody watches its hearings, so there is no check to date and nothing to go stale (AC10, issue #115).
+            return new ExportJurisdiction { Jurisdiction = jurisdiction, LastCheckedUtc = null, Stale = false, StaleAfter = staleAfter };
+        }
+
         var lastChecked = jurisdiction.Platform == Platform.Manual
             ? jurisdiction.LastManualCheckUtc
             : status.LastCheckedUtc.GetValueOrDefault(jurisdiction.Id);
-        var staleAfter = Freshness.StaleAfterFor(jurisdiction.Platform);
         return new ExportJurisdiction
         {
             Jurisdiction = jurisdiction,
@@ -79,13 +86,14 @@ public static class ExportModelBuilder
     /// </summary>
     private static bool IsFutureManualCheck(Jurisdiction jurisdiction, IngestStatus status) =>
         jurisdiction.Platform == Platform.Manual
+        && Freshness.AppliesTo(jurisdiction.CoverageTier)
         && jurisdiction.LastManualCheckUtc is { } checkedAt
         && checkedAt - status.GeneratedUtc > FutureTolerance;
 
     private static List<string> Warnings(List<ExportJurisdiction> jurisdictions, IngestStatus status)
     {
         var automated = jurisdictions
-            .Where(j => j.Jurisdiction.Platform != Platform.Manual)
+            .Where(j => j.Jurisdiction.Platform != Platform.Manual && Freshness.AppliesTo(j.Jurisdiction.CoverageTier))
             .Select(j => j.Jurisdiction.Id)
             .ToHashSet(StringComparer.Ordinal);
         return

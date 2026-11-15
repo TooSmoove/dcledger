@@ -84,5 +84,7 @@ environment's secrets and the job token:
 
 ## Adding a jurisdiction
 
-Add `data/jurisdictions/{id}.yaml` with `platform: legistar`, its `legistar_client` and its `bodies` exactly as the
-Legistar API spells them. The workflow picks it up on its next run; no code or workflow change is needed.
+Add `data/jurisdictions/{id}.yaml` with `platform: legistar`, `coverage_tier: watched`, its `legistar_client` and its
+`bodies` exactly as the Legistar API spells them. The workflow picks it up on its next run; no code or workflow change
+is needed. A jurisdiction with any other tier is never ingested, since nobody watches its hearings (issue #115), and
+`dcl ingest` refuses it with exit code 2.

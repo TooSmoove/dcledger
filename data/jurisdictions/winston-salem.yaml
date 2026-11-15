@@ -1,6 +1,7 @@
 id: winston-salem
 name: Winston-Salem
 platform: legistar
+coverage_tier: watched
 legistar_client: winston-salem
 # Full-council bodies only, names as the Legistar API spells them (spike S15; issue #26, checked Nov 3, 2026).
 # Committees and Committee of the Whole are left out.

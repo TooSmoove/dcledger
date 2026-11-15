@@ -54,4 +54,13 @@ public sealed class FreshnessTests
 
         Freshness.IsStale(eastern, AsOf).ShouldBeFalse();
     }
+
+    [Theory]
+    [InlineData(CoverageTier.Watched, true)]
+    [InlineData(CoverageTier.Decisions, false)]
+    [InlineData(CoverageTier.Registered, false)]
+    public void Freshness_applies_to_watched_jurisdictions_only(CoverageTier tier, bool applies)
+    {
+        Freshness.AppliesTo(tier).ShouldBe(applies);
+    }
 }

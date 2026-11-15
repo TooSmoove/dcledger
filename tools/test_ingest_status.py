@@ -60,16 +60,30 @@ class FakeApi:
 
 
 class AutomatedJurisdictionsTests(unittest.TestCase):
-    def test_only_legistar_jurisdictions_count(self):
+    def test_only_watched_legistar_jurisdictions_count(self):
         with tempfile.TemporaryDirectory() as data:
             folder = Path(data, "jurisdictions")
             folder.mkdir()
-            Path(folder, "guilford.yaml").write_text("id: guilford\nplatform: legistar\n")
-            Path(folder, "winston-salem.yaml").write_text('id: winston-salem\nplatform: "legistar"  # automated\n')
-            Path(folder, "greensboro.yaml").write_text("id: greensboro\nplatform: manual\n")
-            Path(folder, "notes.txt").write_text("platform: legistar\n")
+            Path(folder, "guilford.yaml").write_text("id: guilford\nplatform: legistar\ncoverage_tier: watched\n")
+            Path(folder, "winston-salem.yaml").write_text(
+                'id: winston-salem\nplatform: "legistar"  # automated\ncoverage_tier: "watched"  # hearings too\n'
+            )
+            Path(folder, "greensboro.yaml").write_text("id: greensboro\nplatform: manual\ncoverage_tier: watched\n")
+            Path(folder, "notes.txt").write_text("platform: legistar\ncoverage_tier: watched\n")
 
             self.assertEqual(automated_jurisdictions(Path(data)), ["guilford", "winston-salem"])
+
+    def test_a_legistar_jurisdiction_that_is_not_watched_is_not_automated(self):
+        # Issue #115: the decisions and registered tiers have no hearing watch, so ingest never runs for them.
+        with tempfile.TemporaryDirectory() as data:
+            folder = Path(data, "jurisdictions")
+            folder.mkdir()
+            Path(folder, "guilford.yaml").write_text("id: guilford\nplatform: legistar\ncoverage_tier: watched\n")
+            Path(folder, "decided.yaml").write_text("id: decided\nplatform: legistar\ncoverage_tier: decisions\n")
+            Path(folder, "listed.yaml").write_text("id: listed\nplatform: legistar\ncoverage_tier: registered\n")
+            Path(folder, "untiered.yaml").write_text("id: untiered\nplatform: legistar\n")
+
+            self.assertEqual(automated_jurisdictions(Path(data)), ["guilford"])
 
     def test_a_missing_folder_is_a_configuration_error(self):
         with tempfile.TemporaryDirectory() as data:
@@ -206,7 +220,7 @@ class DocumentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             data = Path(temp, "data", "jurisdictions")
             data.mkdir(parents=True)
-            Path(data, "guilford.yaml").write_text("platform: legistar\n")
+            Path(data, "guilford.yaml").write_text("platform: legistar\ncoverage_tier: watched\n")
             out = Path(temp, "ingest-status.json")
             summary = Path(temp, "summary.md")
             api = FakeApi(

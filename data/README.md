@@ -17,7 +17,9 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 - Only the keys shown below. Names of private people and original source titles are **never** stored (`FORBIDDEN_FIELD`).
 - IDs are lowercase letters, digits and single hyphens, match the file name (`ID_MISMATCH`), and are **permanent** once merged (`SLUG_CHANGED`). To retire a meeting, set `status: cancelled`.
 - A published event that changes (`body`, `title`, `case_number`, `starts_at`, `status`, `label`, `document_ids` or `location`) raises `sequence` by at least 1, and `sequence` never goes down (`SEQUENCE_NOT_RAISED`). `jurisdiction_id`, `platform` and `platform_meeting_id` never change once published, because the calendar UID is built from them (`UID_CHANGED`). CI compares against the base branch with `--previous-data`.
-- Actions follow the same rule: a published action that changes (`event_id`, `action_type`, `outcome`, `decided_on`, `votes`, `unanimous`, `label` or `document_ids`) raises its `sequence` (optional, default 0), and `jurisdiction_id` never changes (`JURISDICTION_CHANGED`). The feed gives each revision of a decision its own item.
+- Actions follow the same rule: a published action that changes (`event_id`, `action_type`, `outcome`, `decided_on`, `votes`, `unanimous`, `label`, `document_ids` or any of its terms) raises its `sequence` (optional, default 0), and `jurisdiction_id` never changes (`JURISDICTION_CHANGED`). The feed gives each revision of a decision its own item.
+- Every jurisdiction has a `coverage_tier` (`REQUIRED_FIELD`). Only a `watched` one has events, and a `registered` one has no actions either (`TIER_MISMATCH`).
+- A decision's terms (see "Recording a decision's terms") appear only on an `adopted` or `adopted_amended` action; `expires_on` is not before `effective_on`; `status: superseded` needs `successor_id`, which names another action in the same jurisdiction decided the same day or later (`TERMS_INVALID`; a missing one is `FK_MISSING`). Text terms are one line of at most 500 characters (`INVALID_VALUE`).
 - An event's `platform` is its jurisdiction's (`PLATFORM_MISMATCH`). `last_manual_check_utc` appears only on a `manual` jurisdiction (`INVALID_VALUE`); export shows one dated after the export as stale and warns.
 - Every event and action lists at least one document, and every listed document exists (`DOC_MISSING`); its jurisdiction exists (`FK_MISSING`).
 - An action's `event_id`, when given, names an event in the same jurisdiction on the same Eastern date as `decided_on` (`FK_MISSING`, `EVENT_MISMATCH`). `action_type` and `outcome` take only the tokens below, and `votes` is ayes-noes like `"9-0"` (`INVALID_VALUE`).
@@ -35,6 +37,7 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 id: guilford
 name: Guilford County
 platform: legistar            # legistar | manual
+coverage_tier: watched        # watched | decisions | registered (see "Coverage tiers")
 legistar_client: guilford     # legistar only
 bodies: [Board of Commissioners]
 last_manual_check_utc: 2026-10-27T14:00:00Z   # manual only, optional
@@ -78,7 +81,30 @@ unanimous: true               # optional: true or left out; reported unanimous, 
 sequence: 0                   # optional, default 0: +1 on every published change
 label: confirmed_official
 document_ids: [<sha256>]
+# Terms (optional, adopted decisions only), each only as an archived document states it:
+instrument_number: "26-01"    # the ordinance or resolution number
+threshold: "electrical power demand exceeding 10 megawatts"   # as written
+scope: "..."                  # as written
+effective_on: 2026-01-15
+expires_on: 2026-07-14
+early_termination: "..."      # as written
+exemptions: "..."             # as written
+successor_id: fixture-county-moratorium-2026-07-13   # the action that replaced or extended it
+status: in_effect             # in_effect | expired | superseded | repealed
 ```
+
+## Coverage tiers
+
+Every jurisdiction states how closely it is covered, and its page says so in a sentence.
+
+- `watched`: upcoming meetings and hearings are on the radar, and decisions are recorded. Only these have events, a
+  calendar, a "last checked" date and the stale flag (SPEC AC10). Legistar ones are ingested; manual ones are
+  checked by hand ("Entering a manual jurisdiction").
+- `decisions`: decisions are recorded after they are made, from minutes or coverage. No events, no calendar, no
+  freshness promise, and ingest skips it whatever its platform.
+- `registered`: listed only, with no events or decisions. To record a decision, change it to `decisions` first.
+
+Changing a jurisdiction's tier changes what the site promises about it, so say why in the PR.
 
 ## Cancelling or rescheduling a meeting
 
@@ -122,13 +148,29 @@ page. Record every vote on the item, including a continuance or a tabling (`cont
 4. **Check and open the PR:** `dotnet run --project src/DcLedger.Cli -- validate --data data`. The gate checks that
    `event_id` exists, is in the same jurisdiction and falls on `decided_on` (`FK_MISSING`, `EVENT_MISMATCH`).
 
+## Recording a decision's terms
+
+An adopted decision, such as a moratorium, can carry its terms (issue #115). G.S. 160D-107 requires a moratorium
+ordinance to state most of them, so they come from the adopted text without interpretation.
+
+- **Only from an archived document.** Fill a term only when a document in `document_ids` states it. Don't work one
+  out: an end date isn't the start date plus a period of days unless the document gives that date. Until the
+  official text is archived, a term taken from a news report stays under `reported_news`.
+- **As written.** `threshold`, `scope`, `early_termination` and `exemptions` are copied word for word, with no
+  summarizing adjectives (SPEC §E). Copy the operative words when the passage is long: one line, at most 500
+  characters, quoted. A quoted value may wrap across lines in the file; `|` and `>` blocks are rejected.
+- **Status is yours to set.** Nothing changes `status` automatically. Set `in_effect` when a document shows it in
+  force; `expired` once its end has passed with no extension; `repealed` when the body ended it early;
+  `superseded` with `successor_id` when a later action replaced or extended it (record that action first).
+- **Say where each term came from** in a comment at the top of the file, and raise `sequence` by 1.
+
 ## Entering a manual jurisdiction
 
 Some jurisdictions publish agendas on a platform without an adapter. Greensboro is on eSCRIBE, Stokes is on Granicus
 and Vance posts PDF packets (#94). Their meetings are entered by hand, until #96 automates the check.
 
-1. **The jurisdiction:** `platform: manual`, with `bodies` listing the bodies you watch (documentation only) and no
-   `legistar_client`. Ingest skips it.
+1. **The jurisdiction:** `platform: manual`, `coverage_tier: watched`, with `bodies` listing the bodies you watch
+   (documentation only) and no `legistar_client`. Ingest skips it.
 2. **Check, then record the check.** Open the jurisdiction's meeting calendar and read the agendas for the next 30
    days, looking for data-center items: data centers, data processing, moratoriums, zoning text amendments,
    rezonings of large industrial sites, and economic development agreements. Then set `last_manual_check_utc` to the

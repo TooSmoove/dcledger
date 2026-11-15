@@ -58,4 +58,23 @@ public static class EnumTokens
         ActionOutcome.Tabled => "tabled",
         _ => throw new ArgumentOutOfRangeException(nameof(outcome), outcome, "Unknown action outcome."),
     };
+
+    /// <summary>Returns <c>watched</c>, <c>decisions</c> or <c>registered</c>.</summary>
+    public static string ToToken(this CoverageTier tier) => tier switch
+    {
+        CoverageTier.Watched => "watched",
+        CoverageTier.Decisions => "decisions",
+        CoverageTier.Registered => "registered",
+        _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, "Unknown coverage tier."),
+    };
+
+    /// <summary>Returns <c>in_effect</c>, <c>expired</c>, <c>superseded</c> or <c>repealed</c>.</summary>
+    public static string ToToken(this ActionStatus status) => status switch
+    {
+        ActionStatus.InEffect => "in_effect",
+        ActionStatus.Expired => "expired",
+        ActionStatus.Superseded => "superseded",
+        ActionStatus.Repealed => "repealed",
+        _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown action status."),
+    };
 }

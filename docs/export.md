@@ -15,7 +15,7 @@ With `--out out` from the repository root, the site build finds its data at `out
 |---|---|
 | `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance (each document's `url`, `retrieved_utc`, `sha256` and `retrieval`) and `location` (`{"lat", "lon"}` or null), and every local action (see below). Mirrored by `site/src/content.config.ts`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
-| `public/radar/{jurisdiction}.ics` | One calendar per jurisdiction, even before it has events. |
+| `public/radar/{jurisdiction}.ics` | One calendar per watched jurisdiction, even before it has events. A jurisdiction that isn't watched (issue #115) gets none. |
 | `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision and per decision revision, newest first (see below). |
 | `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order, ending with `document_retrieval` (`fetched` or `manual` for each). UTF-8 with BOM and a formula guard on text cells (SPEC AC7). Every column: `docs/data-dictionary.md`. |
 | `public/events.parquet` | The CSV's rows with native types: `starts_utc` a UTC timestamp, `sequence` an integer, coordinates doubles, and `documents` one list of `{url, retrieved_utc, sha256, retrieval}` in the record's order. Written by DuckDB `COPY` (snappy); values unguarded. |
@@ -92,6 +92,9 @@ Publish builds `ingest-status.json` from ingest run history with `tools/ingest_s
 - An automated jurisdiction that isn't listed counts as never checked. An entry for a jurisdiction that isn't an
   automated one in the ledger is ignored with a warning, so an old entry can't stop publishing.
 - Manual jurisdictions take "last checked" from `last_manual_check_utc` in their YAML (SPEC AC10).
+- A jurisdiction that isn't watched (`coverage_tier` `decisions` or `registered`, issue #115) has no "last checked"
+  and is never stale: it exports `last_checked_utc: null` and `stale: false`, and a status entry for it is ignored
+  with the warning above.
 
 A jurisdiction is **stale** when it has no successful check, or the last one is more than 48 hours before
 `generated_utc` (exactly 48 hours is still fresh). For a manual jurisdiction the threshold is 7 days (issue #27), and a
