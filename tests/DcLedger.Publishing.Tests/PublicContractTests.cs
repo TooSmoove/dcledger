@@ -125,8 +125,14 @@ public sealed class PublicContractTests
     /// <summary>The values listed for the vocabulary whose column cell starts with <paramref name="column"/> (and whose file cell mentions <paramref name="file"/>, when given).</summary>
     private static IReadOnlyList<string> Values(IReadOnlyList<string[]> rows, string column, string? file = null)
     {
-        var row = rows.Single(r => MarkdownTables.Names(r[0]).FirstOrDefault() == column && (file is null || r[1].Contains(file, StringComparison.Ordinal)));
+        var row = rows.Single(r => FirstName(r[0]) == column && (file is null || r[1].Contains(file, StringComparison.Ordinal)));
         return MarkdownTables.Names(row[2]);
+    }
+
+    private static string? FirstName(string cell)
+    {
+        var names = MarkdownTables.Names(cell);
+        return names.Count > 0 ? names[0] : null;
     }
 
     private static List<string> Tokens<TEnum>(Func<TEnum, string> token)
