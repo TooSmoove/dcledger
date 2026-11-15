@@ -1,13 +1,17 @@
-# WRAL (archived 61e26ba4…): Vance County commissioners "voted on April 20 to approve the rezoning" of land along
-# U.S. 158 near Henderson sought by Natelli Investments, which has not confirmed a data center. WRAL's own story on the
-# vote (summarized elsewhere as 6-1) wasn't archived, so no tally yet: add it from the minutes.
-# Nov 14, 2026 (#112): official minutes not checked. vancecounty.org's robots.txt disallows all robots, so no program
-# reads it; a person has to look for the April 20 special-meeting minutes in a browser and archive them with --file.
+# Minutes of the April 20, 2026 special-called meeting (4:00 p.m.), approved and signed May 4, 2026 (archived
+# c42f7ea2…, saved in a browser Nov 14, 2026), on rezoning case ZMA26-001: "a motion was made by Commissioner Tommy
+# Hester, Jr. and seconded by Commissioner R. Dan Brummitt, vote passed 6-1 (Commissioner Perry voting no) to approve
+# the zoning map amendment and to adopt the resolution with the statement of consistency and reasonableness." All
+# seven commissioners were present. The minutes call April 20 a Tuesday; it was a Monday. WRAL's roundup (61e26ba4…)
+# gives the same date and outcome.
 id: vance-rezoning-2026-04-20
 jurisdiction_id: vance
 action_type: rezoning
 outcome: adopted
 decided_on: 2026-04-20
-label: reported_news
+votes: "6-1"
+sequence: 1
+label: confirmed_official
 document_ids:
+  - c42f7ea2015960759a1043241fa68d4af50cbd5747c7aaef401d7da872cef436
   - 61e26ba423d65552d58ba8c52f8772202cff1d38f3a9b497e3c5881bf7d9ae51

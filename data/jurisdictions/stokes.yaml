@@ -1,7 +1,8 @@
 # Stokes County posts Board of Commissioners agendas, packets and minutes on Granicus
 # (stokescountync.granicus.com/ViewPublisher.php?view_id=1, framed by co.stokes.nc.us/departments/agendas.php); the
-# yearly PDF pages on its own website list years through 2025 ("OLD Agendas & Minutes"). There is no adapter, so its meetings are
-# entered by hand (#94; data/README.md, "Entering a manual jurisdiction"). Add last_manual_check_utc after each check.
+# yearly PDF pages on its own website list years through 2025 ("OLD Agendas & Minutes"). There is no adapter, so its
+# meetings are entered by hand (#94; data/README.md, "Entering a manual jurisdiction"). Add last_manual_check_utc
+# after each check.
 # Granicus's robots.txt disallows all robots (checked Nov 14, 2026, #112): archive documents with --file, never the
 # workflow, and don't automate it (#96).
 id: stokes
