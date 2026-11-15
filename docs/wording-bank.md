@@ -17,7 +17,7 @@ Every template follows the same rules as the rest of the ledger (SPEC §E):
 ## Disclosure ("Who publishes this")
 
 Lives in `site/src/owner/disclosure.md`. The site's tests fail while it still holds the placeholder, so it can't go
-live unwritten. Combine one block from each part: **publisher**, **funding**, **relationships**, then **changes**.
+live unwritten. Combine one block from each part: **publisher**, **funding**, then **relationships**.
 
 ### Publisher
 
@@ -37,8 +37,6 @@ live unwritten. Combine one block from each part: **publisher**, **funding**, **
 
 > NC Data Center Ledger is published and maintained by [Full name], who lives in [county], North Carolina. The code
 > and data are public at [github.com/TooSmoove/dcledger](https://github.com/TooSmoove/dcledger).
-
-When switching from P1 to P2, add a log entry (see "Page wording changed" below) so the change is on the record.
 
 ### Funding
 
@@ -81,10 +79,6 @@ side.
 
 > [The maintainer] has [spoken / written] publicly about data centers in North Carolina, for example [link, date].
 > The ledger records what governments do, using the same rules for every jurisdiction and every side.
-
-### Changes
-
-> This section was last updated on [Month D, YYYY]. Changes to it are listed in the corrections log.
 
 ## Corrections log entries
 
