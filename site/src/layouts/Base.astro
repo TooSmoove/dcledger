@@ -39,7 +39,8 @@ const { title } = Astro.props;
     <footer>
       <p>
         Every item links to its official source with the retrieval time and the SHA-256 of the copy
-        we kept. Times are Eastern. <a href="/about/">About this project</a>.
+        we kept. Times are Eastern. <a href="/about/">About this project</a>. How it works and how
+        to report a mistake: <a href="/methodology/">Methodology and corrections</a>.
       </p>
     </footer>
   </body>
@@ -159,6 +160,18 @@ const { title } = Astro.props;
   }
   .feeds {
     margin: 1rem 0;
+  }
+  .citation {
+    margin: 0;
+    padding: 0.5rem 1rem;
+    border-left: 3px solid var(--rule);
+    overflow-wrap: anywhere;
+  }
+  .log li {
+    margin-bottom: 1rem;
+  }
+  .log p {
+    margin: 0.2rem 0;
   }
   @media (max-width: 40rem) {
     dl {

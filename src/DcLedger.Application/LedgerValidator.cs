@@ -75,6 +75,13 @@ public static class LedgerValidator
             DecisionTermsRules.Check(errors, file, action, actions);
         }
 
+        var correctable = jurisdictions.Keys.Concat(events.Keys).Concat(actions.Keys).ToHashSet(StringComparer.Ordinal);
+        foreach (var (file, correction) in snapshot.Corrections)
+        {
+            CheckId(errors, file, correction.Id);
+            CorrectionRules.Check(errors, file, correction, correctable);
+        }
+
         var present = snapshot.RecordFiles.ToHashSet(StringComparer.Ordinal);
         foreach (var previous in previousRecordFiles.Where(p => !present.Contains(p)).Order(StringComparer.Ordinal))
         {

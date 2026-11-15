@@ -52,7 +52,20 @@ public static class ExportModelBuilder
             })
             .ToList();
 
-        var model = new ExportModel { GeneratedUtc = status.GeneratedUtc, Jurisdictions = jurisdictions, Events = events, Actions = actions };
+        var corrections = snapshot.Corrections
+            .Select(loaded => loaded.Record)
+            .OrderBy(correction => correction.CorrectedOn)
+            .ThenBy(correction => correction.Id, StringComparer.Ordinal)
+            .ToList();
+
+        var model = new ExportModel
+        {
+            GeneratedUtc = status.GeneratedUtc,
+            Jurisdictions = jurisdictions,
+            Events = events,
+            Actions = actions,
+            Corrections = corrections,
+        };
         return new ExportModelResult(model, Warnings(jurisdictions, status));
     }
 

@@ -135,6 +135,39 @@ internal static class ExportSamples
         return model with { Actions = [.. model.Actions.Select(item => item with { Action = item.Action with { Terms = FullTerms } })] };
     }
 
+    /// <summary>A correction to the Nov 5 decision's vote, with a linked issue (issue #117).</summary>
+    public static readonly Correction VoteCorrection = new()
+    {
+        Id = "2026-11-24-fixture-vote-count",
+        ReportedOn = new DateOnly(2026, 11, 23),
+        CorrectedOn = new DateOnly(2026, 11, 24),
+        RecordIds = [November5Moratorium.Id, County.Id],
+        Summary = "The vote was recorded as \"9-0\"; the <minutes> show 8-1 & one absence.",
+        Issue = 131,
+    };
+
+    /// <summary>A correction to page wording only: no record, no issue, corrected the day it was reported.</summary>
+    public static readonly Correction WordingCorrection = new()
+    {
+        Id = "2026-11-22-methodology-interval",
+        ReportedOn = new DateOnly(2026, 11, 22),
+        CorrectedOn = new DateOnly(2026, 11, 22),
+        Summary = "The methodology page gave the publish interval as 12 hours; it is 6 hours.",
+    };
+
+    /// <summary>The model with both corrections, loaded newest first so the builder's ordering shows.</summary>
+    public static ExportModel ModelWithCorrections() =>
+        ExportModelBuilder.Build(
+            Snapshot() with
+            {
+                Corrections =
+                [
+                    Loaded("corrections", VoteCorrection.Id, VoteCorrection),
+                    Loaded("corrections", WordingCorrection.Id, WordingCorrection),
+                ],
+            },
+            Status()).Model;
+
     /// <summary>The ledger as the YAML reader would load it, records deliberately out of order.</summary>
     public static LedgerSnapshot Snapshot() => new()
     {

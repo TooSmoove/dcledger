@@ -20,6 +20,9 @@ public sealed record ExportModel
 
     /// <summary>Every local action, ordered by decision date, then ID.</summary>
     public IReadOnlyList<ExportAction> Actions { get; init; } = [];
+
+    /// <summary>Every corrections log entry (issue #117), ordered by correction date, then ID.</summary>
+    public IReadOnlyList<Correction> Corrections { get; init; } = [];
 }
 
 /// <summary>A jurisdiction with its freshness (SPEC AC10).</summary>

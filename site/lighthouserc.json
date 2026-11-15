@@ -2,7 +2,11 @@
   "ci": {
     "collect": {
       "staticDistDir": "./dist",
-      "url": ["http://localhost/map/index.html", "http://localhost/radar/index.html"],
+      "url": [
+        "http://localhost/map/index.html",
+        "http://localhost/radar/index.html",
+        "http://localhost/methodology/index.html"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "chromeFlags": "--headless=new --no-sandbox",
