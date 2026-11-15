@@ -16,7 +16,9 @@ internal static class LedgerTables
 {
     /// <summary>
     /// One row per event, documents joined in the record's order, space-separated (URLs can't contain spaces). Every text
-    /// column goes through <c>csv_text</c> (see <see cref="CsvTextMacro"/>); numbers stay numbers.
+    /// column goes through <c>csv_text</c> (see <see cref="CsvTextMacro"/>); numbers stay numbers. <c>document_retrieval</c>
+    /// (<c>fetched</c> or <c>manual</c> per document, issue #113) is last because new columns are appended
+    /// (docs/data-dictionary.md, "Changes").
     /// </summary>
     public const string EventsCsvQuery = """
         SELECT
@@ -35,7 +37,8 @@ internal static class LedgerTables
             e.location_lon,
             csv_text(string_agg(d.url, ' ' ORDER BY ed.position)) AS document_urls,
             csv_text(string_agg(strftime(d.retrieved_utc, '%Y-%m-%dT%H:%M:%SZ'), ' ' ORDER BY ed.position)) AS document_retrieved_utc,
-            csv_text(string_agg(d.sha256, ' ' ORDER BY ed.position)) AS document_sha256
+            csv_text(string_agg(d.sha256, ' ' ORDER BY ed.position)) AS document_sha256,
+            csv_text(string_agg(d.retrieval, ' ' ORDER BY ed.position)) AS document_retrieval
         FROM events AS e
         JOIN event_documents AS ed ON ed.event_id = e.id
         JOIN documents AS d ON d.sha256 = ed.sha256
@@ -46,7 +49,7 @@ internal static class LedgerTables
 
     /// <summary>
     /// The Parquet rows: the CSV's columns with native types (<c>starts_utc</c> a UTC timestamp, <c>sequence</c> an
-    /// integer, coordinates doubles) and the documents as one ordered list of structs instead of three joined strings.
+    /// integer, coordinates doubles) and the documents as one ordered list of structs instead of four joined strings.
     /// </summary>
     public const string EventsParquetQuery = """
         SELECT
@@ -63,7 +66,7 @@ internal static class LedgerTables
             e.label,
             e.location_lat,
             e.location_lon,
-            list({'url': d.url, 'retrieved_utc': d.retrieved_utc, 'sha256': d.sha256} ORDER BY ed.position) AS documents
+            list({'url': d.url, 'retrieved_utc': d.retrieved_utc, 'sha256': d.sha256, 'retrieval': d.retrieval} ORDER BY ed.position) AS documents
         FROM events AS e
         JOIN event_documents AS ed ON ed.event_id = e.id
         JOIN documents AS d ON d.sha256 = ed.sha256
@@ -91,7 +94,8 @@ internal static class LedgerTables
             csv_text(a.label) AS label,
             csv_text(string_agg(d.url, ' ' ORDER BY ad.position)) AS document_urls,
             csv_text(string_agg(strftime(d.retrieved_utc, '%Y-%m-%dT%H:%M:%SZ'), ' ' ORDER BY ad.position)) AS document_retrieved_utc,
-            csv_text(string_agg(d.sha256, ' ' ORDER BY ad.position)) AS document_sha256
+            csv_text(string_agg(d.sha256, ' ' ORDER BY ad.position)) AS document_sha256,
+            csv_text(string_agg(d.retrieval, ' ' ORDER BY ad.position)) AS document_retrieval
         FROM actions AS a
         JOIN action_documents AS ad ON ad.action_id = a.id
         JOIN documents AS d ON d.sha256 = ad.sha256
@@ -113,7 +117,7 @@ internal static class LedgerTables
             a.unanimous,
             a.sequence,
             a.label,
-            list({'url': d.url, 'retrieved_utc': d.retrieved_utc, 'sha256': d.sha256} ORDER BY ad.position) AS documents
+            list({'url': d.url, 'retrieved_utc': d.retrieved_utc, 'sha256': d.sha256, 'retrieval': d.retrieval} ORDER BY ad.position) AS documents
         FROM actions AS a
         JOIN action_documents AS ad ON ad.action_id = a.id
         JOIN documents AS d ON d.sha256 = ad.sha256
@@ -158,7 +162,8 @@ internal static class LedgerTables
             retrieved_utc TIMESTAMP NOT NULL,
             media_type VARCHAR NOT NULL,
             bytes BIGINT NOT NULL,
-            source_type VARCHAR NOT NULL
+            source_type VARCHAR NOT NULL,
+            retrieval VARCHAR NOT NULL
         )
         """,
         """
@@ -278,6 +283,7 @@ internal static class LedgerTables
                 .AppendValue(document.MediaType)
                 .AppendValue(document.Bytes)
                 .AppendValue(document.SourceType.ToToken())
+                .AppendValue(document.Retrieval.ToToken())
                 .EndRow();
         }
     }

@@ -10,4 +10,6 @@
 
 **Amendment (Nov 3, 2026, issue #25):** `events.json` gained a top-level `actions` array within schema version 1. Adding a key that an older reader can ignore isn't a breaking change; renaming, removing or retyping one is.
 
+**Amendment (Nov 15, 2026, issue #113):** every document in `events.json` (under events and actions) gained `retrieval`, `fetched` or `manual`, as its last key, within schema version 1. The site defaults a missing key to `fetched`. The wording shown for `manual` is one constant on each side of the boundary (`RetrievalNote.Manual` in Publishing, `MANUAL_RETRIEVAL_TEXT` in `site/src/lib/radar.js`), each pinned by a test to the same sentence.
+
 **Consequences:** A drift fails one contract test in .NET or Node instead of breaking the site silently. Publish feeds the CLI an `ingest-status.json` built from ingest run history, so the CLI never calls the GitHub API to learn freshness.

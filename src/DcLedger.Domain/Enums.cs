@@ -38,7 +38,8 @@ public enum Retrieval
 
     /// <summary>
     /// A person saved them from the URL in a browser and handed the file to <c>dcl archive-document --file</c>, because the
-    /// source only serves browsers (Greensboro's eSCRIBE challenges every program).
+    /// source doesn't allow automated downloads: it only serves browsers (Greensboro's eSCRIBE challenges every program)
+    /// or its robots.txt disallows robots (Stokes, Vance).
     /// </summary>
     Manual,
 }

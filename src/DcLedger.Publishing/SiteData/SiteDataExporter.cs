@@ -112,7 +112,10 @@ public sealed class SiteDataExporter : IExporter
         json.WriteEndObject();
     }
 
-    /// <summary>Provenance for one item (SPEC AC2): URL, retrieval time and SHA-256 of each document.</summary>
+    /// <summary>
+    /// Provenance for one item (SPEC AC2): URL, retrieval time and SHA-256 of each document, and how it was obtained
+    /// (<c>fetched</c> or <c>manual</c>; added within schema version 1, issue #113).
+    /// </summary>
     private static void WriteDocuments(Utf8JsonWriter json, IReadOnlyList<Document> documents)
     {
         json.WriteStartArray("documents");
@@ -122,6 +125,7 @@ public sealed class SiteDataExporter : IExporter
             json.WriteString("url", document.Url.AbsoluteUri);
             json.WriteString("retrieved_utc", IsoTime.Utc(document.RetrievedAtUtc));
             json.WriteString("sha256", document.Id.Value);
+            json.WriteString("retrieval", document.Retrieval.ToToken());
             json.WriteEndObject();
         }
 

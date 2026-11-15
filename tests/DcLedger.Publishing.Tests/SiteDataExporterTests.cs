@@ -10,6 +10,7 @@ namespace DcLedger.Publishing.Tests;
 public sealed class SiteDataExporterTests
 {
     private static readonly string[] LatLon = ["lat", "lon"];
+    private static readonly string[] DocumentKeys = ["url", "retrieved_utc", "sha256", "retrieval"];
 
     private static string EventsJson() =>
         TestFiles.Text(TestFiles.Single(new SiteDataExporter().Export(ExportSamples.Model()), ExportPaths.SiteData));
@@ -64,6 +65,20 @@ public sealed class SiteDataExporterTests
             [ExportSamples.NewsStory.Id.Value, ExportSamples.CountyAgenda1599.Id.Value]);
         documents[0].GetProperty("retrieved_utc").GetString().ShouldBe("2026-10-11T09:30:00Z");
         documents[0].GetProperty("url").GetString().ShouldBe("https://news.example.org/2026/10/fixture-county-hearing");
+    }
+
+    [Fact]
+    public void Documents_say_how_they_were_retrieved()
+    {
+        using var document = JsonDocument.Parse(EventsJson());
+        var events = document.RootElement.GetProperty("events");
+
+        var saved = events[1].GetProperty("documents").EnumerateArray().ShouldHaveSingleItem();
+        saved.GetProperty("sha256").GetString().ShouldBe(ExportSamples.CityAgenda.Id.Value);
+        saved.GetProperty("retrieval").GetString().ShouldBe("manual");
+        saved.EnumerateObject().Select(p => p.Name).ShouldBe(DocumentKeys); // retrieval was added last, within schema version 1
+        events[0].GetProperty("documents").EnumerateArray().Select(d => d.GetProperty("retrieval").GetString()).ShouldAllBe(retrieval => retrieval == "fetched");
+        document.RootElement.GetProperty("actions")[0].GetProperty("documents")[0].GetProperty("retrieval").GetString().ShouldBe("fetched");
     }
 
     [Fact]

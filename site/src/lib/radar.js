@@ -83,6 +83,26 @@ export function labelText(label) {
   return label === 'confirmed_official' ? 'Confirmed (official record)' : 'Reported (news)';
 }
 
+/** What readers are told about a copy a person saved; the feed and calendars say the same (RetrievalNote.cs). */
+export const MANUAL_RETRIEVAL_TEXT =
+  'Saved by a person in a browser (the source does not allow automated downloads)';
+
+/**
+ * How a source's copy was obtained, when that needs saying (issue #113): the sentence above for `manual`, null for
+ * `fetched`. Throws on a token the site doesn't know, so a new one can't pass as fetched.
+ * @param {string} retrieval
+ * @returns {string | null}
+ */
+export function retrievalText(retrieval) {
+  if (retrieval === 'manual') {
+    return MANUAL_RETRIEVAL_TEXT;
+  }
+  if (retrieval === 'fetched') {
+    return null;
+  }
+  throw new Error(`Unknown retrieval ${JSON.stringify(retrieval)}.`);
+}
+
 const ACTION_TYPES = {
   moratorium: 'Moratorium',
   rezoning: 'Rezoning',

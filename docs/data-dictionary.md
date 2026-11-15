@@ -43,8 +43,10 @@ Made for spreadsheets (SPEC AC7):
 | `document_urls` | text, space-separated | never | Each source's URL, in the record's order. URLs contain no spaces. | `https://… https://…` |
 | `document_retrieved_utc` | text, space-separated | never | When each source was retrieved, ISO 8601 UTC, in the same order. | `2026-10-28T12:47:03Z` |
 | `document_sha256` | text, space-separated | never | Each source's SHA-256, lowercase hex, in the same order. A copy of the source with this hash is kept privately. | `98e5…5ea9` |
+| `document_retrieval` | text, space-separated | never | How each source's copy was obtained, in the same order: `fetched` (our program downloaded it from the URL) or `manual` (a person saved it from the URL in a browser, because the source does not allow automated downloads). Either way the hash is of the bytes kept. | `fetched manual` |
 
-The three `document_*` columns line up: the second URL was retrieved at the second time and has the second hash.
+The four `document_*` columns line up: the second URL was retrieved at the second time, has the second hash and was
+obtained the second way.
 
 ## `events.parquet`
 
@@ -57,7 +59,7 @@ guard and no BOM**. Snappy compression. The columns are the CSV's, with native t
 | `starts_utc` | `TIMESTAMP` | An instant in UTC, stored without a time zone. |
 | `sequence` | `INTEGER` | |
 | `location_lat`, `location_lon` | `DOUBLE` | Null when not recorded. |
-| `documents` | `STRUCT(url VARCHAR, retrieved_utc TIMESTAMP, sha256 VARCHAR)[]` | One list instead of three joined columns, in the record's order. |
+| `documents` | `STRUCT(url VARCHAR, retrieved_utc TIMESTAMP, sha256 VARCHAR, retrieval VARCHAR)[]` | One list instead of four joined columns, in the record's order. `retrieval` is `fetched` or `manual`. |
 
 ```sql
 -- DuckDB: one row per source
@@ -83,9 +85,13 @@ on text columns (`unanimous` and `sequence` aren't text). The Parquet file store
 | `unanimous` | `true` / `false` | `BOOLEAN` | never | Reported unanimous; can be `true` while `votes` is still empty. | `true` |
 | `sequence` | integer | `INTEGER` | never | The revision number; it goes up with every published change, and the feed shows each revision as a new item. | `0` |
 | `label` | text | `VARCHAR` | never | `reported_news` or `confirmed_official`, as for events. | `reported_news` |
-| `document_urls`, `document_retrieved_utc`, `document_sha256` | text, space-separated | `documents`: `STRUCT(url VARCHAR, retrieved_utc TIMESTAMP, sha256 VARCHAR)[]` | never | The sources, as for events. | |
+| `document_urls`, `document_retrieved_utc`, `document_sha256`, `document_retrieval` | text, space-separated | `documents`: `STRUCT(url VARCHAR, retrieved_utc TIMESTAMP, sha256 VARCHAR, retrieval VARCHAR)[]` | never | The sources, as for events, including how each copy was obtained (`fetched` or `manual`). | |
 
 ## Changes
 
 New columns are added at the end. Existing columns aren't renamed, retyped or removed without a note here and in the
 SPEC's amendments log (`docs/SPEC.md` §J).
+
+- **Nov 15, 2026 (issue #113):** `document_retrieval` added as the last column of `events.csv` and `actions.csv`. In
+  both Parquet files the `documents` struct gained `retrieval` as its last field; `url`, `retrieved_utc` and `sha256`
+  keep their names, types and positions, so a query that names them is unaffected.

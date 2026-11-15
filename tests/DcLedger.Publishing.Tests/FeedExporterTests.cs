@@ -98,6 +98,31 @@ public sealed class FeedExporterTests
     }
 
     [Fact]
+    public void A_source_saved_by_a_person_says_so_and_fetched_ones_say_nothing()
+    {
+        var items = EventItems(ExportSamples.Model());
+
+        items[0].Element("link")!.Value.ShouldContain(ExportSamples.November3.Id);
+        items[0].Element("description")!.Value.ShouldEndWith(
+            $"SHA-256 {ExportSamples.CityAgenda.Id.Value}). Saved by a person in a browser (the source does not allow automated downloads).</li></ul>");
+        items.Skip(1).ShouldAllBe(item => !item.Element("description")!.Value.Contains("Saved by a person", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void A_decision_backed_by_a_hand_saved_source_says_so()
+    {
+        var model = ExportSamples.Model();
+        var saved = model with
+        {
+            Actions = [.. model.Actions.Select(item => item with { Documents = [.. item.Documents.Select(document => document with { Retrieval = Retrieval.Manual })] })],
+        };
+
+        Items(saved)[0].Element("description")!.Value.ShouldEndWith(
+            $"SHA-256 {ExportSamples.CountyActionDetail1600.Id.Value}). Saved by a person in a browser (the source does not allow automated downloads).</li></ul>");
+        Items(model)[0].Element("description")!.Value.ShouldNotContain("Saved by a person");
+    }
+
+    [Fact]
     public void Markup_in_ledger_text_is_escaped_for_html()
     {
         var model = ExportSamples.Model();

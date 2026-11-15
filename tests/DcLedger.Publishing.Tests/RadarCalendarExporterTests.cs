@@ -121,6 +121,20 @@ public sealed class RadarCalendarExporterTests
     }
 
     [Fact]
+    public void A_source_saved_by_a_person_says_so_and_fetched_ones_say_nothing()
+    {
+        var events = Events(Ics(ExportPaths.Radar)).ToDictionary(e => e.Uid!, StringComparer.Ordinal);
+
+        events[ExportSamples.November3.Uid].Description!.Split('\n').ShouldBe(
+        [
+            "Fixture City, City Council",
+            $"Source: https://fixture-city.example.org/council/2026-11-03-agenda.pdf (retrieved 2026-10-30T10:05:00-04:00, SHA-256 {ExportSamples.CityAgenda.Id.Value}). Saved by a person in a browser (the source does not allow automated downloads).",
+        ]);
+        events[ExportSamples.October15.Uid].Description!.ShouldNotContain("Saved by a person");
+        events[ExportSamples.November5.Uid].Description!.ShouldNotContain("Saved by a person");
+    }
+
+    [Fact]
     public void A_located_event_carries_geo_and_others_do_not()
     {
         var lines = UnfoldedLines(Ics(ExportPaths.Radar));

@@ -69,7 +69,10 @@ internal static class IcsCalendarWriter
         return vevent;
     }
 
-    /// <summary>Jurisdiction and body, the case number, then each source with its retrieval time and SHA-256 (SPEC AC2).</summary>
+    /// <summary>
+    /// Jurisdiction and body, the case number, then each source with its retrieval time and SHA-256 (SPEC AC2). A copy a
+    /// person saved says so (<see cref="RetrievalNote"/>).
+    /// </summary>
     private static string Describe(ExportEvent item)
     {
         var lines = new List<string> { $"{item.Jurisdiction.Name}, {item.Event.Body}" };
@@ -79,7 +82,7 @@ internal static class IcsCalendarWriter
         }
 
         lines.AddRange(item.Documents.Select(document =>
-            $"Source: {document.Url.AbsoluteUri} (retrieved {IsoTime.Eastern(document.RetrievedAtUtc)}, SHA-256 {document.Id.Value})"));
+            $"Source: {document.Url.AbsoluteUri} (retrieved {IsoTime.Eastern(document.RetrievedAtUtc)}, SHA-256 {document.Id.Value}){RetrievalNote.After(document)}"));
         return string.Join('\n', lines);
     }
 }

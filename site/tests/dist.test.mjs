@@ -132,6 +132,34 @@ test('every item page shows each source URL, retrieval time in Eastern and SHA-2
   assert.match(past, /<code>1{64}<\/code>/, 'items outside the window still get a page');
 });
 
+test('a source a person saved says so in words, beside that source only (#113, AC2)', () => {
+  const saved =
+    /<dt>How retrieved<\/dt>\s*<dd>Saved by a person in a browser \(the source does not allow automated downloads\)\.<\/dd>/g;
+  const item = page('items/fixture-escaping-check/index.html');
+  assert.equal(item.match(saved)?.length, 1, 'one of its two sources was saved by hand');
+  assert.match(
+    item,
+    /href="https:\/\/fixture-city.example.org\/agenda.pdf"[\s\S]*?<dt>How retrieved<\/dt>[\s\S]*?<code>2{64}<\/code>/,
+    "in the hand-saved agenda's own entry",
+  );
+  assert.ok(
+    item.indexOf('<code>0'.padEnd(70, '0')) < item.indexOf('How retrieved'),
+    'the fetched news story, listed first, has no note',
+  );
+
+  const city = page('jurisdictions/fixture-city/index.html');
+  assert.equal(city.match(saved)?.length, 1, "on the decision's source on a jurisdiction page");
+
+  for (const name of [
+    'items/fixture-guilford-boc-2026-11-05/index.html',
+    'items/fixture-guilford-boc-2026-10-15/index.html',
+    'jurisdictions/guilford/index.html',
+    'radar/index.html',
+  ]) {
+    assert.doesNotMatch(page(name), /How retrieved|Saved by a person/, `${name}: fetched copies`);
+  }
+});
+
 test('jurisdiction pages show freshness with a text stale flag and link their feed (AC10)', () => {
   const guilford = page('jurisdictions/guilford/index.html');
   assert.match(
