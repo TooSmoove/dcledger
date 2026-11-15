@@ -1,12 +1,21 @@
+# Legistar case page for file 2026-452 (archived 9fd2406f…, Nov 14, 2026): Status "Passed", "Final action:
+# 11/5/2026". Its requested action reads "an eighteen (18) month moratorium, to commence November 5, 2026 and expire
+# May 5, 2028", ending earlier "upon adoption of applicable zoning ordinance text amendments, whichever occurs first".
+# The page read "Agenda Ready" with no final action on Nov 6 (PR #84).
+# Checked Nov 14, 2026 and not posted: the adopted ordinance (the case has no attachments), any recorded action or
+# vote (history empty, in the API too), and the minutes ("Minutes status: Draft", "Not available"). So the terms above
+# are the request as advertised, not the adopted text, and outcome stays adopted until the minutes say otherwise.
 id: guilford-moratorium-2026-11-05
 jurisdiction_id: guilford
 event_id: guilford-board-of-commissioners-2026-11-05
 action_type: moratorium
 outcome: adopted
 decided_on: 2026-11-05
-# votes: WFMY (archived doc 97169a7d…) reports the vote as unanimous, with no tally. Likely 9-0 if all
-# nine commissioners were present; add the recorded ayes-noes from the approved minutes.
+# votes: WFMY (archived doc 97169a7d…) reports the vote as unanimous, with no tally; the official page records no
+# vote. Add the recorded ayes-noes from the approved minutes. Don't infer 9-0 from the size of the board.
 unanimous: true
-label: reported_news
+sequence: 1
+label: confirmed_official
 document_ids:
+  - 9fd2406f2aa9b4877526371a19d8d104b52142f9f567ce8e96ad041df2b84fb3
   - 97169a7ddda332235e1c2fd9bb5390c2777002bb1ab2bcf08194d43b443a27b6

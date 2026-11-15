@@ -124,8 +124,8 @@ page. Record every vote on the item, including a continuance or a tabling (`cont
 
 ## Entering a manual jurisdiction
 
-Some jurisdictions publish agendas on a platform without an adapter. Greensboro is on eSCRIBE, and #94's Stokes and
-Vance post PDF lists. Their meetings are entered by hand, until #96 automates the check.
+Some jurisdictions publish agendas on a platform without an adapter. Greensboro is on eSCRIBE, Stokes is on Granicus
+and Vance posts PDF packets (#94). Their meetings are entered by hand, until #96 automates the check.
 
 1. **The jurisdiction:** `platform: manual`, with `bodies` listing the bodies you watch (documentation only) and no
    `legistar_client`. Ingest skips it.
@@ -152,7 +152,7 @@ Where each manual jurisdiction posts (#94):
 | Jurisdiction | Where to look | `platform_meeting_id` |
 |---|---|---|
 | Greensboro | eSCRIBE, `pub-greensboro-nc.escribemeetings.com` (save documents in a browser: `--file`) | the meeting page's `Id=` value |
-| Stokes | the county website's yearly Board of Commissioners agenda pages; PDFs on `cms9files.revize.com/stokescountync`, which the archive workflow can fetch (checked Nov 14, 2026) | no platform ID: the meeting's date and kind, e.g. `"2026-12-07 regular"` |
+| Stokes | Granicus, `stokescountync.granicus.com/ViewPublisher.php?view_id=1` (agendas, packets, minutes; the county website's yearly PDF pages list years through 2025). Its robots.txt disallows all robots (checked Nov 14, 2026), so the workflow refuses its URLs: save in a browser and use `--file` | no platform ID: the meeting's date and kind, e.g. `"2026-12-07 regular"` |
 | Vance | `vancecounty.org/departments/board-of-commissioners`, "MASTER-File" PDF packets. Its robots.txt disallows all robots, so the workflow refuses its URLs: save in a browser and use `--file` | same as Stokes |
 
 Whatever you choose for a platform without IDs, keep it stable: it can't change once published.
