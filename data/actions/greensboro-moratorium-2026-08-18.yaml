@@ -7,9 +7,13 @@
 # (0759dfed…) record no vote on it.
 # The city's news release of Aug 18, 2026, 6:38 PM (archived 5ccd8e17…, saved in a browser Nov 14, 2026) says the
 # council "voted 8-0, with one recusal", and that the pause runs "until Sunday, February 14, 2027".
-# Nov 14, 2026 (#112): the adopted ordinance itself isn't archived yet (the minutes are; the instrument is not), nor
-# are the city's releases of Aug 31, Nov 5 and Nov 9. www.greensboro-nc.gov answers HTTP 403 to the archive
-# workflow, so they are saved in a browser like eSCRIBE documents (--file).
+# Two later city releases, saved in a browser Nov 14, 2026, restate it: Aug 31, 2026 (642c75fd…) says the council
+# "approved a 180-day moratorium on data centers" covering uses "with an electrical power demand exceeding 10
+# megawatts"; Nov 5, 2026 (04e565d7…) says the moratorium period "concludes on February 14 of next year" and that
+# the council "prepares for ordinance consideration in February".
+# Nov 14, 2026 (#112): the adopted ordinance itself isn't archived yet (the minutes are; the instrument is not).
+# The city's Nov 9 release (News/23241) was no longer available when a person tried to save it that night.
+# www.greensboro-nc.gov answers HTTP 403 to the archive workflow, so its pages are saved in a browser (--file).
 id: greensboro-moratorium-2026-08-18
 jurisdiction_id: greensboro
 action_type: moratorium
@@ -21,4 +25,6 @@ label: confirmed_official
 document_ids:
   - 6664fb8d53149c280316c893e0804ce35545ba994a4c19870ce6fda4c0e11161
   - 5ccd8e17713add78a14662abd7612857106b020d328b99487948c5818a0effa7
+  - 642c75fd4f69a0553c54ea03d4f17c3764cfd8fd12d1373b13b3e76703094d76
+  - 04e565d713a032895773e5f5c0cfacbdae83d9038d9425c85e31797f365f56a1
   - ac94053e1201551bb957f970400fb22c353e65fcac66a038b0d14881f343330d
