@@ -22,6 +22,8 @@ The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcled
   Nov 22, 2026 (#117).
 - **Coverage:** Guilford County, Winston-Salem and Chatham County (automated Legistar ingest), and Greensboro, Stokes
   County and Vance County (entered by hand). Each jurisdiction states its coverage tier; all six are `watched`.
+  Forsyth County and Davidson County are `decisions`: decisions recorded from the official record, hearings not
+  watched (#118).
 - **Decisions** (local actions) on meeting and jurisdiction pages, with outcome, vote and sourcing label, and, for an
   adopted decision, the terms its archived text states: threshold, scope, start and expiry dates, early termination,
   exemptions, a successor and a status.

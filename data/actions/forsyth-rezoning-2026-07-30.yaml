@@ -1,0 +1,17 @@
+# Zoning Map Amendment F-1669 (about 128.5 acres off Bethania-Rural Hall Road, Rural Hall, from RS20 and GI to LI-S,
+# including a site plan and special use district permit; the site plan lists data centers), Board of Commissioners
+# meeting of Thursday, July 30, 2026.
+# Adopted minutes (archived fd67ddc7…, saved in a browser Nov 15, 2026, pages 5-7 of 603): "the motion to approve the
+# proposed site plan amendment failed by a vote of two (2) to five (5)", then a substitute motion to deny "was
+# approved by a majority vote of five (5) to two (2)". votes is written ayes for the rezoning first, 2-5, as for the
+# failed moratorium votes elsewhere in the ledger. WFAE's report (3c1bec20…) matches: voted down 5-2.
+id: forsyth-rezoning-2026-07-30
+jurisdiction_id: forsyth
+action_type: rezoning
+outcome: failed
+decided_on: 2026-07-30
+votes: "2-5"
+label: confirmed_official
+document_ids:
+  - fd67ddc786f1c7f85a5b12533065afb2a485e767b5daecb60868fe30e7f4dbe4
+  - 3c1bec20731bd4563b8a4c6c0b05c0cb4c7d7d53f6ac785561539b6dbb1bccde

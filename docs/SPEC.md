@@ -16,6 +16,7 @@ Due live and unlisted by **Sun Nov 22, 2026**.
 - **AC1 Coverage:** Given date D, when /radar is built, it lists every reviewed item in [D, D+30 days], sorted by start time, for:
   - Guilford County BOC, Winston-Salem City Council and Chatham County BOC (automated ingest)
   - Greensboro City Council, Stokes County BOC and Vance County BOC (manual YAML entry; Chatham, Stokes and Vance amended in, issue #94)
+  - Only `watched` jurisdictions count here. Forsyth County and Davidson County are `decisions` (decisions recorded, hearings not watched; amended Nov 15, 2026, issue #118), so their meetings are never on /radar.
 - **AC2 Provenance:** Every public item shows the source URL, the retrieval time (stored in UTC, shown in Eastern with offset) and the SHA-256 of the retrieved bytes. The gate fails any record missing one of these.
 - **AC3 iCal across DST:**
   - An Oct 15, 2026 5:30 p.m. meeting serializes as `DTSTART;TZID=America/New_York:20261015T173000` and resolves to 21:30Z.
@@ -65,7 +66,7 @@ Modules follow ADR-0001; contracts follow ADR-0004.
 
 ## D. Out of scope for v0.1
 
-- **Coverage:** watched jurisdictions beyond the six in AC1 (the Davidson, Halifax and Person stretch candidates of #94 included). Others may join as `decisions` or `registered` (§J, Nov 15, 2026), with no hearing watch; eSCRIBE adapter (plan week 6); automated NC DAQ, Forsyth EAP, NCUC, NCGA ingest (manual entries only); parcels and GIS layers.
+- **Coverage:** watched jurisdictions beyond the six in AC1 (the Halifax and Person stretch candidates of #94 included). Others may join as `decisions` or `registered` (§J, Nov 15, 2026), with no hearing watch: Forsyth and Davidson have joined as `decisions` (#118), and watching either waits for #96 and #114; eSCRIBE adapter (plan week 6); automated NC DAQ, Forsyth EAP, NCUC, NCGA ingest (manual entries only); parcels and GIS layers.
 - **Records:** `fact`, `project`, `entity`, `correction` (no AC needs them).
 - **Features:** project/entity pages; search and filter UI; DuckDB-WASM; PDF extraction (PdfPig deferred); HTML or iCal fallback adapter and AngleSharp (the Legistar API is open); email, accounts, notifications, analytics; any LLM or AI.
 - **Publishing:** public mirror of agenda packets; versioned data releases, Frictionless, Zenodo; SEO and indexing.
@@ -218,3 +219,8 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - Corrections: reported as a GitHub issue (form `.github/ISSUE_TEMPLATE/correction.yml`) until a contact address exists (§H). Within 48 hours the record is corrected, or the report gets a reply saying why it stands or what the fix is waiting for.
   - The log opens Nov 22, 2026. Entries live one per file in `data/corrections/` (ADR-0002 amended), pass the quality gate (`CORRECTION_INVALID`, `FK_MISSING`) and are permanent (`SLUG_CHANGED`). `dcl export` writes them to `site-data/corrections.json` (ADR-0004 amended); they aren't in the public downloads, so the `correction` record type in §D stays deferred.
   - The disclosure is the owner's wording, kept in `site/src/owner/disclosure.md`; the site's tests fail while it holds the placeholder. Templates for it, for log entries and for replies are in `docs/wording-bank.md`.
+- **Nov 15, 2026 — Forsyth and Davidson, decisions only (issue #118, AC1, AC6, AC10, §D):**
+  - Forsyth County and Davidson County join as `platform: manual`, `coverage_tier: decisions`: decisions recorded from the official record, no hearing watch, no events or calendar, and no freshness promise (AC10 applies to `watched` only, #115). The site's existing tier sentence and /radar's split already cover them, so no code changed.
+  - Where they post differs from the issue: Forsyth uses CivicWeb (iCompass/Diligent), whose robots.txt disallows all robots, so its documents are archived with `--file`; Davidson's Board of Commissioners uses AgendaSuite (Provox), which has no robots.txt, so the archive-document workflow fetches it (its CivicPlus Agenda Center carries only other boards).
+  - Davidson, all `confirmed_official` from archived minutes: the Aug 24 six-month moratorium motion (failed 3-3), the Sept 28 vote to schedule a four-month moratorium hearing (4-2), the Oct 26 data-center text amendments (`adopted_amended` 5-2, approved with board-requested revisions) and the Oct 26 moratorium (failed, written 1-6). The Aug and Sept votes were added to the issue's list at the owner's request.
+  - Forsyth: rezoning case F-1669 (Jul 30, failed, written 2-5) is `confirmed_official` from the adopted minutes, saved in a browser and archived with `--file`; WFAE's report is kept as a second source. The Sept 28 "Data Center discussion" at a Monday briefing is not recorded: Forsyth posts no briefing minutes, so no official record says what the action was. No `not_advanced` outcome was added (owner decision); it can be added if a record ever needs it.

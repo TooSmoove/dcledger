@@ -175,10 +175,10 @@ public sealed class IngestCommandTests : IDisposable
     [Fact]
     public async Task Unknown_jurisdiction_is_a_usage_error()
     {
-        var result = await DclRunner.RunWithAsync(Root, "ingest", "--jurisdiction", "forsyth", "--data", DataDirectory());
+        var result = await DclRunner.RunWithAsync(Root, "ingest", "--jurisdiction", "no-such-county", "--data", DataDirectory());
 
         result.Code.ShouldBe(ExitCodes.Usage);
-        result.Error.ShouldContain("No jurisdiction file jurisdictions/forsyth.yaml");
+        result.Error.ShouldContain("No jurisdiction file jurisdictions/no-such-county.yaml");
     }
 
     [Fact]

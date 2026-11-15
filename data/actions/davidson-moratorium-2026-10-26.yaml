@@ -1,0 +1,14 @@
+# Approved minutes of the Oct 26, 2026 Board of Commissioners meeting (archived ab53428f…, page 11), public hearing
+# item 7.C, "Consideration of a Temporary Moratorium on Data Centers", heard after the text amendments were approved:
+# "By a vote of 6-1, as follows, the Board voted against a temporary moratorium on data centers."
+# votes: the 6-1 is for the motion against the moratorium, so it is written 1-6 here, ayes for the moratorium first,
+# as for Stokes's July 13 and Greensboro's July 21 votes. AgendaSuite's voting record (voting/details/15876) matches.
+id: davidson-moratorium-2026-10-26
+jurisdiction_id: davidson
+action_type: moratorium
+outcome: failed
+decided_on: 2026-10-26
+votes: "1-6"
+label: confirmed_official
+document_ids:
+  - ab53428f4c5aae1d36f4dd2013611609f8538babb26e801a1cab4987b2f93b80

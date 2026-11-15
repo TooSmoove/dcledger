@@ -198,6 +198,14 @@ Where each manual jurisdiction posts (#94):
 | Stokes | Granicus, `stokescountync.granicus.com/ViewPublisher.php?view_id=1` (agendas, packets, minutes; the county website's yearly PDF pages list years through 2025). Its robots.txt disallows all robots (checked Nov 14, 2026), so the workflow refuses its URLs: save in a browser and use `--file` | no platform ID: the meeting's date and kind, e.g. `"2026-12-07 regular"` |
 | Vance | `vancecounty.org/departments/board-of-commissioners`, "MASTER-File" PDF packets. Its robots.txt disallows all robots, so the workflow refuses its URLs: save in a browser and use `--file` | same as Stokes |
 
+Decisions-only jurisdictions (`coverage_tier: decisions`, #118) have no events, so no `platform_meeting_id` and no
+`last_manual_check_utc`. Look there only to record a decision:
+
+| Jurisdiction | Where to look |
+|---|---|
+| Forsyth | CivicWeb, `coforsythnc.civicweb.net` (agendas under Meetings; adopted minutes in the Document Center under Minutes → Board of Commissioners Meeting). Its robots.txt disallows all robots (checked Nov 15, 2026): save in a browser and use `--file`. Monday briefings post no minutes |
+| Davidson | AgendaSuite, `agendasuite.org/iip/davidson` (agendas, per-item voting records and approved minutes). It has no robots.txt (checked Nov 15, 2026), so the archive-document workflow can fetch it |
+
 Whatever you choose for a platform without IDs, keep it stable: it can't change once published.
 
 ## Archiving a file saved in a browser
