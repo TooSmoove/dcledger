@@ -123,6 +123,7 @@ internal static class RssFeedWriter
             html.Append(CultureInfo.InvariantCulture, $"<p>Vote: {vote}</p>");
         }
 
+        AppendTerms(html, action.Terms);
         html.Append(CultureInfo.InvariantCulture, $"<p>{LabelText(action.Label)}</p>");
         AppendSources(html, item.Documents);
         return new FeedItem(
@@ -132,6 +133,75 @@ internal static class RssFeedWriter
             Published: item.Documents.Max(document => document.RetrievedAtUtc),
             Description: html.ToString());
     }
+
+    /// <summary>
+    /// A decision's terms (issue #115), one paragraph per term the record states, with the site's labels (termRows in
+    /// site/src/lib/radar.js). Text terms are quoted because they are copied from the document as written.
+    /// </summary>
+    private static void AppendTerms(StringBuilder html, DecisionTerms terms)
+    {
+        foreach (var (label, value) in TermLines(terms))
+        {
+            html.Append(CultureInfo.InvariantCulture, $"<p>{label}: {Html(value)}</p>");
+        }
+    }
+
+    private static IEnumerable<(string Label, string Value)> TermLines(DecisionTerms terms)
+    {
+        if (terms.Status is { } status)
+        {
+            yield return ("Status", StatusText(status));
+        }
+
+        if (terms.InstrumentNumber is { } number)
+        {
+            yield return ("Ordinance or resolution number", number);
+        }
+
+        if (terms.Threshold is { } threshold)
+        {
+            yield return ("Threshold", Quoted(threshold));
+        }
+
+        if (terms.Scope is { } scope)
+        {
+            yield return ("Covers", Quoted(scope));
+        }
+
+        if (terms.EffectiveOn is { } effectiveOn)
+        {
+            yield return ("Effective", LongDate(effectiveOn));
+        }
+
+        if (terms.ExpiresOn is { } expiresOn)
+        {
+            yield return ("Expires", LongDate(expiresOn));
+        }
+
+        if (terms.EarlyTermination is { } early)
+        {
+            yield return ("Ends earlier", Quoted(early));
+        }
+
+        if (terms.Exemptions is { } exemptions)
+        {
+            yield return ("Exemptions", Quoted(exemptions));
+        }
+    }
+
+    private static string Quoted(string text) => $"\u201C{text}\u201D";
+
+    private static string LongDate(DateOnly date) => date.ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture);
+
+    /// <summary>The site's wording for a decision's status (site/src/lib/radar.js).</summary>
+    private static string StatusText(ActionStatus status) => status switch
+    {
+        ActionStatus.InEffect => "In effect",
+        ActionStatus.Expired => "Expired",
+        ActionStatus.Superseded => "Replaced or extended by a later decision",
+        ActionStatus.Repealed => "Repealed",
+        _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown action status."),
+    };
 
     /// <summary>What the revision is, as a title prefix: nothing for a meeting's first version.</summary>
     private static string Change(LedgerEvent ledgerEvent) =>

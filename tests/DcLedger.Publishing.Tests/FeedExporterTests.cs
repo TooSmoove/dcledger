@@ -180,6 +180,33 @@ public sealed class FeedExporterTests
     }
 
     [Fact]
+    public void A_decisions_terms_follow_its_vote_quoted_and_escaped()
+    {
+        var description = Items(ExportSamples.ModelWithTerms())[0].Element("description")!.Value;
+
+        description.ShouldContain(
+            "<p>Vote: 8 in favor, 1 against</p>"
+            + "<p>Status: Replaced or extended by a later decision</p>"
+            + "<p>Ordinance or resolution number: =26-01</p>"
+            + "<p>Threshold: \u201C+electrical power demand exceeding 10 megawatts\u201D</p>"
+            + "<p>Covers: \u201C-development approvals for &lt;data center&gt; facilities &amp; accessory uses\u201D</p>"
+            + "<p>Effective: Thursday, November 5, 2026</p>"
+            + "<p>Expires: Tuesday, May 4, 2027</p>"
+            + "<p>Ends earlier: \u201C@upon adoption of text amendments, whichever occurs first\u201D</p>"
+            + "<p>Exemptions: \u201C'applications deemed complete before the effective date\u201D</p>"
+            + "<p>Confirmed (official record)</p>");
+    }
+
+    [Fact]
+    public void A_decision_without_terms_has_no_term_lines()
+    {
+        var description = Items(ExportSamples.Model())[0].Element("description")!.Value;
+
+        description.ShouldNotContain("Expires:");
+        description.ShouldNotContain("Status:");
+    }
+
+    [Fact]
     public void A_decision_without_a_meeting_links_to_its_jurisdiction()
     {
         var model = WithAction(ExportSamples.Model(), action => action with { EventId = null });

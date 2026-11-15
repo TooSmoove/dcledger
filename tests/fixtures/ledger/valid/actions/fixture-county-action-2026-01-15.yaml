@@ -8,3 +8,13 @@ votes: 5-2
 label: confirmed_official
 document_ids:
   - bf771d2f48e40c8ff1c60d5b2a63fc3680ba510fb30d8e9fa1e4fb069d163811
+# Terms as an adopted ordinance would state them (issue #115); a quoted value may wrap across lines.
+instrument_number: "26-01"
+threshold: "electrical power demand exceeding 10 megawatts"
+scope: "acceptance, processing and approval of development applications for data center facilities"
+effective_on: 2026-01-15
+expires_on: 2026-07-14
+early_termination: "upon adoption of amendments to the development ordinance,
+  whichever occurs first"
+exemptions: "applications deemed complete before the effective date"
+status: in_effect

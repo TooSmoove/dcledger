@@ -86,6 +86,20 @@ on text columns (`unanimous` and `sequence` aren't text). The Parquet file store
 | `sequence` | integer | `INTEGER` | never | The revision number; it goes up with every published change, and the feed shows each revision as a new item. | `0` |
 | `label` | text | `VARCHAR` | never | `reported_news` or `confirmed_official`, as for events. | `reported_news` |
 | `document_urls`, `document_retrieved_utc`, `document_sha256`, `document_retrieval` | text, space-separated | `documents`: `STRUCT(url VARCHAR, retrieved_utc TIMESTAMP, sha256 VARCHAR, retrieval VARCHAR)[]` | never | The sources, as for events, including how each copy was obtained (`fetched` or `manual`). | |
+| `instrument_number` | text | `VARCHAR` | not stated in an archived document | The ordinance or resolution number, as the body numbers it. | `2026-11` |
+| `threshold` | text | `VARCHAR` | not stated | What triggers the decision, copied as written. | `electrical power demand exceeding 10 megawatts` |
+| `scope` | text | `VARCHAR` | not stated | What approvals or area it covers, copied as written. | `temporary development moratorium applicable to data center facilities` |
+| `effective_on` | text, `YYYY-MM-DD` | `DATE` | not stated | The start date. | `2026-11-05` |
+| `expires_on` | text, `YYYY-MM-DD` | `DATE` | not stated | The outside expiry date. Never before `effective_on`. | `2027-02-14` |
+| `early_termination` | text | `VARCHAR` | not stated | What ends it sooner, copied as written. | `upon adoption of text amendments` |
+| `exemptions` | text | `VARCHAR` | not stated | What is exempt, copied as written. | |
+| `successor_id` | text | `VARCHAR` | not replaced or extended | The `id` of the decision that replaced or extended it: same jurisdiction, decided the same day or later. | `greensboro-moratorium-2027-02-02` |
+| `status` | text | `VARCHAR` | not recorded | `in_effect`, `expired`, `superseded` (then `successor_id` is set) or `repealed`, set by a reviewer from an archived document. Nothing changes it automatically: check the dates. | `in_effect` |
+
+The last nine columns are a decision's terms (issue #115). They are filled only for an adopted decision
+(`adopted` or `adopted_amended`), and only as an archived document states them: text terms are copied as written,
+never summarized, on one line of at most 500 characters. A term taken from a news report stays under the decision's
+`reported_news` label until the official text is archived.
 
 ## Changes
 
@@ -95,3 +109,7 @@ SPEC's amendments log (`docs/SPEC.md` §J).
 - **Nov 15, 2026 (issue #113):** `document_retrieval` added as the last column of `events.csv` and `actions.csv`. In
   both Parquet files the `documents` struct gained `retrieval` as its last field; `url`, `retrieved_utc` and `sha256`
   keep their names, types and positions, so a query that names them is unaffected.
+- **Nov 15, 2026 (issue #115):** `actions.csv` gained nine columns after `document_retrieval`: `instrument_number`,
+  `threshold`, `scope`, `effective_on`, `expires_on`, `early_termination`, `exemptions`, `successor_id` and
+  `status`. `actions.parquet` gained the same columns after `documents`, with `effective_on` and `expires_on` as
+  `DATE`. No existing column moved.

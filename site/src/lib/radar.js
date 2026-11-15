@@ -203,6 +203,77 @@ export function staleWindowText(hours) {
   return hours > 48 && hours % 24 === 0 ? `${hours / 24} days` : `${hours} hours`;
 }
 
+const COVERAGE_TIERS = {
+  watched:
+    'Coverage: hearings watched. Upcoming meetings and hearings are on the Hearing Radar, and decisions are recorded.',
+  decisions:
+    'Coverage: decisions only. Decisions are recorded after they are made. Upcoming meetings and hearings are not watched, so there is no calendar and no "last checked" date.',
+  registered:
+    'Coverage: listed only. Meetings, hearings and decisions are not recorded for this jurisdiction.',
+};
+
+/**
+ * How closely a jurisdiction is covered, in one sentence (issue #115). Throws on a tier the site doesn't know.
+ * @param {string} tier
+ */
+export function coverageText(tier) {
+  return lookup(COVERAGE_TIERS, tier, 'coverage tier');
+}
+
+/**
+ * Whether the freshness promise (SPEC AC10) is made: only for a watched jurisdiction (issue #115). Mirrors
+ * DcLedger.Domain.Freshness.AppliesTo.
+ * @param {string} tier
+ */
+export function isWatched(tier) {
+  coverageText(tier);
+  return tier === 'watched';
+}
+
+const ACTION_STATUSES = {
+  in_effect: 'In effect',
+  expired: 'Expired',
+  superseded: 'Replaced or extended by a later decision',
+  repealed: 'Repealed',
+};
+
+/** Where an adopted decision stands, in words (issue #115). Same wording as the feed (RssFeedWriter.StatusText). */
+export function actionStatusText(status) {
+  return lookup(ACTION_STATUSES, status, 'action status');
+}
+
+/**
+ * The terms a decision's record states (issue #115), in display order, each as a definition-list row. Text terms are
+ * quoted because they are copied from the document as written; dates are calendar dates. The labels match the feed
+ * (RssFeedWriter.TermLines). A term the record leaves out (null or undefined) has no row.
+ * @param {{ instrument_number?: string | null, threshold?: string | null, scope?: string | null,
+ *   effective_on?: string | null, expires_on?: string | null, early_termination?: string | null,
+ *   exemptions?: string | null, status?: string | null }} terms
+ * @returns {{ label: string, text: string, date?: string }[]}
+ */
+export function termRows(terms) {
+  const rows = [];
+  const quoted = (text) => `\u201C${text}\u201D`;
+  const present = (value) => value !== null && value !== undefined;
+  if (present(terms.status)) rows.push({ label: 'Status', text: actionStatusText(terms.status) });
+  if (present(terms.instrument_number)) {
+    rows.push({ label: 'Ordinance or resolution number', text: terms.instrument_number });
+  }
+  if (present(terms.threshold)) rows.push({ label: 'Threshold', text: quoted(terms.threshold) });
+  if (present(terms.scope)) rows.push({ label: 'Covers', text: quoted(terms.scope) });
+  if (present(terms.effective_on)) {
+    rows.push({ label: 'Effective', text: dateText(terms.effective_on), date: terms.effective_on });
+  }
+  if (present(terms.expires_on)) {
+    rows.push({ label: 'Expires', text: dateText(terms.expires_on), date: terms.expires_on });
+  }
+  if (present(terms.early_termination)) {
+    rows.push({ label: 'Ends earlier', text: quoted(terms.early_termination) });
+  }
+  if (present(terms.exemptions)) rows.push({ label: 'Exemptions', text: quoted(terms.exemptions) });
+  return rows;
+}
+
 /**
  * @param {Record<string, string>} table
  * @param {string} token

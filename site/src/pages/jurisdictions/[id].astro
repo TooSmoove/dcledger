@@ -1,12 +1,13 @@
 ---
-// One page per jurisdiction: freshness (SPEC AC10), its calendar feed, its decisions (issue #25) and every one of its
-// items, newest first.
+// One page per jurisdiction: its coverage tier in words (issue #115) and its decisions (issue #25). A watched
+// jurisdiction also shows freshness (SPEC AC10), its calendar feed and every one of its items, newest first; the
+// other tiers have no hearing watch, so they show none of those.
 import { getCollection, getEntry } from 'astro:content';
 import Decisions from '../../components/Decisions.astro';
 import EventTable from '../../components/EventTable.astro';
 import Freshness from '../../components/Freshness.astro';
 import Base from '../../layouts/Base.astro';
-import { byDecisionNewestFirst, byStart } from '../../lib/radar.js';
+import { byDecisionNewestFirst, byStart, coverageText, isWatched } from '../../lib/radar.js';
 
 export async function getStaticPaths() {
   return (await getCollection('jurisdictions')).map((j) => ({ params: { id: j.id } }));
@@ -18,6 +19,7 @@ if (!jurisdiction) {
   throw new Error(`No jurisdiction ${id} in events.json.`);
 }
 const { data } = jurisdiction;
+const watched = isWatched(data.coverage_tier);
 const events = byStart(
   (await getCollection('events')).filter((event) => event.data.jurisdiction_id === id),
 ).reverse();
@@ -31,21 +33,26 @@ const decisions = byDecisionNewestFirst(
     <a href="/radar/">← Hearing Radar</a>
   </p>
   <h1>{data.name}</h1>
-  <Freshness
-    lastCheckedUtc={data.last_checked_utc}
-    stale={data.stale}
-    staleAfterHours={data.stale_after_hours}
-  />
-  <p class="feeds">
-    Subscribe: <a href={`/radar/${id}.ics`}>calendar (iCal) for {data.name}</a>
-  </p>
+  <p class="coverage">{coverageText(data.coverage_tier)}</p>
+  {watched && (
+    <>
+      <Freshness
+        lastCheckedUtc={data.last_checked_utc}
+        stale={data.stale}
+        staleAfterHours={data.stale_after_hours}
+      />
+      <p class="feeds">
+        Subscribe: <a href={`/radar/${id}.ics`}>calendar (iCal) for {data.name}</a>
+      </p>
 
-  <EventTable
-    caption={`Every reviewed item for ${data.name}, newest first`}
-    events={events}
-    jurisdictions={new Map([[id, data.name]])}
-    showJurisdiction={false}
-  />
+      <EventTable
+        caption={`Every reviewed item for ${data.name}, newest first`}
+        events={events}
+        jurisdictions={new Map([[id, data.name]])}
+        showJurisdiction={false}
+      />
+    </>
+  )}
 
   <Decisions actions={decisions} heading="Decisions, newest first" linkMeetings={true} />
 </Base>

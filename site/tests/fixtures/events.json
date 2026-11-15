@@ -3,25 +3,44 @@
   "generated_utc": "2026-10-25T21:00:00Z",
   "jurisdictions": [
     {
+      "id": "decided-county",
+      "name": "Decided County",
+      "last_checked_utc": null,
+      "stale": false,
+      "stale_after_hours": 168,
+      "coverage_tier": "decisions"
+    },
+    {
       "id": "fixture-city",
       "name": "Fixture City",
       "last_checked_utc": "2026-10-15T14:00:00Z",
       "stale": true,
-      "stale_after_hours": 168
+      "stale_after_hours": 168,
+      "coverage_tier": "watched"
     },
     {
       "id": "guilford",
       "name": "Guilford County",
       "last_checked_utc": "2026-10-25T20:17:00Z",
       "stale": false,
-      "stale_after_hours": 48
+      "stale_after_hours": 48,
+      "coverage_tier": "watched"
     },
     {
       "id": "never-checked",
       "name": "Never Checked County",
       "last_checked_utc": null,
       "stale": true,
-      "stale_after_hours": 48
+      "stale_after_hours": 48,
+      "coverage_tier": "watched"
+    },
+    {
+      "id": "registered-county",
+      "name": "Registered County",
+      "last_checked_utc": null,
+      "stale": false,
+      "stale_after_hours": 168,
+      "coverage_tier": "registered"
     }
   ],
   "events": [
@@ -148,7 +167,16 @@
           "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
           "retrieval": "fetched"
         }
-      ]
+      ],
+      "instrument_number": "2026-11",
+      "threshold": "electrical power demand exceeding 10 megawatts <script>alert(1)</script>",
+      "scope": "acceptance of applications for data center uses & \"quotes\"",
+      "effective_on": "2026-11-05",
+      "expires_on": "2028-05-05",
+      "early_termination": "upon adoption of text amendments",
+      "exemptions": "applications deemed complete before the effective date",
+      "successor_id": null,
+      "status": "in_effect"
     },
     {
       "id": "fixture-city-text-amendment-2026-10-20",
@@ -168,7 +196,16 @@
           "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
           "retrieval": "manual"
         }
-      ]
+      ],
+      "instrument_number": null,
+      "threshold": null,
+      "scope": null,
+      "effective_on": null,
+      "expires_on": null,
+      "early_termination": null,
+      "exemptions": null,
+      "successor_id": null,
+      "status": null
     },
     {
       "id": "fixture-guilford-resolution-2026-11-04",
@@ -188,7 +225,45 @@
           "sha256": "6666666666666666666666666666666666666666666666666666666666666666",
           "retrieval": "fetched"
         }
-      ]
+      ],
+      "instrument_number": null,
+      "threshold": null,
+      "scope": null,
+      "effective_on": null,
+      "expires_on": null,
+      "early_termination": null,
+      "exemptions": null,
+      "successor_id": "fixture-guilford-moratorium-2026-11-05",
+      "status": "superseded"
+    },
+    {
+      "id": "fixture-decided-moratorium-2026-09-02",
+      "jurisdiction_id": "decided-county",
+      "event_id": null,
+      "action_type": "moratorium",
+      "outcome": "adopted",
+      "decided_on": "2026-09-02",
+      "votes": "5-0",
+      "unanimous": false,
+      "sequence": 0,
+      "label": "reported_news",
+      "documents": [
+        {
+          "url": "https://news.example.org/fixture-decided",
+          "retrieved_utc": "2026-09-03T12:00:00Z",
+          "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+          "retrieval": "fetched"
+        }
+      ],
+      "instrument_number": null,
+      "threshold": null,
+      "scope": null,
+      "effective_on": null,
+      "expires_on": "2027-03-02",
+      "early_termination": null,
+      "exemptions": null,
+      "successor_id": null,
+      "status": null
     }
   ]
 }

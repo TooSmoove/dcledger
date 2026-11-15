@@ -52,6 +52,7 @@ public sealed partial class RenderedIssueYamlTests
             id: guilford
             name: Guilford County
             platform: legistar
+            coverage_tier: watched
             legistar_client: guilford
             bodies:
               - Board of Commissioners

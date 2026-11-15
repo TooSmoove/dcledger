@@ -46,7 +46,20 @@ public sealed class YamlLedgerReaderTests
         snapshot.LoadErrors.ShouldBeEmpty();
         snapshot.Jurisdictions.ShouldHaveSingleItem().Record.Bodies.ShouldHaveSingleItem().ShouldBe("Board of Commissioners");
         snapshot.Documents.ShouldHaveSingleItem().Record.Id.Value.ShouldBe(Doc);
-        snapshot.Actions.ShouldHaveSingleItem().Record.DecidedOn.ShouldBe(new DateOnly(2026, 1, 15));
+        var action = snapshot.Actions.ShouldHaveSingleItem().Record;
+        action.DecidedOn.ShouldBe(new DateOnly(2026, 1, 15));
+        action.Terms.ShouldBe(new DecisionTerms
+        {
+            InstrumentNumber = "26-01",
+            Threshold = "electrical power demand exceeding 10 megawatts",
+            Scope = "acceptance, processing and approval of development applications for data center facilities",
+            EffectiveOn = new DateOnly(2026, 1, 15),
+            ExpiresOn = new DateOnly(2026, 7, 14),
+            EarlyTermination = "upon adoption of amendments to the development ordinance, whichever occurs first",
+            Exemptions = "applications deemed complete before the effective date",
+            Status = ActionStatus.InEffect,
+        }, "every term is read as written; a quoted value that wraps is one line");
+        snapshot.Jurisdictions.ShouldHaveSingleItem().Record.CoverageTier.ShouldBe(CoverageTier.Watched);
         var loaded = snapshot.Events.ShouldHaveSingleItem();
         loaded.File.ShouldBe("events/fixture-county-boc-2026-11-05.yaml");
         loaded.Record.StartsAt.ShouldBe(new DateTimeOffset(2026, 11, 5, 17, 30, 0, TimeSpan.FromHours(-5)));
@@ -347,6 +360,90 @@ public sealed class YamlLedgerReaderTests
         var yaml = ValidAction.Replace("outcome: adopted_amended\n", string.Empty, StringComparison.Ordinal);
 
         RuleFor("actions/fixture-moratorium-2026-11-05.yaml", yaml).ShouldBe(ValidationRule.RequiredField);
+    }
+
+    [Fact]
+    public void Action_without_terms_has_none()
+    {
+        Load("actions/fixture-moratorium-2026-11-05.yaml", ValidAction).Actions.ShouldHaveSingleItem().Record.Terms.IsEmpty.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Action_reads_its_successor_and_status()
+    {
+        var yaml = ValidAction + "\nsuccessor_id: fixture-moratorium-2027-05-04\nstatus: superseded";
+
+        var terms = Load("actions/fixture-moratorium-2026-11-05.yaml", yaml).Actions.ShouldHaveSingleItem().Record.Terms;
+
+        terms.SuccessorId.ShouldBe("fixture-moratorium-2027-05-04");
+        terms.Status.ShouldBe(ActionStatus.Superseded);
+    }
+
+    [Theory]
+    [InlineData("in_effect", ActionStatus.InEffect)]
+    [InlineData("expired", ActionStatus.Expired)]
+    [InlineData("superseded", ActionStatus.Superseded)]
+    [InlineData("repealed", ActionStatus.Repealed)]
+    public void Action_status_takes_its_four_tokens(string token, ActionStatus expected)
+    {
+        var yaml = ValidAction + "\nstatus: " + token;
+
+        Load("actions/fixture-moratorium-2026-11-05.yaml", yaml).Actions.ShouldHaveSingleItem().Record.Terms.Status.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("instrument_number")]
+    [InlineData("threshold")]
+    [InlineData("scope")]
+    [InlineData("early_termination")]
+    [InlineData("exemptions")]
+    public void A_text_term_is_one_line_of_at_most_500_characters(string key)
+    {
+        var atTheCap = new string('x', DecisionTerms.MaxTextLength);
+
+        Load("actions/fixture-moratorium-2026-11-05.yaml", $"{ValidAction}\n{key}: {atTheCap}").LoadErrors.ShouldBeEmpty("exactly at the cap");
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", $"{ValidAction}\n{key}: {atTheCap}x").ShouldBe(ValidationRule.InvalidValue, "one over the cap");
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", $"{ValidAction}\n{key}: \"\"").ShouldBe(ValidationRule.InvalidValue, "empty: leave the key out");
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", $"{ValidAction}\n{key}: |\n  first line\n  second line").ShouldBe(ValidationRule.InvalidValue, "a block scalar keeps its line breaks");
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", $"{ValidAction}\n{key}: \"tab\\there\"").ShouldBe(ValidationRule.InvalidValue, "a tab");
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", $"{ValidAction}\n{key}: [a, b]").ShouldBe(ValidationRule.InvalidValue, "a list");
+    }
+
+    [Theory]
+    [InlineData("effective_on: 11/05/2026", "not an ISO date")]
+    [InlineData("expires_on: 2027-02-30", "no such day")]
+    [InlineData("expires_on: 2027-02-14T00:00:00Z", "a time, not a date")]
+    [InlineData("successor_id: Fixture_Moratorium", "successor_id isn't a slug")]
+    [InlineData("status: active", "unknown status")]
+    [InlineData("status: In_Effect", "tokens are lowercase")]
+    public void Malformed_term_values_are_rejected(string line, string because)
+    {
+        RuleFor("actions/fixture-moratorium-2026-11-05.yaml", ValidAction + "\n" + line).ShouldBe(ValidationRule.InvalidValue, because);
+    }
+
+    [Theory]
+    [InlineData("watched", CoverageTier.Watched)]
+    [InlineData("decisions", CoverageTier.Decisions)]
+    [InlineData("registered", CoverageTier.Registered)]
+    public void Jurisdiction_reads_its_coverage_tier(string token, CoverageTier expected)
+    {
+        var yaml = $"id: fixture\nname: Fixture County\nplatform: manual\ncoverage_tier: {token}";
+
+        Load("jurisdictions/fixture.yaml", yaml).Jurisdictions.ShouldHaveSingleItem().Record.CoverageTier.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Jurisdiction_needs_a_coverage_tier()
+    {
+        RuleFor("jurisdictions/fixture.yaml", "id: fixture\nname: Fixture County\nplatform: manual").ShouldBe(ValidationRule.RequiredField);
+    }
+
+    [Theory]
+    [InlineData("coverage_tier: full")]
+    [InlineData("coverage_tier: Watched")]
+    public void Coverage_tier_outside_the_vocabulary_is_rejected(string line)
+    {
+        RuleFor("jurisdictions/fixture.yaml", "id: fixture\nname: Fixture County\nplatform: manual\n" + line).ShouldBe(ValidationRule.InvalidValue);
     }
 
     [Fact]

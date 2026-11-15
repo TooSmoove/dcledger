@@ -45,10 +45,12 @@ jobs:
         env:
           ONLY: ${{ inputs.jurisdiction }}
         run: |
-          # A new Legistar jurisdiction is a YAML file, not a workflow change (ADR-0001).
+          # A new Legistar jurisdiction is a YAML file, not a workflow change (ADR-0001). Only a watched one is
+          # ingested: the other coverage tiers have no hearing watch (issue #115).
           ids=()
           for file in data/jurisdictions/*.yaml; do
-            if grep -Eq '^platform:[[:space:]]*"?legistar"?[[:space:]]*(#.*)?$' "$file"; then
+            if grep -Eq '^platform:[[:space:]]*"?legistar"?[[:space:]]*(#.*)?$' "$file" &&
+              grep -Eq '^coverage_tier:[[:space:]]*"?watched"?[[:space:]]*(#.*)?$' "$file"; then
               ids+=("$(basename "$file" .yaml)")
             fi
           done

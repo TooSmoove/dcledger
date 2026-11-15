@@ -41,7 +41,8 @@ One publish runs at a time; a newer one waits and replaces any other that is wai
 
 ## "Last checked"
 
-`tools/ingest_status.py` reads `ingest.yml` runs on main from the last 30 days and takes, per automated jurisdiction,
+`tools/ingest_status.py` reads `ingest.yml` runs on main from the last 30 days and takes, per automated jurisdiction
+(`platform: legistar` and `coverage_tier: watched`, the same rule as the ingest workflow),
 when its newest successful `ingest (<id>)` job finished. Only runs started by the schedule or a dispatch on this
 repository count, and dry runs don't: they're named "ingest (dry run)", and they store nothing and open no issue. A
 jurisdiction with no successful job in 30 days shows as never checked. The search stops once every jurisdiction is

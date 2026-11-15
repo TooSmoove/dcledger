@@ -14,6 +14,12 @@ public static class Freshness
     /// <summary>How long a manual check stays fresh: 7 days, since each one is a reviewed commit.</summary>
     public static TimeSpan ManualStaleAfter { get; } = TimeSpan.FromDays(7);
 
+    /// <summary>
+    /// Whether the freshness promise is made at all: only for a watched jurisdiction (issue #115). The others have no
+    /// hearing watch, so they show no "last checked" and are never stale.
+    /// </summary>
+    public static bool AppliesTo(CoverageTier tier) => tier == CoverageTier.Watched;
+
     /// <summary>The threshold for a jurisdiction on <paramref name="platform"/>.</summary>
     public static TimeSpan StaleAfterFor(Platform platform) => platform == Platform.Manual ? ManualStaleAfter : StaleAfter;
 

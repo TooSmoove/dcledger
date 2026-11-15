@@ -30,13 +30,13 @@ public sealed record ExportJurisdiction
 
     /// <summary>
     /// The last successful ingest check for an automated jurisdiction, or the reviewer's last manual check for a manual
-    /// one; null when there is none.
+    /// one; null when there is none, and for a jurisdiction that isn't watched (issue #115).
     /// </summary>
     public DateTimeOffset? LastCheckedUtc { get; init; }
 
     /// <summary>
     /// True after <see cref="StaleAfter"/> without a successful check (<see cref="Freshness"/>), or when a manual
-    /// check is dated after the export.
+    /// check is dated after the export. Always false for a jurisdiction that isn't watched.
     /// </summary>
     public required bool Stale { get; init; }
 

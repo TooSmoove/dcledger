@@ -78,7 +78,8 @@ internal static class LedgerTables
     /// <summary>
     /// One row per local action (issue #90), in the order of <c>events.json</c>'s actions, documents joined like the
     /// events' and every text column guarded (see <see cref="CsvTextMacro"/>). <c>unanimous</c> is <c>true</c> or
-    /// <c>false</c>; <c>sequence</c> a number.
+    /// <c>false</c>; <c>sequence</c> a number. The decision's terms and <c>status</c> (issue #115) are the last nine
+    /// columns, empty when the record doesn't state them, because new columns are appended.
     /// </summary>
     public const string ActionsCsvQuery = """
         SELECT
@@ -95,16 +96,29 @@ internal static class LedgerTables
             csv_text(string_agg(d.url, ' ' ORDER BY ad.position)) AS document_urls,
             csv_text(string_agg(strftime(d.retrieved_utc, '%Y-%m-%dT%H:%M:%SZ'), ' ' ORDER BY ad.position)) AS document_retrieved_utc,
             csv_text(string_agg(d.sha256, ' ' ORDER BY ad.position)) AS document_sha256,
-            csv_text(string_agg(d.retrieval, ' ' ORDER BY ad.position)) AS document_retrieval
+            csv_text(string_agg(d.retrieval, ' ' ORDER BY ad.position)) AS document_retrieval,
+            csv_text(a.instrument_number) AS instrument_number,
+            csv_text(a.threshold) AS threshold,
+            csv_text(a.scope) AS scope,
+            csv_text(a.effective_on) AS effective_on,
+            csv_text(a.expires_on) AS expires_on,
+            csv_text(a.early_termination) AS early_termination,
+            csv_text(a.exemptions) AS exemptions,
+            csv_text(a.successor_id) AS successor_id,
+            csv_text(a.status) AS status
         FROM actions AS a
         JOIN action_documents AS ad ON ad.action_id = a.id
         JOIN documents AS d ON d.sha256 = ad.sha256
         GROUP BY a.id, a.jurisdiction_id, a.event_id, a.action_type, a.outcome, a.decided_on, a.votes, a.unanimous, a.sequence,
-            a.label
+            a.label, a.instrument_number, a.threshold, a.scope, a.effective_on, a.expires_on, a.early_termination,
+            a.exemptions, a.successor_id, a.status
         ORDER BY a.decided_on, a.id
         """;
 
-    /// <summary>The actions' Parquet rows: native types (<c>decided_on</c> a DATE) and documents as a list of structs.</summary>
+    /// <summary>
+    /// The actions' Parquet rows: native types (<c>decided_on</c>, <c>effective_on</c> and <c>expires_on</c> are DATEs)
+    /// and documents as a list of structs. The terms follow <c>documents</c>, null when not stated.
+    /// </summary>
     public const string ActionsParquetQuery = """
         SELECT
             a.id,
@@ -117,12 +131,22 @@ internal static class LedgerTables
             a.unanimous,
             a.sequence,
             a.label,
-            list({'url': d.url, 'retrieved_utc': d.retrieved_utc, 'sha256': d.sha256, 'retrieval': d.retrieval} ORDER BY ad.position) AS documents
+            list({'url': d.url, 'retrieved_utc': d.retrieved_utc, 'sha256': d.sha256, 'retrieval': d.retrieval} ORDER BY ad.position) AS documents,
+            a.instrument_number,
+            a.threshold,
+            a.scope,
+            CAST(a.effective_on AS DATE) AS effective_on,
+            CAST(a.expires_on AS DATE) AS expires_on,
+            a.early_termination,
+            a.exemptions,
+            a.successor_id,
+            a.status
         FROM actions AS a
         JOIN action_documents AS ad ON ad.action_id = a.id
         JOIN documents AS d ON d.sha256 = ad.sha256
         GROUP BY a.id, a.jurisdiction_id, a.event_id, a.action_type, a.outcome, a.decided_on, a.votes, a.unanimous, a.sequence,
-            a.label
+            a.label, a.instrument_number, a.threshold, a.scope, a.effective_on, a.expires_on, a.early_termination,
+            a.exemptions, a.successor_id, a.status
         ORDER BY a.decided_on, a.id
         """;
 
@@ -204,7 +228,16 @@ internal static class LedgerTables
             votes VARCHAR,
             unanimous BOOLEAN NOT NULL,
             sequence INTEGER NOT NULL,
-            label VARCHAR NOT NULL
+            label VARCHAR NOT NULL,
+            instrument_number VARCHAR,
+            threshold VARCHAR,
+            scope VARCHAR,
+            effective_on VARCHAR,
+            expires_on VARCHAR,
+            early_termination VARCHAR,
+            exemptions VARCHAR,
+            successor_id VARCHAR,
+            status VARCHAR
         )
         """,
         """
@@ -347,6 +380,15 @@ internal static class LedgerTables
                     .AppendValue(action.Unanimous)
                     .AppendValue(action.Sequence)
                     .AppendValue(action.Label.ToToken())
+                    .AppendValue(action.Terms.InstrumentNumber)
+                    .AppendValue(action.Terms.Threshold)
+                    .AppendValue(action.Terms.Scope)
+                    .AppendValue(IsoTime.Date(action.Terms.EffectiveOn))
+                    .AppendValue(IsoTime.Date(action.Terms.ExpiresOn))
+                    .AppendValue(action.Terms.EarlyTermination)
+                    .AppendValue(action.Terms.Exemptions)
+                    .AppendValue(action.Terms.SuccessorId)
+                    .AppendValue(action.Terms.Status?.ToToken())
                     .EndRow();
             }
         }

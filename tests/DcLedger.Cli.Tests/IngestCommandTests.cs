@@ -186,7 +186,7 @@ public sealed class IngestCommandTests : IDisposable
     {
         var data = Path.Combine(_temp, "data");
         Directory.CreateDirectory(Path.Combine(data, "jurisdictions"));
-        await File.WriteAllTextAsync(Path.Combine(data, "jurisdictions", "greensboro.yaml"), "id: greensboro\nname: Greensboro\nplatform: manual\n", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(data, "jurisdictions", "greensboro.yaml"), "id: greensboro\nname: Greensboro\nplatform: manual\ncoverage_tier: watched\n", TestContext.Current.CancellationToken);
 
         var result = await DclRunner.RunWithAsync(Root, "ingest", "--jurisdiction", "greensboro", "--data", data);
 
@@ -194,12 +194,31 @@ public sealed class IngestCommandTests : IDisposable
         result.Error.ShouldContain("greensboro is entered by hand (platform: manual), so there is nothing to ingest.");
     }
 
+    [Theory]
+    [InlineData("decisions")]
+    [InlineData("registered")]
+    public async Task Jurisdiction_that_is_not_watched_is_a_usage_error(string tier)
+    {
+        // Issue #115: only a watched jurisdiction has a hearing watch, whatever its platform.
+        var data = Path.Combine(_temp, "data");
+        Directory.CreateDirectory(Path.Combine(data, "jurisdictions"));
+        await File.WriteAllTextAsync(
+            Path.Combine(data, "jurisdictions", "fixture-county.yaml"),
+            $"id: fixture-county\nname: Fixture County\nplatform: legistar\ncoverage_tier: {tier}\nlegistar_client: fixture\nbodies: [Board of Commissioners]\n",
+            TestContext.Current.CancellationToken);
+
+        var result = await DclRunner.RunWithAsync(Root, "ingest", "--jurisdiction", "fixture-county", "--data", data);
+
+        result.Code.ShouldBe(ExitCodes.Usage);
+        result.Error.ShouldContain($"fixture-county isn't watched (coverage_tier: {tier}), so there is nothing to ingest.");
+    }
+
     [Fact]
     public async Task Broken_jurisdiction_file_is_a_usage_error()
     {
         var data = Path.Combine(_temp, "data");
         Directory.CreateDirectory(Path.Combine(data, "jurisdictions"));
-        await File.WriteAllTextAsync(Path.Combine(data, "jurisdictions", "guilford.yaml"), "id: guilford\nname: Guilford County\nplatform: legistar\nsecret_field: x\n", TestContext.Current.CancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(data, "jurisdictions", "guilford.yaml"), "id: guilford\nname: Guilford County\nplatform: legistar\ncoverage_tier: watched\nsecret_field: x\n", TestContext.Current.CancellationToken);
 
         var result = await DclRunner.RunWithAsync(Root, "ingest", "--jurisdiction", "guilford", "--data", data);
 

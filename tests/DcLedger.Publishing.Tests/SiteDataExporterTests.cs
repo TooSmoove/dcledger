@@ -1,4 +1,6 @@
 using System.Text.Json;
+using DcLedger.Application;
+using DcLedger.Domain;
 using DcLedger.Publishing.SiteData;
 using DcLedger.Testing;
 using Shouldly;
@@ -157,5 +159,69 @@ public sealed class SiteDataExporterTests
         using var document = JsonDocument.Parse(TestFiles.Text(new SiteDataExporter().Export(ExportSamples.Model() with { Actions = [] })[0]));
 
         document.RootElement.GetProperty("actions").GetArrayLength().ShouldBe(0);
+    }
+
+    private static readonly string[] TermKeys =
+    [
+        "instrument_number", "threshold", "scope", "effective_on", "expires_on", "early_termination", "exemptions",
+        "successor_id", "status",
+    ];
+
+    [Fact]
+    public void Jurisdictions_state_their_coverage_tier_last()
+    {
+        using var document = JsonDocument.Parse(EventsJson());
+
+        foreach (var jurisdiction in document.RootElement.GetProperty("jurisdictions").EnumerateArray())
+        {
+            jurisdiction.EnumerateObject().Last().Name.ShouldBe("coverage_tier", "new keys are appended (ADR-0004)");
+            jurisdiction.GetProperty("coverage_tier").GetString().ShouldBe("watched");
+        }
+    }
+
+    [Fact]
+    public void A_jurisdiction_that_is_not_watched_writes_its_tier_and_no_last_check()
+    {
+        var model = ExportModelBuilder.Build(
+            ExportSamples.Snapshot() with
+            {
+                Jurisdictions = [.. ExportSamples.Snapshot().Jurisdictions.Select(j => j.Record.Id == ExportSamples.City.Id ? j with { Record = ExportSamples.City with { CoverageTier = CoverageTier.Decisions } } : j)],
+            },
+            ExportSamples.Status()).Model;
+        using var document = JsonDocument.Parse(TestFiles.Text(new SiteDataExporter().Export(model)[0]));
+
+        var city = document.RootElement.GetProperty("jurisdictions").EnumerateArray().Single(j => j.GetProperty("id").GetString() == ExportSamples.City.Id);
+        city.GetProperty("coverage_tier").GetString().ShouldBe("decisions");
+        city.GetProperty("last_checked_utc").ValueKind.ShouldBe(JsonValueKind.Null);
+        city.GetProperty("stale").GetBoolean().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void An_action_without_terms_writes_each_term_key_as_null_after_its_documents()
+    {
+        using var document = JsonDocument.Parse(EventsJson());
+
+        var action = document.RootElement.GetProperty("actions")[0];
+        var keys = action.EnumerateObject().Select(p => p.Name).ToList();
+        keys[^TermKeys.Length..].ShouldBe(TermKeys);
+        keys[^(TermKeys.Length + 1)].ShouldBe("documents");
+        TermKeys.ShouldAllBe(key => action.GetProperty(key).ValueKind == JsonValueKind.Null);
+    }
+
+    [Fact]
+    public void An_action_with_terms_writes_them_as_recorded()
+    {
+        using var document = JsonDocument.Parse(TestFiles.Text(new SiteDataExporter().Export(ExportSamples.ModelWithTerms())[0]));
+
+        var action = document.RootElement.GetProperty("actions")[0];
+        action.GetProperty("instrument_number").GetString().ShouldBe("=26-01");
+        action.GetProperty("threshold").GetString().ShouldBe("+electrical power demand exceeding 10 megawatts");
+        action.GetProperty("scope").GetString().ShouldBe("-development approvals for <data center> facilities & accessory uses", "JSON keeps text as it is");
+        action.GetProperty("effective_on").GetString().ShouldBe("2026-11-05");
+        action.GetProperty("expires_on").GetString().ShouldBe("2027-05-04");
+        action.GetProperty("early_termination").GetString().ShouldBe("@upon adoption of text amendments, whichever occurs first");
+        action.GetProperty("exemptions").GetString().ShouldBe("'applications deemed complete before the effective date");
+        action.GetProperty("successor_id").GetString().ShouldBe("fixture-county-moratorium-2027-05-04");
+        action.GetProperty("status").GetString().ShouldBe("superseded");
     }
 }

@@ -20,15 +20,21 @@ public static class LedgerValidator
 
         var errors = new List<ValidationError>(snapshot.LoadErrors);
         var jurisdictionIds = snapshot.Jurisdictions.Select(j => j.Record.Id).ToHashSet(StringComparer.Ordinal);
-        var platforms = new Dictionary<string, Platform>(StringComparer.Ordinal);
+        var jurisdictions = new Dictionary<string, Jurisdiction>(StringComparer.Ordinal);
         foreach (var (_, jurisdiction) in snapshot.Jurisdictions)
         {
-            platforms.TryAdd(jurisdiction.Id, jurisdiction.Platform); // a duplicate also fails ID_MISMATCH below
+            jurisdictions.TryAdd(jurisdiction.Id, jurisdiction); // a duplicate also fails ID_MISMATCH below
         }
         var events = new Dictionary<string, LedgerEvent>(StringComparer.Ordinal);
         foreach (var (_, ledgerEvent) in snapshot.Events)
         {
             events.TryAdd(ledgerEvent.Id, ledgerEvent); // a duplicate also fails ID_MISMATCH below
+        }
+
+        var actions = new Dictionary<string, LocalAction>(StringComparer.Ordinal);
+        foreach (var (_, action) in snapshot.Actions)
+        {
+            actions.TryAdd(action.Id, action); // a duplicate also fails ID_MISMATCH below
         }
 
         var documents = new Dictionary<Sha256Hash, Document>();
@@ -52,7 +58,8 @@ public static class LedgerValidator
         {
             CheckId(errors, file, ledgerEvent.Id);
             CheckJurisdiction(errors, file, ledgerEvent.Id, ledgerEvent.JurisdictionId, jurisdictionIds);
-            CheckEventPlatform(errors, file, ledgerEvent, platforms);
+            CheckEventPlatform(errors, file, ledgerEvent, jurisdictions);
+            CheckEventTier(errors, file, ledgerEvent, jurisdictions);
             CheckEvidence(errors, file, ledgerEvent.Id, ledgerEvent.DocumentIds, ledgerEvent.Label, documents);
             CheckStartTime(errors, file, ledgerEvent);
             CheckLocation(errors, file, ledgerEvent);
@@ -64,6 +71,8 @@ public static class LedgerValidator
             CheckJurisdiction(errors, file, action.Id, action.JurisdictionId, jurisdictionIds);
             CheckEvidence(errors, file, action.Id, action.DocumentIds, action.Label, documents);
             CheckActionEvent(errors, file, action, events);
+            CheckActionTier(errors, file, action, jurisdictions);
+            DecisionTermsRules.Check(errors, file, action, actions);
         }
 
         var present = snapshot.RecordFiles.ToHashSet(StringComparer.Ordinal);
@@ -111,12 +120,35 @@ public static class LedgerValidator
     /// An event's platform is its jurisdiction's (issue #27): the calendar UID is built from it, and a manual
     /// jurisdiction's meetings are entered by hand, so an event claiming another platform is a mistake.
     /// </summary>
-    private static void CheckEventPlatform(List<ValidationError> errors, string file, LedgerEvent ledgerEvent, Dictionary<string, Platform> platforms)
+    private static void CheckEventPlatform(List<ValidationError> errors, string file, LedgerEvent ledgerEvent, Dictionary<string, Jurisdiction> jurisdictions)
     {
-        if (platforms.TryGetValue(ledgerEvent.JurisdictionId, out var platform) && platform != ledgerEvent.Platform)
+        if (jurisdictions.TryGetValue(ledgerEvent.JurisdictionId, out var jurisdiction) && jurisdiction.Platform != ledgerEvent.Platform)
         {
             errors.Add(new ValidationError(file, ledgerEvent.Id, ValidationRule.PlatformMismatch,
-                $"platform is {ledgerEvent.Platform.ToToken()}, but jurisdiction '{ledgerEvent.JurisdictionId}' is {platform.ToToken()}."));
+                $"platform is {ledgerEvent.Platform.ToToken()}, but jurisdiction '{ledgerEvent.JurisdictionId}' is {jurisdiction.Platform.ToToken()}."));
+        }
+    }
+
+    /// <summary>
+    /// Only a watched jurisdiction has hearings on the radar (issue #115): an event anywhere else would promise a
+    /// watch that nobody keeps.
+    /// </summary>
+    private static void CheckEventTier(List<ValidationError> errors, string file, LedgerEvent ledgerEvent, Dictionary<string, Jurisdiction> jurisdictions)
+    {
+        if (jurisdictions.TryGetValue(ledgerEvent.JurisdictionId, out var jurisdiction) && jurisdiction.CoverageTier != CoverageTier.Watched)
+        {
+            errors.Add(new ValidationError(file, ledgerEvent.Id, ValidationRule.TierMismatch,
+                $"jurisdiction '{jurisdiction.Id}' has coverage_tier {jurisdiction.CoverageTier.ToToken()}; only a watched jurisdiction has events."));
+        }
+    }
+
+    /// <summary>A registered jurisdiction is listed only (issue #115); recording its decisions makes it <c>decisions</c>.</summary>
+    private static void CheckActionTier(List<ValidationError> errors, string file, LocalAction action, Dictionary<string, Jurisdiction> jurisdictions)
+    {
+        if (jurisdictions.TryGetValue(action.JurisdictionId, out var jurisdiction) && jurisdiction.CoverageTier == CoverageTier.Registered)
+        {
+            errors.Add(new ValidationError(file, action.Id, ValidationRule.TierMismatch,
+                $"jurisdiction '{jurisdiction.Id}' has coverage_tier registered, which is listed only; set it to decisions to record this."));
         }
     }
 

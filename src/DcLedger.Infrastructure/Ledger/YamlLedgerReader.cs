@@ -27,6 +27,8 @@ public sealed class YamlLedgerReader : ILedgerReader
     private static readonly Dictionary<string, EvidenceLabel> Labels = ByToken<EvidenceLabel>(EnumTokens.ToToken);
     private static readonly Dictionary<string, ActionType> ActionTypes = ByToken<ActionType>(EnumTokens.ToToken);
     private static readonly Dictionary<string, ActionOutcome> Outcomes = ByToken<ActionOutcome>(EnumTokens.ToToken);
+    private static readonly Dictionary<string, CoverageTier> CoverageTiers = ByToken<CoverageTier>(EnumTokens.ToToken);
+    private static readonly Dictionary<string, ActionStatus> ActionStatuses = ByToken<ActionStatus>(EnumTokens.ToToken);
 
     /// <summary>True for paths like <c>events/some-id.yaml</c>: a record file relative to the data directory.</summary>
     public static bool IsRecordPath(string relativePath)
@@ -159,8 +161,9 @@ public sealed class YamlLedgerReader : ILedgerReader
         var client = f.Optional("legistar_client");
         var bodies = f.List("bodies");
         var lastManualCheck = f.UtcTimestamp("last_manual_check_utc", required: false);
+        var coverageTier = f.Choice("coverage_tier", CoverageTiers);
 
-        return id is null || name is null || platform is null
+        return id is null || name is null || platform is null || coverageTier is null
             ? null
             : new Jurisdiction
             {
@@ -170,6 +173,7 @@ public sealed class YamlLedgerReader : ILedgerReader
                 LegistarClient = client,
                 Bodies = bodies,
                 LastManualCheckUtc = lastManualCheck,
+                CoverageTier = coverageTier.Value,
             };
     }
 
@@ -268,6 +272,7 @@ public sealed class YamlLedgerReader : ILedgerReader
         var sequence = f.OptionalWholeNumber("sequence", int.MaxValue);
         var label = f.Choice("label", Labels);
         var documentIds = f.Hashes("document_ids");
+        var terms = ReadTerms(f);
 
         return id is null || jurisdictionId is null || actionType is null || outcome is null || decidedOn is null || label is null
             ? null
@@ -284,8 +289,23 @@ public sealed class YamlLedgerReader : ILedgerReader
                 Sequence = (int)(sequence ?? 0),
                 Label = label.Value,
                 DocumentIds = documentIds,
+                Terms = terms,
             };
     }
+
+    /// <summary>The optional terms of a decision (issue #115), flat keys of the action record.</summary>
+    private static DecisionTerms ReadTerms(YamlFields f) => new()
+    {
+        InstrumentNumber = f.TermText("instrument_number"),
+        Threshold = f.TermText("threshold"),
+        Scope = f.TermText("scope"),
+        EffectiveOn = f.OptionalDate("effective_on"),
+        ExpiresOn = f.OptionalDate("expires_on"),
+        EarlyTermination = f.TermText("early_termination"),
+        Exemptions = f.TermText("exemptions"),
+        SuccessorId = f.OptionalSlug("successor_id"),
+        Status = f.OptionalChoice("status", ActionStatuses),
+    };
 
     private static Dictionary<string, T> ByToken<T>(Func<T, string> token)
         where T : struct, Enum =>

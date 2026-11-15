@@ -2,6 +2,7 @@
 id: fixture-county
 name: Fixture County
 platform: legistar
+coverage_tier: watched
 legistar_client: fixture
 bodies:
   - Board of Commissioners

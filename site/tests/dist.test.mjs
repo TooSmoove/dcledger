@@ -54,6 +54,8 @@ test('the build produced the home, radar, about, 404, item and jurisdiction page
     'jurisdictions/guilford/index.html',
     'jurisdictions/fixture-city/index.html',
     'jurisdictions/never-checked/index.html',
+    'jurisdictions/decided-county/index.html',
+    'jurisdictions/registered-county/index.html',
     'map/index.html',
   ]) {
     assert.ok(names.includes(expected), `${expected} (built: ${names.join(', ')})`);
@@ -380,6 +382,85 @@ test('jurisdiction pages list their decisions with sourcing and link the meeting
   assert.doesNotMatch(city, /Meeting page/, 'no meeting to link');
 
   assert.doesNotMatch(page('jurisdictions/never-checked/index.html'), /decisions-heading/);
+});
+
+test('each jurisdiction page states its coverage tier in text (#115)', () => {
+  assert.match(page('jurisdictions/guilford/index.html'), /Coverage: hearings watched\./);
+  assert.match(page('jurisdictions/decided-county/index.html'), /Coverage: decisions only\./);
+  assert.match(page('jurisdictions/registered-county/index.html'), /Coverage: listed only\./);
+});
+
+test('freshness, the calendar and the meeting table are for watched jurisdictions only (AC10, #115)', () => {
+  for (const id of ['decided-county', 'registered-county']) {
+    const html = page(`jurisdictions/${id}/index.html`);
+    assert.doesNotMatch(html, /Last checked|Never checked|Stale:/, `${id}: no freshness`);
+    assert.doesNotMatch(html, /\.ics"/, `${id}: no calendar link`);
+    assert.doesNotMatch(html, /<table/, `${id}: no meeting table`);
+  }
+  assert.match(page('jurisdictions/guilford/index.html'), /<table/);
+
+  const [watchedList, otherList] = radar.split('Other jurisdictions');
+  assert.ok(otherList, 'the radar lists the jurisdictions that are not watched');
+  assert.doesNotMatch(watchedList, /decided-county|registered-county/);
+  assert.match(otherList, /href="\/jurisdictions\/decided-county\/"/);
+  assert.match(otherList, /href="\/jurisdictions\/registered-county\/"/);
+  assert.doesNotMatch(otherList, /Last checked|Never checked|Stale:/);
+});
+
+test('a decision renders every term its record states, and only those (#115)', () => {
+  const guilford = page('jurisdictions/guilford/index.html');
+  const moratorium = guilford.slice(
+    guilford.indexOf('id="decision-fixture-guilford-moratorium-2026-11-05"'),
+  );
+  assert.match(moratorium, /<dt>Status<\/dt>\s*<dd>In effect<\/dd>/);
+  assert.match(moratorium, /<dt>Ordinance or resolution number<\/dt>\s*<dd>2026-11<\/dd>/);
+  assert.match(
+    moratorium,
+    /<dt>Threshold<\/dt>\s*<dd>\u201Celectrical power demand exceeding 10 megawatts &lt;script&gt;/,
+  );
+  assert.match(moratorium, /<dt>Covers<\/dt>/);
+  assert.match(
+    moratorium,
+    /<dt>Effective<\/dt>\s*<dd><time datetime="2026-11-05">Thu, Nov 5, 2026<\/time><\/dd>/,
+  );
+  assert.match(
+    moratorium,
+    /<dt>Expires<\/dt>\s*<dd><time datetime="2028-05-05">Fri, May 5, 2028<\/time><\/dd>/,
+  );
+  assert.match(moratorium, /<dt>Ends earlier<\/dt>/);
+  assert.match(moratorium, /<dt>Exemptions<\/dt>/);
+
+  const meeting = page('items/fixture-guilford-boc-2026-11-05/index.html');
+  assert.match(meeting, /<dt>Expires<\/dt>/, 'the meeting page shows the terms too');
+
+  const city = page('jurisdictions/fixture-city/index.html');
+  assert.doesNotMatch(
+    city,
+    /<dt>(Status|Threshold|Expires)<\/dt>/,
+    'no terms recorded, none shown',
+  );
+
+  const decided = page('jurisdictions/decided-county/index.html');
+  assert.match(decided, /Moratorium: Adopted/, 'a decisions-only jurisdiction lists its decisions');
+  assert.match(decided, /<dt>Expires<\/dt>/);
+  assert.doesNotMatch(decided, /<dt>Status<\/dt>/, 'one term, one row');
+});
+
+test('a superseded decision links the decision that replaced it (#115)', () => {
+  const guilford = page('jurisdictions/guilford/index.html');
+  const resolution = guilford.slice(
+    guilford.indexOf('id="decision-fixture-guilford-resolution-2026-11-04"'),
+  );
+  assert.match(resolution, /<dt>Status<\/dt>\s*<dd>Replaced or extended by a later decision<\/dd>/);
+  assert.match(
+    resolution,
+    /<dt>Replaced or extended by<\/dt>\s*<dd>\s*<a href="\/jurisdictions\/guilford\/#decision-fixture-guilford-moratorium-2026-11-05">/,
+  );
+  assert.match(
+    guilford,
+    /id="decision-fixture-guilford-moratorium-2026-11-05"/,
+    'the anchor exists',
+  );
 });
 
 test('source-derived text is escaped everywhere it appears', () => {

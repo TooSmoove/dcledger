@@ -10,7 +10,8 @@ namespace DcLedger.Publishing.SiteData;
 /// <summary>
 /// Writes <c>site-data/events.json</c>, the site's only input (ADR-0001, ADR-0004). Field names and order are spelled
 /// out here and mirrored by <c>site/src/content.config.ts</c>; a breaking change bumps <see cref="SchemaVersion"/>.
-/// Adding a key the site can ignore, such as <c>actions</c> (issue #25), isn't breaking.
+/// Adding a key the site can ignore, such as <c>actions</c> (issue #25) or a jurisdiction's <c>coverage_tier</c> and a
+/// decision's terms (issue #115), isn't breaking.
 /// The output is LF-terminated UTF-8 without a BOM, the same on every operating system.
 /// </summary>
 public sealed class SiteDataExporter : IExporter
@@ -71,6 +72,7 @@ public sealed class SiteDataExporter : IExporter
         WriteStringOrNull(json, "last_checked_utc", item.LastCheckedUtc is { } lastChecked ? IsoTime.Utc(lastChecked) : null);
         json.WriteBoolean("stale", item.Stale);
         json.WriteNumber("stale_after_hours", (int)item.StaleAfter.TotalHours);
+        json.WriteString("coverage_tier", item.Jurisdiction.CoverageTier.ToToken());
         json.WriteEndObject();
     }
 
@@ -109,7 +111,25 @@ public sealed class SiteDataExporter : IExporter
         json.WriteNumber("sequence", action.Sequence);
         json.WriteString("label", action.Label.ToToken());
         WriteDocuments(json, item.Documents);
+        WriteTerms(json, action.Terms);
         json.WriteEndObject();
+    }
+
+    /// <summary>
+    /// A decision's terms and status (issue #115), added within schema version 1 after <c>documents</c>: each key is
+    /// always written, null when the record doesn't state it. Dates are <c>YYYY-MM-DD</c>.
+    /// </summary>
+    private static void WriteTerms(Utf8JsonWriter json, DecisionTerms terms)
+    {
+        WriteStringOrNull(json, "instrument_number", terms.InstrumentNumber);
+        WriteStringOrNull(json, "threshold", terms.Threshold);
+        WriteStringOrNull(json, "scope", terms.Scope);
+        WriteStringOrNull(json, "effective_on", IsoTime.Date(terms.EffectiveOn));
+        WriteStringOrNull(json, "expires_on", IsoTime.Date(terms.ExpiresOn));
+        WriteStringOrNull(json, "early_termination", terms.EarlyTermination);
+        WriteStringOrNull(json, "exemptions", terms.Exemptions);
+        WriteStringOrNull(json, "successor_id", terms.SuccessorId);
+        WriteStringOrNull(json, "status", terms.Status?.ToToken());
     }
 
     /// <summary>

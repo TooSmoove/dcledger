@@ -37,6 +37,21 @@ public sealed class RadarCalendarExporterTests
             .ShouldBe([ExportSamples.November3.Uid]);
     }
 
+    [Theory]
+    [InlineData(CoverageTier.Decisions)]
+    [InlineData(CoverageTier.Registered)]
+    public void A_jurisdiction_that_is_not_watched_gets_no_calendar(CoverageTier tier)
+    {
+        var model = ExportSamples.Model();
+        var notWatched = model with
+        {
+            Jurisdictions = [.. model.Jurisdictions.Select(j => j.Jurisdiction.Id == ExportSamples.City.Id ? j with { Jurisdiction = j.Jurisdiction with { CoverageTier = tier } } : j)],
+        };
+
+        new RadarCalendarExporter().Export(notWatched).Select(file => file.Path).ShouldBe(
+            [ExportPaths.Radar, ExportPaths.JurisdictionRadar(ExportSamples.County.Id)]);
+    }
+
     [Fact]
     public void Lines_end_in_crlf_fit_in_75_octets_and_there_is_no_bom()
     {

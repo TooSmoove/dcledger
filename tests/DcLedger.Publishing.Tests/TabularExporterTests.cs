@@ -28,7 +28,8 @@ public sealed class TabularExporterTests
     private static readonly string[] ActionsHeader =
     [
         "id", "jurisdiction_id", "event_id", "action_type", "outcome", "decided_on", "votes", "unanimous", "sequence", "label",
-        "document_urls", "document_retrieved_utc", "document_sha256", "document_retrieval",
+        "document_urls", "document_retrieved_utc", "document_sha256", "document_retrieval", "instrument_number", "threshold",
+        "scope", "effective_on", "expires_on", "early_termination", "exemptions", "successor_id", "status",
     ];
 
     /// <summary>The CSV as text, without its BOM (asserted on the bytes below).</summary>
@@ -355,5 +356,75 @@ public sealed class TabularExporterTests
         var csv = EventsCsv(model);
 
         Rfc4180.Parse(csv).ShouldHaveSingleItem().ShouldBe(Header);
+    }
+
+    [Fact]
+    public void Decision_terms_are_the_last_actions_columns_and_text_terms_are_guarded()
+    {
+        var csv = TestFiles.Text(TestFiles.Single(new TabularExporter().Export(ExportSamples.ModelWithTerms()), ExportPaths.ActionsCsv)).TrimStart('\uFEFF');
+
+        var rows = Rfc4180.Parse(csv);
+
+        ActionsHeader[13].ShouldBe("document_retrieval", "the terms come after every column published before #115");
+        rows[0].ShouldBe(ActionsHeader);
+        rows[1][14..].ShouldBe(
+        [
+            "'=26-01",
+            "'+electrical power demand exceeding 10 megawatts",
+            "'-development approvals for <data center> facilities & accessory uses",
+            "2026-11-05",
+            "2027-05-04",
+            "'@upon adoption of text amendments, whichever occurs first",
+            "''applications deemed complete before the effective date",
+            "fixture-county-moratorium-2027-05-04",
+            "superseded",
+        ]);
+        rows[1][14..].Select(Unguard).ShouldBe(
+        [
+            ExportSamples.FullTerms.InstrumentNumber, ExportSamples.FullTerms.Threshold, ExportSamples.FullTerms.Scope, "2026-11-05", "2027-05-04",
+            ExportSamples.FullTerms.EarlyTermination, ExportSamples.FullTerms.Exemptions, ExportSamples.FullTerms.SuccessorId, "superseded",
+        ]);
+    }
+
+    [Fact]
+    public void An_action_without_terms_has_empty_term_columns()
+    {
+        Rfc4180.Parse(ActionsCsv())[1][14..].ShouldAllBe(cell => cell.Length == 0);
+    }
+
+    [Fact]
+    public void Actions_parquet_has_terms_with_native_dates_after_the_documents()
+    {
+        var directory = Directory.CreateTempSubdirectory("dcl-parquet-");
+        try
+        {
+            var path = Path.Combine(directory.FullName, "actions.parquet");
+            File.WriteAllBytes(path, TestFiles.Single(new TabularExporter().Export(ExportSamples.ModelWithTerms()), ExportPaths.ActionsParquet).Content.ToArray());
+
+            var row = ReadParquet(
+                "SELECT instrument_number, typeof(effective_on), expires_on, early_termination, successor_id, status FROM parquet", path)
+                .ShouldHaveSingleItem();
+            var columns = ReadParquet("SELECT name FROM (DESCRIBE SELECT * FROM parquet)", path).Select(column => (string)column[0]!).ToList();
+
+            row[0].ShouldBe("=26-01", "Parquet keeps values unguarded");
+            row[1].ShouldBe("DATE");
+            var expires = row[2] switch
+            {
+                DateOnly date => date,
+                DateTime dateTime => DateOnly.FromDateTime(dateTime),
+                var other => throw new InvalidOperationException($"expires_on read back as {other?.GetType().Name ?? "null"}."),
+            };
+            expires.ShouldBe(new DateOnly(2027, 5, 4));
+            (row[3], row[4], row[5]).ShouldBe(((object?)ExportSamples.FullTerms.EarlyTermination, (object?)ExportSamples.FullTerms.SuccessorId, (object?)"superseded"));
+            columns[columns.IndexOf("documents")..].ShouldBe(
+            [
+                "documents", "instrument_number", "threshold", "scope", "effective_on", "expires_on", "early_termination", "exemptions",
+                "successor_id", "status",
+            ]);
+        }
+        finally
+        {
+            directory.Delete(recursive: true);
+        }
     }
 }

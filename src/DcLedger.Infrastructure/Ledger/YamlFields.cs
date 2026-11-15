@@ -159,12 +159,17 @@ internal sealed partial class YamlFields
 
     /// <summary>An optional fixed token: <paramref name="absent"/> when the key is left out; reported when it isn't allowed.</summary>
     public TEnum OptionalChoice<TEnum>(string key, IReadOnlyDictionary<string, TEnum> allowed, TEnum absent)
+        where TEnum : struct, Enum =>
+        OptionalChoice(key, allowed) ?? absent;
+
+    /// <summary>An optional fixed token: null when the key is left out; reported, and null, when it isn't allowed.</summary>
+    public TEnum? OptionalChoice<TEnum>(string key, IReadOnlyDictionary<string, TEnum> allowed)
         where TEnum : struct, Enum
     {
         var value = Optional(key);
         if (value is null)
         {
-            return absent;
+            return null;
         }
 
         if (allowed.TryGetValue(value, out var choice))
@@ -173,7 +178,42 @@ internal sealed partial class YamlFields
         }
 
         Add(ValidationRule.InvalidValue, $"'{key}' must be one of: {string.Join(", ", allowed.Keys)}.");
-        return absent;
+        return null;
+    }
+
+    /// <summary>
+    /// An optional term copied from an archived document (issue #115): absent is fine; present, it is one line of at
+    /// most <see cref="DecisionTerms.MaxTextLength"/> characters with something in it. A YAML block scalar
+    /// (<c>|</c> or <c>&gt;</c>) keeps a line break and is rejected; a quoted value may wrap across lines.
+    /// </summary>
+    public string? TermText(string key)
+    {
+        var value = Optional(key);
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            Add(ValidationRule.InvalidValue, $"'{key}' is empty; leave the key out when the document doesn't state it.");
+            return null;
+        }
+
+        if (value.Length > DecisionTerms.MaxTextLength)
+        {
+            Add(ValidationRule.InvalidValue,
+                string.Create(CultureInfo.InvariantCulture, $"'{key}' is {value.Length} characters; terms are capped at {DecisionTerms.MaxTextLength}. Copy the operative words; the cited document holds the rest."));
+            return null;
+        }
+
+        if (value.Any(char.IsControl))
+        {
+            Add(ValidationRule.InvalidValue, $"'{key}' must be a single line without tabs or line breaks; use a quoted value, not a block scalar.");
+            return null;
+        }
+
+        return value;
     }
 
     public Sha256Hash? Hash(string key)
@@ -270,9 +310,13 @@ internal sealed partial class YamlFields
         return null;
     }
 
-    public DateOnly? Date(string key)
+    public DateOnly? Date(string key) => ParseDate(key, Required(key));
+
+    /// <summary>Like <see cref="Date"/>, but a missing key is null without an error.</summary>
+    public DateOnly? OptionalDate(string key) => ParseDate(key, Optional(key));
+
+    private DateOnly? ParseDate(string key, string? value)
     {
-        var value = Required(key);
         if (value is null)
         {
             return null;

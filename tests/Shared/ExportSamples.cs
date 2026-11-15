@@ -111,6 +111,30 @@ internal static class ExportSamples
         DocumentIds = [CountyActionDetail1600.Id],
     };
 
+    /// <summary>
+    /// Every decision term (issue #115), with each text term starting with a CSV formula trigger and one holding markup,
+    /// so the exporters' guard and escaping show. Not on <see cref="November5Moratorium"/>: tests add it where needed.
+    /// </summary>
+    public static readonly DecisionTerms FullTerms = new()
+    {
+        InstrumentNumber = "=26-01",
+        Threshold = "+electrical power demand exceeding 10 megawatts",
+        Scope = "-development approvals for <data center> facilities & accessory uses",
+        EffectiveOn = new DateOnly(2026, 11, 5),
+        ExpiresOn = new DateOnly(2027, 5, 4),
+        EarlyTermination = "@upon adoption of text amendments, whichever occurs first",
+        Exemptions = "'applications deemed complete before the effective date",
+        SuccessorId = "fixture-county-moratorium-2027-05-04",
+        Status = ActionStatus.Superseded,
+    };
+
+    /// <summary>The model with <see cref="FullTerms"/> on the Nov 5 decision.</summary>
+    public static ExportModel ModelWithTerms()
+    {
+        var model = Model();
+        return model with { Actions = [.. model.Actions.Select(item => item with { Action = item.Action with { Terms = FullTerms } })] };
+    }
+
     /// <summary>The ledger as the YAML reader would load it, records deliberately out of order.</summary>
     public static LedgerSnapshot Snapshot() => new()
     {
