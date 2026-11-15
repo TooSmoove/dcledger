@@ -1,7 +1,7 @@
 # DRY RUN for #117 (issue #127). Discarded with its branch; never merged to main.
-id: 2026-11-15-guilford-nov-5-title
-reported_on: 2026-11-15
-corrected_on: 2026-11-15
+id: 2026-11-22-guilford-nov-5-title
+reported_on: 2026-11-22
+corrected_on: 2026-11-22
 record_ids:
   - guilford-board-of-commissioners-2026-11-05
 summary: "The title said \"Board of Commissioners Meeting 11-05-2026\"; it now says \"Board of Commissioners regular meeting, Nov 5, 2026\", which matches the agenda."
