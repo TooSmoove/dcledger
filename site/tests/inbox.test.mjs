@@ -95,7 +95,7 @@ test('signed in, the inbox lists open reports newest first, escaped, with deadli
   const html = await response.text();
   assert.ok(html.indexOf('id="r-2"') < html.indexOf('id="r-1"'), 'newest first');
   assert.doesNotMatch(html, /id="r-3"/, 'settled reports are hidden by default');
-  assert.doesNotMatch(html, /<script>/);
+  assert.doesNotMatch(html, /<script>/i);
   assert.match(html, /The &lt;script&gt;alert\(1\)&lt;\/script&gt; vote\nwas 8-1 &amp; not 9-0\./);
   assert.doesNotMatch(html, /href="javascript:/, 'only web addresses become links');
   assert.match(html, /href="https:\/\/example\.gov\/minutes\.pdf" rel="noreferrer noopener"/);
