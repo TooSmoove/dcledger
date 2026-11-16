@@ -179,8 +179,8 @@ internal static class ExportSamples
     {
         var thumbnail = new Thumbnail { Sha256 = Sha256Hash.Compute(ThumbnailBytes), Width = 240, Height = 311, Reviewed = true };
         var detail = CountyActionDetail1600 with { Kind = DocumentKind.Legislation, Thumbnail = thumbnail };
-        var unlisted = Doc("fixture unlisted minutes", "https://fixture-county.example.org/minutes/1590.pdf", Utc(2026, 10, 1, 12, 0, 0), "application/pdf", 2345, SourceType.Official)
-            with { Kind = DocumentKind.Minutes, Thumbnail = thumbnail };
+        var unlistedSource = Doc("fixture unlisted minutes", "https://fixture-county.example.org/minutes/1590.pdf", Utc(2026, 10, 1, 12, 0, 0), "application/pdf", 2345, SourceType.Official);
+        var unlisted = unlistedSource with { Kind = DocumentKind.Minutes, Thumbnail = thumbnail };
         var snapshot = Snapshot();
         snapshot = snapshot with
         {
