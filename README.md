@@ -12,7 +12,7 @@ The site is at <https://ncdcledger.org> (unlisted until launch).
 - **Downloads:** `/events.csv`, `/events.parquet`, `/actions.csv` and `/actions.parquet`. Every column is described in
   [`docs/data-dictionary.md`](docs/data-dictionary.md).
 - **What stays stable:** IDs, addresses, columns and vocabularies don't change without 90 days' notice in the
-  [CHANGELOG](CHANGELOG.md). See [`docs/export.md`, "Stability"](docs/export.md#stability).
+  [CHANGELOG](CHANGELOG.md). See [`docs/stability.md`](docs/stability.md).
 - **The reviewed records** are YAML files in [`data/`](data/README.md), which also explains how to add and review them.
 
 ## The code

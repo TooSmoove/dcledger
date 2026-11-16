@@ -1,0 +1,7 @@
+# Readers report mistakes, ask questions and ask us to stop fetching through the site's form, not GitHub issues
+# (docs/reports.md). Blank issues are off and there are no templates, so the "New issue" page shows only this link.
+blank_issues_enabled: false
+contact_links:
+  - name: Report a mistake, ask a question, or ask us to stop fetching
+    url: https://ncdcledger.org/report/
+    about: Use the form on ncdcledger.org. Reports are private and answered within 48 hours.

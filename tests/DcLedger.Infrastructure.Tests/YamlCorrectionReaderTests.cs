@@ -17,7 +17,7 @@ public sealed class YamlCorrectionReaderTests
         record_ids:
           - fixture-moratorium-2026-11-05
         summary: "The vote was recorded as 9-0; the minutes show 8-1."
-        issue: 131
+        report: 131
         """;
 
     [Fact]
@@ -33,7 +33,7 @@ public sealed class YamlCorrectionReaderTests
         correction.CorrectedOn.ShouldBe(new DateOnly(2026, 11, 24));
         correction.RecordIds.ShouldBe(["fixture-moratorium-2026-11-05"]);
         correction.Summary.ShouldBe("The vote was recorded as 9-0; the minutes show 8-1.");
-        correction.Issue.ShouldBe(131);
+        correction.Report.ShouldBe(131);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class YamlCorrectionReaderTests
             """).Corrections.ShouldHaveSingleItem().Record;
 
         correction.RecordIds.ShouldBeEmpty();
-        correction.Issue.ShouldBeNull();
+        correction.Report.ShouldBeNull();
     }
 
     [Theory]

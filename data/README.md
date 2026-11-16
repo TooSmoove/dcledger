@@ -28,7 +28,7 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 - `location` is optional: the proposed project's site, as decimal degrees with at most 6 decimals, inside North
   Carolina (`LOCATION_OUT_OF_RANGE` otherwise; usually a swapped pair or a missing minus sign). Only `lat` and `lon`:
   never a name, address or owner. It puts the item on the map.
-- A corrections log entry (`corrections/<id>.yaml`, see "Logging a correction") names only jurisdictions, events or actions that exist (`FK_MISSING`), each once; is reported on or after Nov 22, 2026, when the log opened, and corrected on or after it was reported; and cites an issue number of 1 or more (`CORRECTION_INVALID`). Its `summary` is one line of at most 500 characters (`INVALID_VALUE`). Entries are permanent like every record (`SLUG_CHANGED`).
+- A corrections log entry (`corrections/<id>.yaml`, see "Logging a correction") names only jurisdictions, events or actions that exist (`FK_MISSING`), each once; is reported on or after Nov 22, 2026, when the log opened, and corrected on or after it was reported; and cites a report number of 1 or more (`CORRECTION_INVALID`). Its `summary` is one line of at most 500 characters (`INVALID_VALUE`). Entries are permanent like every record (`SLUG_CHANGED`).
 - Files are UTF-8, at most 64 KB, one YAML mapping, no anchors or aliases. Quote values that start with a special character or look like numbers you want kept as text.
 
 ## Shapes
@@ -252,12 +252,13 @@ request (issue #117). The log is listed on `/methodology/#log`; entries are neve
    record_ids:                    # optional: the jurisdictions, events or actions changed
      - guilford-moratorium-2026-11-05
    summary: "The vote was recorded as 9-0; the minutes show 8-1."
-   issue: 131                     # optional: the GitHub issue it was reported in
+   report: 131                    # optional: the form report it came from (R-131 in the inbox)
    ```
 
 3. **Word the summary** from `docs/wording-bank.md` ("Corrections log entries"): what was wrong and what the record
    says now, in neutral words, with no one's name.
-4. **Reply on the issue** (`docs/wording-bank.md`, "Replies to correction reports") and close it once the fix is live.
+4. **Reply to the reporter** by email from the inbox if they left an address (`docs/wording-bank.md`, "Replies to
+   correction reports"), and set the report's status once the fix is live (`docs/reports.md`).
 
 A change to the page's own wording that readers relied on gets an entry with no `record_ids`. A label moving from
 reported to confirmed because a new official record was archived is routine and gets none.

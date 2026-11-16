@@ -58,6 +58,10 @@ test('the build produced the home, radar, about, 404, item and jurisdiction page
     'jurisdictions/decided-county/index.html',
     'jurisdictions/registered-county/index.html',
     'map/index.html',
+    'report/index.html',
+    'report/thanks/index.html',
+    'data/index.html',
+    'changelog/index.html',
   ]) {
     assert.ok(names.includes(expected), `${expected} (built: ${names.join(', ')})`);
   }
@@ -227,9 +231,9 @@ test('the radar links the calendar, feed and downloads, and the build carries th
   }
 });
 
-test('published page addresses and files never disappear or move (docs/export.md, Stability, #116)', () => {
+test('published page addresses and files never disappear or move (docs/stability.md, #116)', () => {
   // Spelled out, not derived from the build: renaming a page or a file fails here. New ones may be added. A breaking
-  // change updates this list, docs/export.md and CHANGELOG.md together, 90 days after announcing it.
+  // change updates this list, docs/stability.md and CHANGELOG.md together, 90 days after announcing it.
   const frozenPages = [
     'radar/index.html',
     'map/index.html',
@@ -264,18 +268,65 @@ test('published page addresses and files never disappear or move (docs/export.md
   );
 });
 
-test('the about page links the stability promise, the data dictionary and the changelog (#116)', () => {
+test('the about page links the stability promise, the data dictionary and the changelog on the site (#116)', () => {
   const about = page('about/index.html');
-  assert.match(
-    about,
-    /href="https:\/\/github.com\/TooSmoove\/dcledger\/blob\/main\/docs\/export.md#stability"/,
-  );
-  assert.match(
-    about,
-    /href="https:\/\/github.com\/TooSmoove\/dcledger\/blob\/main\/docs\/data-dictionary.md"/,
-  );
-  assert.match(about, /href="https:\/\/github.com\/TooSmoove\/dcledger\/blob\/main\/CHANGELOG.md"/);
+  assert.match(about, /href="\/data\/#stability"/);
+  assert.match(about, /href="\/data\/#data-dictionary"/);
+  assert.match(about, /href="\/changelog\/"/);
   assert.match(about, /announced at least 90 days ahead/);
+});
+
+test('/data/ and /changelog/ carry the repository documents, rewritten for the site (ADR-0009)', () => {
+  const data = page('data/index.html');
+  assert.match(data, /<h2 id="stability">Stability<\/h2>/);
+  assert.match(data, /<h2 id="data-dictionary">Data dictionary<\/h2>/);
+  assert.match(data, /<h3 id="vocabularies">Vocabularies<\/h3>/);
+  assert.match(data, /at least <strong>90 days<\/strong>/);
+  assert.match(data, /href="\/changelog\/"/);
+  const changelog = page('changelog/index.html');
+  assert.match(changelog, /<h1 id="changelog">Changelog<\/h1>/);
+  assert.match(changelog, /href="\/data\/#stability"/);
+  for (const [name, html] of [
+    ['data', data],
+    ['changelog', changelog],
+  ]) {
+    assert.doesNotMatch(html, /href="[^"]*\.md(?:#[^"]*)?"/, `${name}: a link to a Markdown file`);
+    assert.doesNotMatch(html, /\((?:issue |PR )?#\d+\)|\bissue #\d+|\bSPEC\b|ADR-\d/, name);
+    assert.doesNotMatch(html, /<!--/, `${name}: a developer comment`);
+  }
+});
+
+test('no page links to the code repository or GitHub (ADR-0009)', () => {
+  for (const { name, html } of pages) {
+    assert.doesNotMatch(html, /github\.com/i, name);
+  }
+});
+
+test('the report form posts to the Function, works without script, and states what happens to a report', () => {
+  const form = page('report/index.html');
+  assert.match(form, /<form class="report-form" method="post" action="\/api\/report"/);
+  for (const value of ['correction', 'question', 'stop_fetching', 'other']) {
+    assert.match(
+      form,
+      new RegExp(`<input type="radio" id="kind-${value}" name="kind" value="${value}"`),
+      value,
+    );
+  }
+  assert.match(form, /<textarea id="message" name="message"[^>]*required/);
+  assert.match(form, /<input type="email" id="email" name="email"/);
+  assert.doesNotMatch(form, /id="email"[^>]*required/, 'email is optional');
+  assert.match(form, /<div class="trap" aria-hidden="true">[\s\S]*name="website" tabindex="-1"/);
+  assert.match(form, /never published/);
+  assert.match(page('report/thanks/index.html'), /within 48 hours/);
+});
+
+test('only the report endpoint and the inbox run as Functions; every other path stays static', async () => {
+  const routes = JSON.parse(await readFile(join(dist, '_routes.json'), 'utf8'));
+  assert.deepEqual(routes, {
+    version: 1,
+    include: ['/api/report', '/inbox', '/inbox/*'],
+    exclude: [],
+  });
 });
 
 test('every page advertises the feed for readers that discover it', () => {
@@ -589,15 +640,12 @@ test('the corrections log opens with its date and lists entries newest first (#1
   assert.match(logHtml, /<time datetime="2026-11-23">Mon, Nov 23, 2026<\/time>/);
 });
 
-test('a log entry links its issue and every record it changed (#117)', () => {
+test('a log entry names its report as plain text and links every record it changed (#117)', () => {
   const vote = logHtml.slice(
     0,
     logHtml.indexOf('id="correction-2026-11-22-fixture-methodology-interval"'),
   );
-  assert.match(
-    vote,
-    /href="https:\/\/github.com\/TooSmoove\/dcledger\/issues\/131">issue #131<\/a>/,
-  );
+  assert.match(vote, /<\/time> as report R-131\./);
   assert.match(
     vote,
     /href="\/jurisdictions\/guilford\/#decision-fixture-guilford-moratorium-2026-11-05"/,
@@ -608,14 +656,15 @@ test('a log entry links its issue and every record it changed (#117)', () => {
   const wording = logHtml.slice(
     logHtml.indexOf('id="correction-2026-11-22-fixture-methodology-interval"'),
   );
-  assert.doesNotMatch(wording.slice(0, wording.indexOf('</li>')), /issue #|Changed:/);
+  assert.doesNotMatch(wording.slice(0, wording.indexOf('</li>')), /as report|Changed:/);
 });
 
-test('the report link opens the correction form (#117)', () => {
-  assert.match(
-    methodology,
-    /href="https:\/\/github.com\/TooSmoove\/dcledger\/issues\/new\?template=correction.yml"/,
-  );
+test('the methodology page, the about page and every footer send reports to the site form (ADR-0009)', () => {
+  assert.match(methodology, /To report a mistake, use the <a href="\/report\/">report form<\/a>/);
+  assert.match(page('about/index.html'), /href="\/report\/"/);
+  for (const { name, html } of pages) {
+    assert.match(html.slice(html.indexOf('<footer>')), /<a href="\/report\/">Report it<\/a>/, name);
+  }
 });
 
 test("the disclosure is the owner's wording, not the placeholder (#117)", () => {

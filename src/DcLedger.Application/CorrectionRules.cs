@@ -30,9 +30,9 @@ public static class CorrectionRules
                 $"corrected_on {correction.CorrectedOn:yyyy-MM-dd} is before reported_on {correction.ReportedOn:yyyy-MM-dd}."));
         }
 
-        if (correction.Issue is <= 0)
+        if (correction.Report is <= 0)
         {
-            Add(errors, file, correction, "issue must be a GitHub issue number, 1 or more.");
+            Add(errors, file, correction, "report must be a form report number, 1 or more.");
         }
 
         foreach (var duplicate in correction.RecordIds.GroupBy(id => id, StringComparer.Ordinal).Where(group => group.Count() > 1))

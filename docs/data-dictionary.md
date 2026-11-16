@@ -1,14 +1,19 @@
 # Data dictionary
 
-What's in the downloads, served at the site's root next to the calendars and the feed (`docs/export.md`):
+<!--
+Published on the site at /data/#data-dictionary, so write it for the site's readers. Links to other files are rewritten
+for the site and issue references like "(issue #115)" are left out there (site/src/lib/public-docs.js).
+-->
+
+What's in the downloads, served at the site's root next to the calendars and the feed:
 `events.csv` and `events.parquet` have one row per reviewed event, ordered by start time, then ID; `actions.csv` and
 `actions.parquet` one row per recorded decision. Everything in them is
 public by design: neutral titles written by a reviewer, case numbers, meeting metadata, source URLs, retrieval times
-and SHA-256 hashes. No private individual's name appears (SPEC §E).
+and SHA-256 hashes. No private individual's name appears.
 
 ## `events.csv`
 
-Made for spreadsheets (SPEC AC7):
+Made for spreadsheets:
 
 - **Encoding:** UTF-8 with a byte-order mark (BOM). Without it, Excel guesses the file is in the system code page and
   garbles characters like "é".
@@ -104,7 +109,7 @@ never summarized, on one line of at most 500 characters. A term taken from a new
 ## Vocabularies
 
 These columns take only the values listed. A value keeps its meaning once published; new values may be added, so
-treat one you don't know as "other" rather than an error (`docs/export.md`, "Stability").
+treat one you don't know as "other" rather than an error (see [Stability](stability.md)).
 
 | Column | File | Values |
 |---|---|---|
@@ -118,8 +123,10 @@ treat one you don't know as "other" rather than an error (`docs/export.md`, "Sta
 
 ## Changes
 
-New columns are added at the end. Existing columns aren't renamed, retyped or removed without a note here and in the
-SPEC's amendments log (`docs/SPEC.md` §J).
+New columns are added at the end. Existing columns aren't renamed, retyped or removed without a note here and the
+notice described under [Stability](stability.md).
+
+<!-- Developers: also record column changes in docs/SPEC.md §J. -->
 
 - **Nov 15, 2026 (issue #113):** `document_retrieval` added as the last column of `events.csv` and `actions.csv`. In
   both Parquet files the `documents` struct gained `retrieval` as its last field; `url`, `retrieved_utc` and `sha256`

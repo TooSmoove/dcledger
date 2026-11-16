@@ -39,8 +39,9 @@ const { title } = Astro.props;
     <footer>
       <p>
         Every item links to its official source with the retrieval time and the SHA-256 of the copy
-        we kept. Times are Eastern. <a href="/about/">About this project</a>. How it works and how
-        to report a mistake: <a href="/methodology/">Methodology and corrections</a>.
+        we kept. Times are Eastern. <a href="/about/">About this project</a>. How it works:
+        <a href="/methodology/">Methodology and corrections</a>. Found a mistake?
+        <a href="/report/">Report it</a>.
       </p>
     </footer>
   </body>
@@ -81,6 +82,9 @@ const { title } = Astro.props;
     color: var(--link);
   }
   a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
   .skip:focus {
     outline: 3px solid var(--link);
     outline-offset: 2px;
@@ -172,6 +176,58 @@ const { title } = Astro.props;
   }
   .log p {
     margin: 0.2rem 0;
+  }
+  .report-form label {
+    display: block;
+    font-weight: 600;
+    margin-top: 1rem;
+  }
+  .report-form fieldset label {
+    display: inline;
+    font-weight: normal;
+    margin: 0 0 0 0.35rem;
+  }
+  .report-form fieldset {
+    border: 1px solid var(--rule);
+    margin: 1rem 0 0;
+  }
+  .report-form input[type='text'],
+  .report-form input[type='url'],
+  .report-form input[type='email'],
+  .report-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 40rem;
+    font: inherit;
+    padding: 0.4rem;
+  }
+  .report-form button {
+    font: inherit;
+    padding: 0.4rem 1rem;
+    margin-top: 1rem;
+  }
+  .hint {
+    margin: 0.1rem 0 0.3rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .trap {
+    position: absolute;
+    left: -9999px;
+  }
+  .doc h2,
+  .doc h3 {
+    scroll-margin-top: 1rem;
+  }
+  .doc th,
+  .doc td {
+    overflow-wrap: anywhere;
+  }
+  .doc pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding: 0.5rem;
+    border: 1px solid var(--rule);
   }
   @media (max-width: 40rem) {
     dl {

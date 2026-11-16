@@ -1,0 +1,107 @@
+---
+// The report form: corrections, questions and requests to stop fetching. A plain HTML form that posts to the Pages
+// Function at /api/report (site/functions/api/report.js), so it works with JavaScript off and the page ships no
+// script (AC12). Reports are kept privately and never published (docs/reports.md).
+import Base from '../../layouts/Base.astro';
+import { KINDS, LIMITS, HONEYPOT } from '../../../functions/_lib/report.js';
+---
+
+<Base title="Report a mistake or contact us">
+  <h1>Report a mistake or contact us</h1>
+  <p>
+    Use this form to report something wrong in the ledger, ask a question, or ask us to stop
+    fetching from a site you run. We act on every correction within 48 hours, as described under
+    <a href="/methodology/#corrections">Corrections</a>.
+  </p>
+
+  <form class="report-form" method="post" action="/api/report">
+    <fieldset>
+      <legend>What is this about?</legend>
+      {Object.entries(KINDS).map(([value, text], i) => (
+        <div>
+          <input
+            type="radio"
+            id={`kind-${value}`}
+            name="kind"
+            value={value}
+            required
+            checked={i === 0}
+          />
+          <label for={`kind-${value}`}>{text}</label>
+        </div>
+      ))}
+    </fieldset>
+
+    <label for="item">
+      Which page or item? <span class="muted">(optional)</span>
+    </label>
+    <p class="hint" id="item-hint">
+      Paste the page address, for example https://ncdcledger.org/items/…
+    </p>
+    <input
+      type="text"
+      id="item"
+      name="item"
+      maxlength={LIMITS.item}
+      aria-describedby="item-hint"
+      autocomplete="off"
+    />
+
+    <label for="message">What is wrong, or what do you need?</label>
+    <textarea id="message" name="message" rows="7" maxlength={LIMITS.message} required></textarea>
+
+    <label for="source">
+      A record that shows it <span class="muted">(optional)</span>
+    </label>
+    <p class="hint" id="source-hint">
+      A link to minutes, an agenda or another official record helps us fix it faster.
+    </p>
+    <input
+      type="url"
+      id="source"
+      name="source"
+      maxlength={LIMITS.source}
+      aria-describedby="source-hint"
+      autocomplete="off"
+    />
+
+    <label for="email">
+      Your email <span class="muted">(optional)</span>
+    </label>
+    <p class="hint" id="email-hint">
+      Only if you want a reply. We use it to answer this report and nothing else.
+    </p>
+    <input
+      type="email"
+      id="email"
+      name="email"
+      maxlength={LIMITS.email}
+      aria-describedby="email-hint"
+      autocomplete="email"
+    />
+
+    <div class="trap" aria-hidden="true">
+      <label for={HONEYPOT}>Leave this empty</label>
+      <input type="text" id={HONEYPOT} name={HONEYPOT} tabindex="-1" autocomplete="off" />
+    </div>
+
+    <p>
+      <button type="submit">Send report</button>
+    </p>
+  </form>
+
+  <h2 id="privacy">What happens to your report</h2>
+  <ul>
+    <li>
+      Only the maintainer reads it. Reports are kept in private storage and are never published.
+    </li>
+    <li>
+      If a report leads to a fix, the fix is listed in the public
+      <a href="/methodology/#log">corrections log</a>, without your name or email.
+    </li>
+    <li>
+      Please don't include personal details about anyone else. This site doesn't use cookies,
+      analytics or tracking.
+    </li>
+  </ul>
+</Base>

@@ -78,7 +78,7 @@ public static class ValidationRule
 
     /// <summary>
     /// A corrections log entry contradicts itself or the log (issue #117): corrected before it was reported, dated
-    /// before the log opened, naming the same record twice, or citing issue number 0.
+    /// before the log opened, naming the same record twice, or citing report number 0.
     /// </summary>
     public const string CorrectionInvalid = "CORRECTION_INVALID";
 }

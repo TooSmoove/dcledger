@@ -6,7 +6,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { Content as Disclosure } from '../owner/disclosure.md';
-import { readCorrections, newestFirst, recordHref, issueHref } from '../lib/corrections.js';
+import { readCorrections, newestFirst, recordHref, reportReference } from '../lib/corrections.js';
 import { SITE_URL, citationText, logOpenedText } from '../lib/methodology.js';
 import {
   MANUAL_RETRIEVAL_TEXT,
@@ -48,8 +48,6 @@ const citation =
       sha256: example.data.documents[0].sha256,
     },
   });
-
-const newIssue = 'https://github.com/TooSmoove/dcledger/issues/new?template=correction.yml';
 ---
 
 <Base title="Methodology and corrections">
@@ -88,8 +86,8 @@ const newIssue = 'https://github.com/TooSmoove/dcledger/issues/new?template=corr
   <ul>
     <li>
       For jurisdictions on an agenda platform we can read, a program checks for new agendas about
-      once an hour. GitHub skips some scheduled runs, so the longest gap we measured between checks
-      was just under 11 hours.
+      once an hour. The scheduler sometimes skips a run, so the longest gap we measured between
+      checks was just under 11 hours.
     </li>
     <li>
       When a check finds an agenda item that may concern a data center, it opens a review task in
@@ -175,14 +173,15 @@ const newIssue = 'https://github.com/TooSmoove/dcledger/issues/new?template=corr
 
   <h2 id="corrections">Corrections</h2>
   <p>
-    To report a mistake, <a href={newIssue}>open a correction on GitHub</a>. Say which item is wrong
-    and, if you can, point to the record that shows it. A contact address is planned.
+    To report a mistake, use the <a href="/report/">report form</a>. Say which item is wrong and, if
+    you can, point to the record that shows it. Your email is optional; leave it if you want a
+    reply.
   </p>
   <p>
-    We act on every report within 48 hours: we correct the record, or we reply on the report with
-    what we found and why the record stands, or, when a fix depends on a record not yet posted, what
-    we are waiting for and when. Every correction is listed below with the date it was reported and
-    the date it was fixed. Entries are never removed.
+    We act on every report within 48 hours: we correct the record, or, if you left an email address,
+    we reply with what we found and why the record stands, or, when a fix depends on a record not
+    yet posted, what we are waiting for and when. Every correction is listed below with the date it
+    was reported and the date it was fixed. Entries are never removed.
   </p>
 
   <h3 id="log">Corrections log</h3>
@@ -201,13 +200,7 @@ const newIssue = 'https://github.com/TooSmoove/dcledger/issues/new?template=corr
           </p>
           <p class="muted">
             Reported <time datetime={entry.reported_on}>{dateText(entry.reported_on)}</time>
-            {entry.issue !== null && (
-              <>
-                {' '}
-                in <a href={issueHref(entry.issue)}>issue #{entry.issue}</a>
-              </>
-            )}
-            .
+            {entry.report !== null && <> as report {reportReference(entry.report)}</>}.
             {entry.record_ids.length > 0 && (
               <>
                 {' '}

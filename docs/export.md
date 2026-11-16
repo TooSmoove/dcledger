@@ -14,7 +14,7 @@ With `--out out` from the repository root, the site build finds its data at `out
 | File | Contents |
 |---|---|
 | `site-data/events.json` | The site's only input (schema version 1, ADR-0004): jurisdictions with "last checked" and the stale flag, and every event with its provenance (each document's `url`, `retrieved_utc`, `sha256` and `retrieval`) and `location` (`{"lat", "lon"}` or null), and every local action (see below). Mirrored by `site/src/content.config.ts`. |
-| `site-data/corrections.json` | The corrections log for `/methodology/` (issue #117): `schema_version` 1, `opened_on`, and every entry from `data/corrections/` oldest first, each with `id`, `reported_on`, `corrected_on`, `record_ids`, `summary` and `issue` (a number or null). Written even when the log is empty. Site data only: not served, not downloadable, and not part of "Stability" below. Mirrored by `site/src/lib/corrections.js`. |
+| `site-data/corrections.json` | The corrections log for `/methodology/` (issue #117): `schema_version` 1, `opened_on`, and every entry from `data/corrections/` oldest first, each with `id`, `reported_on`, `corrected_on`, `record_ids`, `summary` and `report` (the form report's number, shown as `R-<n>`, or null). Written even when the log is empty. Site data only: not served, not downloadable, and not part of "Stability" below. Mirrored by `site/src/lib/corrections.js`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per watched jurisdiction, even before it has events. A jurisdiction that isn't watched (issue #115) gets none. |
 | `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision and per decision revision, newest first (see below). |
@@ -74,35 +74,8 @@ CSV list meetings only; a decision shows on the site, on its meeting's page and 
 
 ## Stability
 
-Once someone subscribes to a calendar, bookmarks a download or cites an item, changing its address or its shape
-breaks them. This section is the promise, from v0.1.0 on (issue #116). `CHANGELOG.md` records every change to it.
-
-**These don't change:**
-
-- **Record IDs:** event, decision (local action) and jurisdiction IDs, and document IDs (the SHA-256 of the bytes).
-- **Page addresses:** `/radar/`, `/map/`, `/about/`, `/methodology/`, `/items/{event id}/`,
-  `/jurisdictions/{jurisdiction id}/`, the `#decision-{decision id}` anchor on a jurisdiction page, and the
-  `#correction-{correction id}` anchor on the methodology page.
-- **Calendar and feed identity:** each event's calendar UID (a hash of jurisdiction, platform and platform meeting
-  ID) and each feed GUID (`{UID}/{sequence}` for an event revision, `action:{id}/{sequence}` for a decision
-  revision).
-- **File paths:** `/radar.ics`, `/radar/{jurisdiction id}.ics`, `/feed.xml`, `/events.csv`, `/events.parquet`,
-  `/actions.csv` and `/actions.parquet`.
-- **Columns:** the name, order, type and meaning of every column in the CSV and Parquet files
-  (`docs/data-dictionary.md`), and the keys and types of `events.json` within its `schema_version`.
-- **Vocabularies:** a published value keeps its meaning (`docs/data-dictionary.md`, "Vocabularies").
-
-**These can happen at any time, because they don't break a reader:**
-
-- New columns, added at the end; new keys in `events.json`; new files, pages and feeds.
-- New values in a vocabulary. Readers should treat a value they don't know as "other", not as an error.
-- New records, and corrections to a record's values. A published correction raises the record's `sequence`, so
-  calendars and feed readers see it.
-
-**A breaking change** renames, removes, reorders or retypes anything in the first list. It is announced in
-`CHANGELOG.md` at least **90 days** before it ships, saying what changes, when, and what to use instead.
-`events.json` also bumps `schema_version` (ADR-0004). A record is never renamed. If one has to be removed (for
-example, a duplicate entered by mistake), the CHANGELOG lists it.
+What never changes, what may change at any time, and how a breaking change is announced: [`docs/stability.md`](stability.md),
+published on the site at `/data/#stability`.
 
 **Held by tests:** the frozen public paths (`PublicContractTests` in .NET and the site's `dist` tests), the data
 dictionary against the exporters' headers and Parquet columns, and the dictionary's vocabularies against the code's
