@@ -76,7 +76,7 @@
     },
     {
       "path": "site/src/geo/nc-boundaries.json",
-      "sha256": "f4e8bc1fb7e52e5754af4991ac8c5b6d880f8814b16018731d877ed114257df7",
+      "sha256": "29b171fd81249af0b103a725b7d81f542d64db02a752701004e6cbf065221787",
       "license": "LicenseRef-US-Government-Work",
       "license_file": "site/src/geo/LICENSE.md",
       "source": "U.S. Census Bureau cartographic boundary files, built by tools/build_locators.py (issue #132)"
