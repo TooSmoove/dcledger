@@ -402,6 +402,42 @@ internal sealed partial class YamlFields
         return null;
     }
 
+    /// <summary>A required whole number from 1 to <paramref name="max"/>, such as a picture's width in pixels (issue #132).</summary>
+    public int? PositiveNumber(string key, int max)
+    {
+        var value = Required(key);
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var number) && number >= 1 && number <= max)
+        {
+            return number;
+        }
+
+        Add(ValidationRule.InvalidValue, string.Create(CultureInfo.InvariantCulture, $"'{key}' must be a whole number from 1 to {max}."));
+        return null;
+    }
+
+    /// <summary>A required <c>true</c> or <c>false</c>, spelled exactly so (no YAML yes/no or on/off).</summary>
+    public bool? TrueOrFalse(string key)
+    {
+        var value = Required(key);
+        switch (value)
+        {
+            case null:
+                return null;
+            case "true":
+                return true;
+            case "false":
+                return false;
+            default:
+                Add(ValidationRule.InvalidValue, $"'{key}' must be true or false.");
+                return null;
+        }
+    }
+
     /// <summary>
     /// The optional <c>unanimous</c> flag: <c>true</c> or left out, never <c>false</c> (a split vote is a tally, not a
     /// flag). It lets a reviewer record a reported unanimous vote before the platform posts the count. When

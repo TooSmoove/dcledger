@@ -3,7 +3,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from license_check import Package, license_allowed, npm_packages, nuget_packages
+import hashlib
+
+from license_check import Package, VendoredAsset, license_allowed, npm_packages, nuget_packages, vendored_problems
 
 POLICY = {
     "allowed": ["MIT", "Apache-2.0", "BSD-3-Clause"],
@@ -97,3 +99,34 @@ class ReaderTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class VendoredAssetTests(unittest.TestCase):
+    POLICY = {"vendored_allowed": ["OFL-1.1"]}
+
+    def check(self, content: bytes, license: str = "OFL-1.1", with_license_text: bool = True, sha: str | None = None):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            (repo / "font.woff2").write_bytes(content)
+            if with_license_text:
+                (repo / "OFL.txt").write_text("SIL Open Font License", encoding="utf-8")
+            digest = sha or hashlib.sha256(b"font bytes").hexdigest()
+            asset = VendoredAsset("font.woff2", digest, license, "OFL.txt", "test")
+            return vendored_problems(asset, repo, self.POLICY)
+
+    def test_unchanged_file_with_license_text_passes(self):
+        self.assertEqual(self.check(b"font bytes"), [])
+
+    def test_changed_file_fails(self):
+        self.assertEqual(len(self.check(b"other bytes")), 1)
+
+    def test_license_outside_vendored_allowed_fails(self):
+        self.assertIn("license 'GPL-3.0-only' is not in vendored_allowed", self.check(b"font bytes", "GPL-3.0-only"))
+
+    def test_missing_license_text_fails(self):
+        self.assertIn("license text OFL.txt is missing", self.check(b"font bytes", with_license_text=False))
+
+    def test_policy_lists_the_site_font_with_its_license_text(self):
+        policy = json.loads(Path(__file__).with_name("license-policy.json").read_text(encoding="utf-8"))
+        paths = [entry["path"] for entry in policy["vendored"]]
+        self.assertIn("site/src/fonts/eb-garamond-latin-wght.woff2", paths)

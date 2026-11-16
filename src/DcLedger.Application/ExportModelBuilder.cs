@@ -58,6 +58,16 @@ public static class ExportModelBuilder
             .ThenBy(correction => correction.Id, StringComparer.Ordinal)
             .ToList();
 
+        var pictured = events.SelectMany(e => e.Documents)
+            .Concat(actions.SelectMany(a => a.Documents))
+            .Where(document => document.Thumbnail is not null)
+            .Select(document => document.Id)
+            .ToHashSet();
+        var thumbnails = snapshot.Thumbnails
+            .Where(file => pictured.Contains(file.DocumentId))
+            .OrderBy(file => file.DocumentId.Value, StringComparer.Ordinal)
+            .ToList();
+
         var model = new ExportModel
         {
             GeneratedUtc = status.GeneratedUtc,
@@ -65,6 +75,7 @@ public static class ExportModelBuilder
             Events = events,
             Actions = actions,
             Corrections = corrections,
+            Thumbnails = thumbnails,
         };
         return new ExportModelResult(model, Warnings(jurisdictions, status));
     }

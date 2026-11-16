@@ -81,4 +81,14 @@ public static class ValidationRule
     /// before the log opened, naming the same record twice, or citing report number 0.
     /// </summary>
     public const string CorrectionInvalid = "CORRECTION_INVALID";
+
+    /// <summary>
+    /// A first-page picture the site may not show (issue #132): its document isn't official minutes or legislation (agenda
+    /// packets stay private, SPEC §E), its file is missing or differs from the hash its record states, or a file under
+    /// <c>data/thumbnails/</c> has no record that names it.
+    /// </summary>
+    public const string ThumbnailInvalid = "THUMBNAIL_INVALID";
+
+    /// <summary>A first-page picture nobody has marked as checked for private individuals' names (issue #132, SPEC §E).</summary>
+    public const string ThumbnailUnreviewed = "THUMBNAIL_UNREVIEWED";
 }

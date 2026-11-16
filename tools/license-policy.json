@@ -1,5 +1,5 @@
 {
-  "comment": "Licenses allowed for every NuGet package (src and tests) and every non-dev npm package in site/. Anything else fails CI unless a scoped exception below allows it. No fee-bearing or source-available terms (SPEC \u00a7E).",
+  "comment": "Licenses allowed for every NuGet package (src and tests) and every non-dev npm package in site/. Anything else fails CI unless a scoped exception below allows it. No fee-bearing or source-available terms (SPEC \u00a7E). Files vendored into the site (fonts, map geometry) are listed under \"vendored\" with their SHA-256 and license text; their licenses come from \"vendored_allowed\".",
   "allowed": [
     "0BSD",
     "Apache-2.0",
@@ -59,6 +59,27 @@
       "package": "XPath2",
       "license": "MS-PL",
       "reason": "Microsoft Public License (OSI-approved; obligations apply only when distributing it). Test-only (WireMock.Net.Minimal via Handlebars.Net.Helpers.XPath); never shipped."
+    }
+  ],
+  "vendored_allowed": [
+    "OFL-1.1",
+    "CC0-1.0",
+    "LicenseRef-US-Government-Work"
+  ],
+  "vendored": [
+    {
+      "path": "site/src/fonts/eb-garamond-latin-wght.woff2",
+      "sha256": "7000e4fb6cc16d37d6761ba40f1e2ac78a8c2b347b0eccb0b7cfdc2fc8d0e4e0",
+      "license": "OFL-1.1",
+      "license_file": "site/src/fonts/OFL.txt",
+      "source": "EB Garamond, google/fonts@bd33585 ofl/ebgaramond, subset by tools/subset_font.py (issue #132)"
+    },
+    {
+      "path": "site/src/geo/nc-boundaries.json",
+      "sha256": "29b171fd81249af0b103a725b7d81f542d64db02a752701004e6cbf065221787",
+      "license": "LicenseRef-US-Government-Work",
+      "license_file": "site/src/geo/LICENSE.md",
+      "source": "U.S. Census Bureau cartographic boundary files, built by tools/build_locators.py (issue #132)"
     }
   ]
 }

@@ -23,6 +23,12 @@ public sealed record ExportModel
 
     /// <summary>Every corrections log entry (issue #117), ordered by correction date, then ID.</summary>
     public IReadOnlyList<Correction> Corrections { get; init; } = [];
+
+    /// <summary>
+    /// The first-page picture of each exported document that has one (issue #132), ordered by document ID. The quality
+    /// gate has already checked that each may be shown, was reviewed and matches its record's hash.
+    /// </summary>
+    public IReadOnlyList<ThumbnailFile> Thumbnails { get; init; } = [];
 }
 
 /// <summary>A jurisdiction with its freshness (SPEC AC10).</summary>

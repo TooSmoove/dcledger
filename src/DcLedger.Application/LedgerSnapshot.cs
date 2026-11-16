@@ -5,6 +5,12 @@ namespace DcLedger.Application;
 /// <summary>A record together with the file it came from (relative to the data directory, '/' separators).</summary>
 public sealed record LoadedRecord<T>(string File, T Record);
 
+/// <summary>
+/// One picture file under <c>data/thumbnails/</c> (issue #132): <paramref name="File"/> relative to the data directory,
+/// <paramref name="DocumentId"/> from its name, and its bytes with their SHA-256.
+/// </summary>
+public sealed record ThumbnailFile(string File, Sha256Hash DocumentId, Sha256Hash ContentHash, ReadOnlyMemory<byte> Content);
+
 /// <summary>Everything read from the data directory: records that parsed, problems found while reading, and every record file seen.</summary>
 public sealed record LedgerSnapshot
 {
@@ -22,6 +28,9 @@ public sealed record LedgerSnapshot
 
     /// <summary>Corrections log entries that parsed without errors (issue #117).</summary>
     public IReadOnlyList<LoadedRecord<Correction>> Corrections { get; init; } = [];
+
+    /// <summary>Picture files under <c>data/thumbnails/</c> whose names are document IDs (issue #132).</summary>
+    public IReadOnlyList<ThumbnailFile> Thumbnails { get; init; } = [];
 
     /// <summary>Problems found while reading (shape, format, unknown or forbidden keys).</summary>
     public IReadOnlyList<ValidationError> LoadErrors { get; init; } = [];

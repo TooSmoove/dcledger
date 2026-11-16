@@ -19,10 +19,14 @@ public sealed class YamlLedgerReader : ILedgerReader
 
     private static readonly string[] Folders = ["jurisdictions", "documents", "events", "actions", "corrections"];
 
+    /// <summary>First-page pictures, one per document, named by the document's ID (issue #132). Not record files.</summary>
+    public const string ThumbnailsFolder = "thumbnails";
+
     // YAML values are the same fixed tokens the exports use (Domain), so the two can't drift apart.
     private static readonly Dictionary<string, Platform> Platforms = ByToken<Platform>(PlatformExtensions.ToToken);
     private static readonly Dictionary<string, SourceType> SourceTypes = ByToken<SourceType>(EnumTokens.ToToken);
     private static readonly Dictionary<string, Retrieval> Retrievals = ByToken<Retrieval>(EnumTokens.ToToken);
+    private static readonly Dictionary<string, DocumentKind> DocumentKinds = ByToken<DocumentKind>(EnumTokens.ToToken);
     private static readonly Dictionary<string, EventStatus> Statuses = ByToken<EventStatus>(EnumTokens.ToToken);
     private static readonly Dictionary<string, EvidenceLabel> Labels = ByToken<EvidenceLabel>(EnumTokens.ToToken);
     private static readonly Dictionary<string, ActionType> ActionTypes = ByToken<ActionType>(EnumTokens.ToToken);
@@ -105,10 +109,62 @@ public sealed class YamlLedgerReader : ILedgerReader
             Events = events,
             Actions = actions,
             Corrections = corrections,
+            Thumbnails = ReadThumbnails(dataDirectory, errors),
             LoadErrors = errors,
             RecordFiles = files,
         };
     }
+
+    /// <summary>
+    /// Every <c>thumbnails/{sha256}.webp</c> (issue #132), with its SHA-256. A file with another name or extension, one
+    /// over <see cref="Thumbnail.MaxBytes"/>, or one that isn't WebP is reported and skipped; whether each picture may
+    /// be published is the validator's call (<see cref="ThumbnailRules"/>).
+    /// </summary>
+    private static List<ThumbnailFile> ReadThumbnails(string dataDirectory, List<ValidationError> errors)
+    {
+        var thumbnails = new List<ThumbnailFile>();
+        var directory = Path.Combine(dataDirectory, ThumbnailsFolder);
+        if (!Directory.Exists(directory))
+        {
+            return thumbnails;
+        }
+
+        foreach (var path in Directory.EnumerateFiles(directory).Order(StringComparer.Ordinal))
+        {
+            var name = Path.GetFileName(path);
+            var relative = $"{ThumbnailsFolder}/{name}";
+            if (!name.EndsWith(".webp", StringComparison.Ordinal) || !Sha256Hash.TryParse(name[..^".webp".Length], out var documentId))
+            {
+                errors.Add(new ValidationError(relative, null, ValidationRule.ThumbnailInvalid,
+                    "Only {document sha256}.webp files belong in thumbnails/."));
+                continue;
+            }
+
+            var size = new FileInfo(path).Length;
+            if (size > Thumbnail.MaxBytes)
+            {
+                errors.Add(new ValidationError(relative, documentId.Value, ValidationRule.FileTooLarge,
+                    string.Create(CultureInfo.InvariantCulture, $"{size} bytes; pictures are capped at {Thumbnail.MaxBytes} bytes.")));
+                continue;
+            }
+
+            var content = File.ReadAllBytes(path);
+            if (!IsWebP(content))
+            {
+                errors.Add(new ValidationError(relative, documentId.Value, ValidationRule.ThumbnailInvalid,
+                    "The file isn't a WebP image."));
+                continue;
+            }
+
+            thumbnails.Add(new ThumbnailFile(relative, documentId, Sha256Hash.Compute(content), content));
+        }
+
+        return thumbnails;
+    }
+
+    /// <summary>A RIFF container whose form type is WEBP.</summary>
+    private static bool IsWebP(ReadOnlySpan<byte> content) =>
+        content.Length >= 12 && content[..4].SequenceEqual("RIFF"u8) && content[8..12].SequenceEqual("WEBP"u8);
 
     private static YamlFields? Open(string path, string relative, List<ValidationError> errors)
     {
@@ -192,6 +248,8 @@ public sealed class YamlLedgerReader : ILedgerReader
         var bytes = f.WholeNumber("bytes");
         var sourceType = f.Choice("source_type", SourceTypes);
         var retrieval = f.OptionalChoice("retrieval", Retrievals, Retrieval.Fetched);
+        var kind = f.OptionalChoice("kind", DocumentKinds);
+        var thumbnail = ReadThumbnail(f);
 
         return id is null || url is null || retrievedAt is null || mediaType is null || bytes is null || sourceType is null
             ? null
@@ -204,7 +262,31 @@ public sealed class YamlLedgerReader : ILedgerReader
                 Bytes = bytes.Value,
                 SourceType = sourceType.Value,
                 Retrieval = retrieval,
+                Kind = kind,
+                Thumbnail = thumbnail,
             };
+    }
+
+    /// <summary>
+    /// The optional <c>thumbnail</c> mapping (issue #132): exactly <c>sha256</c>, <c>width</c>, <c>height</c> and
+    /// <c>reviewed</c>. <c>reviewed</c> is required, so a pasted block that a person hasn't checked yet says so.
+    /// </summary>
+    private static Thumbnail? ReadThumbnail(YamlFields f)
+    {
+        var fields = f.Mapping("thumbnail");
+        if (fields is null)
+        {
+            return null;
+        }
+
+        var sha256 = fields.Hash("sha256");
+        var width = fields.PositiveNumber("width", Thumbnail.MaxWidth);
+        var height = fields.PositiveNumber("height", Thumbnail.MaxHeight);
+        var reviewed = fields.TrueOrFalse("reviewed");
+        fields.RejectUnreadKeys();
+        return sha256 is null || width is null || height is null || reviewed is null
+            ? null
+            : new Thumbnail { Sha256 = sha256.Value, Width = width.Value, Height = height.Value, Reviewed = reviewed.Value };
     }
 
     private static LedgerEvent? ReadEvent(YamlFields f)

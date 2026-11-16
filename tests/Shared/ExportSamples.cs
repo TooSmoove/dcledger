@@ -168,6 +168,37 @@ internal static class ExportSamples
             },
             Status()).Model;
 
+    /// <summary>The smallest bytes the reader accepts as a WebP picture (issue #132).</summary>
+    public static readonly byte[] ThumbnailBytes = [.. "RIFF"u8, 4, 0, 0, 0, .. "WEBP"u8];
+
+    /// <summary>
+    /// The model with a reviewed first-page picture of the Nov 5 action detail page (issue #132), plus a picture of a
+    /// document no item lists, which the export leaves out.
+    /// </summary>
+    public static ExportModel ModelWithThumbnail()
+    {
+        var thumbnail = new Thumbnail { Sha256 = Sha256Hash.Compute(ThumbnailBytes), Width = 240, Height = 311, Reviewed = true };
+        var detail = CountyActionDetail1600 with { Kind = DocumentKind.Legislation, Thumbnail = thumbnail };
+        var unlistedSource = Doc("fixture unlisted minutes", "https://fixture-county.example.org/minutes/1590.pdf", Utc(2026, 10, 1, 12, 0, 0), "application/pdf", 2345, SourceType.Official);
+        var unlisted = unlistedSource with { Kind = DocumentKind.Minutes, Thumbnail = thumbnail };
+        var snapshot = Snapshot();
+        snapshot = snapshot with
+        {
+            Documents =
+            [
+                .. snapshot.Documents.Where(loaded => loaded.Record.Id != detail.Id),
+                Loaded("documents", detail.Id.Value, detail),
+                Loaded("documents", unlisted.Id.Value, unlisted),
+            ],
+            Thumbnails =
+            [
+                new ThumbnailFile($"thumbnails/{unlisted.Id.Value}.webp", unlisted.Id, thumbnail.Sha256, ThumbnailBytes),
+                new ThumbnailFile($"thumbnails/{detail.Id.Value}.webp", detail.Id, thumbnail.Sha256, ThumbnailBytes),
+            ],
+        };
+        return ExportModelBuilder.Build(snapshot, Status()).Model;
+    }
+
     /// <summary>The ledger as the YAML reader would load it, records deliberately out of order.</summary>
     public static LedgerSnapshot Snapshot() => new()
     {

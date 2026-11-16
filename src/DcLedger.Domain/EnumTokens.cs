@@ -38,6 +38,23 @@ public static class EnumTokens
         _ => throw new ArgumentOutOfRangeException(nameof(retrieval), retrieval, "Unknown retrieval."),
     };
 
+    /// <summary>
+    /// Returns <c>minutes</c>, <c>legislation</c>, <c>agenda</c>, <c>agenda_packet</c>, <c>notice</c>,
+    /// <c>news_release</c>, <c>news_article</c> or <c>other</c>.
+    /// </summary>
+    public static string ToToken(this DocumentKind kind) => kind switch
+    {
+        DocumentKind.Minutes => "minutes",
+        DocumentKind.Legislation => "legislation",
+        DocumentKind.Agenda => "agenda",
+        DocumentKind.AgendaPacket => "agenda_packet",
+        DocumentKind.Notice => "notice",
+        DocumentKind.NewsRelease => "news_release",
+        DocumentKind.NewsArticle => "news_article",
+        DocumentKind.Other => "other",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown document kind."),
+    };
+
     /// <summary>Returns <c>moratorium</c>, <c>rezoning</c>, <c>text_amendment</c> or <c>resolution</c>.</summary>
     public static string ToToken(this ActionType actionType) => actionType switch
     {

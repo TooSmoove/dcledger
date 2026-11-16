@@ -229,3 +229,23 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - The reader's email is optional. With one, the reply is an email from the maintainer within 48 hours; without one, the corrections log is the answer. Reports are never published; the log names a report only by number (`R-<n>`), and corrections entries' `issue` key is now `report`.
   - No page links the repository. The about page's links to the stability promise, data dictionary and changelog now point at `/data/` and `/changelog/`, rendered from `docs/stability.md` (moved out of `docs/export.md`), `docs/data-dictionary.md` and `CHANGELOG.md`. A remark plugin rewrites their links for the site, leaves out issue references and stops the build on any link into the repository or mention of its internals.
   - The correction issue template is removed; `.github/ISSUE_TEMPLATE/config.yml` turns off blank issues and links the form.
+- **Nov 16, 2026 — Locator maps, first-page pictures and one web font (issue #132, items 2 to 4; AC2, AC8, AC12, §E):**
+  - Each jurisdiction page draws a static SVG locator: North Carolina, its county lines and the jurisdiction filled
+    (ringed when a city is too small to see), from the Census Bureau's cartographic boundary files (public domain).
+    `tools/build_locators.py` builds `site/src/geo/nc-boundaries.json` once and it is committed, so builds stay
+    offline; no basemap data is drawn, so no ODbL attribution is needed. The SVG is `role="img"` with an accessible
+    name, the credit is a visible caption, and the page ships no script.
+  - Documents gain an optional `kind` and, for official `minutes` and `legislation` only, an optional `thumbnail`
+    (`sha256`, `width`, `height`, `reviewed`) with its picture in `data/thumbnails/{id}.webp` (ADR-0002's layout gains
+    that folder). The picture is rendered from the archived bytes themselves (`tools/render_thumbnail.py` refuses a
+    file whose SHA-256 isn't a record's ID), at archive time rather than at publish, because publish holds no
+    document credentials (WS-AC9). The quality gate rejects a picture of any other kind (agenda packets stay private),
+    one whose file is missing or differs from its hash, an unclaimed file (`THUMBNAIL_INVALID`) and one not marked
+    reviewed for private individuals' names (`THUMBNAIL_UNREVIEWED`). Export copies each listed document's picture to
+    `public/thumbnails/` and `events.json` gains `kind` and `thumbnail` per document (schema version 1, additive;
+    ADR-0004 amended). The `thumbnail` workflow renders a fetched document from the private bucket for review
+    (ADR-0003 amended). Pictures are lazy-loaded at a fixed size beside their source.
+  - The site self-hosts one font: EB Garamond (SIL OFL 1.1), roman, weights 400 to 700, subset to Latin and the
+    punctuation in use, one 37,120-byte WOFF2 preloaded with `font-display: swap` and a metric-matched Times
+    fallback (`tools/subset_font.py`). Italic stays on the system serif to keep within 60 KB. The license report
+    gains a "vendored" section that checks the font's and the boundaries' hashes and license texts.

@@ -33,6 +33,15 @@ public static class ExportPaths
     /// <summary>The RSS 2.0 feed of reviewed changes.</summary>
     public const string Feed = "public/feed.xml";
 
+    /// <summary>
+    /// A document's first-page picture (issue #132), for example <c>public/thumbnails/{sha256}.webp</c>; the site serves
+    /// it at <see cref="ThumbnailUrlPath"/>.
+    /// </summary>
+    public static string Thumbnail(string documentId) => $"public/thumbnails/{documentId}.webp";
+
+    /// <summary>Where the site serves <see cref="Thumbnail"/>: <c>/thumbnails/{sha256}.webp</c>.</summary>
+    public static string ThumbnailUrlPath(string documentId) => $"/thumbnails/{documentId}.webp";
+
     /// <summary>One jurisdiction's calendar, for example <c>public/radar/guilford.ics</c>.</summary>
     public static string JurisdictionRadar(string jurisdictionId) => $"public/radar/{jurisdictionId}.ics";
 }

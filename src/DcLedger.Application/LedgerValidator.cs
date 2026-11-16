@@ -54,6 +54,8 @@ public static class LedgerValidator
             CheckId(errors, file, document.Id.Value);
         }
 
+        ThumbnailRules.Check(errors, snapshot.Documents, snapshot.Thumbnails);
+
         foreach (var (file, ledgerEvent) in snapshot.Events)
         {
             CheckId(errors, file, ledgerEvent.Id);
