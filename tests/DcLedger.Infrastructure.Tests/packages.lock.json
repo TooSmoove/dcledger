@@ -4,11 +4,11 @@
     "net10.0": {
       "Microsoft.Extensions.DependencyInjection": {
         "type": "Direct",
-        "requested": "[10.0.14, )",
-        "resolved": "10.0.14",
-        "contentHash": "2LzcuVjemeXR+WdY9wGIr8iGb7fYsDAit+IScxXX2XJnX0b++mWcE/WO6fEGIqhdMfSQM2ZS5JGMHYZix7YXZg==",
+        "requested": "[10.0.15, )",
+        "resolved": "10.0.15",
+        "contentHash": "7DUIgHeJpBs1RG0hYwWDOImXP03+uPrV5KtyUPxrZsiWadlg95aYijNKCZ2j2UmufQAmN6XEQfx4B/J6TuE7lg==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.14"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.15"
         }
       },
       "Shouldly": {
@@ -23,9 +23,9 @@
       },
       "WireMock.Net.Minimal": {
         "type": "Direct",
-        "requested": "[2.30.0, )",
-        "resolved": "2.30.0",
-        "contentHash": "W737m474jEcpATECyFAPcVkUhP2h4dYAbGKliDrmTjdtXhhGSJQdmBuoFRonkhmV79x5n+E+wxcKQxyhvFvyzw==",
+        "requested": "[2.31.0, )",
+        "resolved": "2.31.0",
+        "contentHash": "zf51qxjf0xlQq45PoYOhfTi5zIloFYd+//JndYJVeP41jYVJAAcNIH0eAQUjxWvS2KOj4MbjwIjNrRv+5lvNjA==",
         "dependencies": {
           "JmesPath.Net": "1.1.0",
           "Microsoft.IdentityModel.Protocols.OpenIdConnect": "6.34.0",
@@ -34,9 +34,9 @@
           "Scriban.Signed": "7.5.3",
           "SimMetrics.Net": "1.0.5",
           "TinyMapper.Signed": "4.0.0",
-          "WireMock.Net.OpenApiParser": "2.30.0",
-          "WireMock.Net.Shared": "2.30.0",
-          "WireMock.Org.Abstractions": "2.30.0"
+          "WireMock.Net.OpenApiParser": "2.31.0",
+          "WireMock.Net.Shared": "2.31.0",
+          "WireMock.Org.Abstractions": "2.31.0"
         }
       },
       "xunit.v3": {
@@ -55,8 +55,17 @@
       },
       "AWSSDK.Core": {
         "type": "Transitive",
-        "resolved": "4.0.102.19",
-        "contentHash": "Hb6P2ui6y0U+UNUjcC4ASFFoTLzCijhMzfOCXfoFTXq/o0YWQsO1oSH1NG2GQ9dlIT693xeeih0yAcfeL1dphg=="
+        "resolved": "4.1.1",
+        "contentHash": "MGURtuvtalMXUaRKCTJv4f3XrwLTcZgrIGfthnOt1Qqol6rTtNKoF0ZusQc12+Z7V9e/UsarZ7AXhh8vMIm76A==",
+        "dependencies": {
+          "AWSSDK.Extensions.Numerics": "[4.1.0, 5.0.0)",
+          "System.IO.Hashing": "11.0.0"
+        }
+      },
+      "AWSSDK.Extensions.Numerics": {
+        "type": "Transitive",
+        "resolved": "4.1.0",
+        "contentHash": "hhoiXT1aUyVgIiQbQoqG3L1EEneqXDh2GKyH5izUlO6Rzi9GAAi8S6mlLiVwow23+EGg77zHjdmUi+ia3RSUTg=="
       },
       "DiffEngine": {
         "type": "Transitive",
@@ -647,28 +656,28 @@
       },
       "Microsoft.AspNetCore.Http": {
         "type": "Transitive",
-        "resolved": "2.3.9",
-        "contentHash": "+CcfWi1LoKYbcxt+3toO4xbBG+qSSMbPuuow+cbZKIrITXuu1geN1traamL4jG8QaHdHGm3M0eCh+EOgdMgNPA==",
+        "resolved": "2.3.14",
+        "contentHash": "wBRDKE/2tDZr35O/OOknUDxebC9RhAY9jjXWmH8RjqRR0DkwqaL5gGQlu8Xf12u8E+O+8+jmrfAPdK5Lqj199g==",
         "dependencies": {
-          "Microsoft.AspNetCore.Http.Abstractions": "2.3.0",
-          "Microsoft.AspNetCore.WebUtilities": "2.3.0",
+          "Microsoft.AspNetCore.Http.Abstractions": "2.3.13",
+          "Microsoft.AspNetCore.WebUtilities": "2.3.13",
           "Microsoft.Extensions.ObjectPool": "8.0.11",
           "Microsoft.Extensions.Options": "8.0.2",
-          "Microsoft.Net.Http.Headers": "2.3.8"
+          "Microsoft.Net.Http.Headers": "2.3.13"
         }
       },
       "Microsoft.AspNetCore.Http.Abstractions": {
         "type": "Transitive",
-        "resolved": "2.3.0",
-        "contentHash": "39r9PPrjA6s0blyFv5qarckjNkaHRA5B+3b53ybuGGNTXEj1/DStQJ4NWjFL6QTRQpL9zt7nDyKxZdJOlcnq+Q==",
+        "resolved": "2.3.13",
+        "contentHash": "V40/i3RzwjOpC7aUXkWYac45lD5o/HH/BF6KDgWpto/YWGHW9oHd4OSYg+WkaZxZYXxF4t2fRUWA4KyyABxw8g==",
         "dependencies": {
-          "Microsoft.AspNetCore.Http.Features": "2.3.0"
+          "Microsoft.AspNetCore.Http.Features": "2.3.12"
         }
       },
       "Microsoft.AspNetCore.Http.Features": {
         "type": "Transitive",
-        "resolved": "2.3.0",
-        "contentHash": "f10WUgcsKqrkmnz6gt8HeZ7kyKjYN30PO7cSic1lPtH7paPtnQqXPOveul/SIPI43PhRD4trttg4ywnrEmmJpA==",
+        "resolved": "2.3.12",
+        "contentHash": "Lq3xByu3oBaIPJrKhL8NIRTwQO177NhztvBG6FBoajnxeDIZn2N5vzfDjcp7eQcyPbWPm9G1yMEi9ah+yMR7kw==",
         "dependencies": {
           "Microsoft.Extensions.Primitives": "8.0.0"
         }
@@ -725,8 +734,8 @@
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Transitive",
-        "resolved": "10.0.14",
-        "contentHash": "QtpQzuSZVyTPCuHW058yCs9Nj0394uUkNyFHS813nOmK9UgUdBdaprJ5PPsBgsQIpxADTsTkbaMMonykem6qdw=="
+        "resolved": "10.0.15",
+        "contentHash": "KczR2nV7ooeimtZxAawPht/FJUHnX+uoWy7y4pba+iaRQBwUM2NwtiqZg+/FpZDHUf2RkkzveGkhMTWDNzmDUA=="
       },
       "Microsoft.Extensions.DependencyInjection.AutoActivation": {
         "type": "Transitive",
@@ -1103,6 +1112,11 @@
           "Microsoft.IdentityModel.Tokens": "6.34.0"
         }
       },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "11.0.0",
+        "contentHash": "U+Bv2qCYt6eONi+arSP0QIp4uTO6os6uceBsqiAwruZ+Wo2HrRhO/0tj38M9URJtS+4DhAtT3ka2TGNFYsnhyQ=="
+      },
       "System.Management": {
         "type": "Transitive",
         "resolved": "6.0.1",
@@ -1128,26 +1142,26 @@
       },
       "WireMock.Net.Abstractions": {
         "type": "Transitive",
-        "resolved": "2.30.0",
-        "contentHash": "0dIuFLZq+QTp4XDremAt17DO099H+B5TnXzuCKkdop8hejuQpt3dHt1F1CevMGZ6i6kZj7ylizHY68d27T4mgg=="
+        "resolved": "2.31.0",
+        "contentHash": "mi4HF6BZVBSNl9YNP4hjMWywLFNzXv7bjhxiw3MeoNIA4C6TFLd/GJrZhtsrmuoe/V1hKaRUX4GWvB2nCXFpbg=="
       },
       "WireMock.Net.OpenApiParser": {
         "type": "Transitive",
-        "resolved": "2.30.0",
-        "contentHash": "qrzMMdZ9YHVdG6SlTt+CTKn1Tdh3x4fPDImzTv7WjT6bHQsAmEPZu/TlkimQ72bCwXwEfCqge7dZaYjtacmLPg==",
+        "resolved": "2.31.0",
+        "contentHash": "IyIxGwdimAIP+NPEB08WTqPAMzK5ffVn+d3obhugN+W4XjBkUuvBpZrlAABmbaGbtHUEah2mb9IasjxYAksvxw==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.4",
           "RamlToOpenApiConverter.SourceOnly": "0.50.0",
           "RandomDataGenerator.Net": "1.0.19.1",
           "SharpYaml": "2.1.5",
           "Stef.Validation": "0.3.0",
-          "WireMock.Net.Abstractions": "2.30.0"
+          "WireMock.Net.Abstractions": "2.31.0"
         }
       },
       "WireMock.Net.Shared": {
         "type": "Transitive",
-        "resolved": "2.30.0",
-        "contentHash": "S89W9s865U2T0B4b/EyHVUFeDXvEe+4OrU1d00Gby+1+E38FmHrpitqFbL52NYpN/wwAXJU702cS6c3FQzO74Q==",
+        "resolved": "2.31.0",
+        "contentHash": "1t9abmUKacqBnNsdSX8AIj+J0uN5RKxMEqN2qo970smrKmdU1anh5pg8rGh82mDd6NKbI+kv4RyBFRr1Qcd3lw==",
         "dependencies": {
           "AnyOf": "0.5.0.1",
           "Handlebars.Net.Helpers": "2.5.5",
@@ -1159,16 +1173,17 @@
           "Handlebars.Net.Helpers.Xslt": "2.5.5",
           "JsonConverter.Newtonsoft.Json": "0.13.0",
           "JsonConverter.System.Text.Json": "0.13.0",
-          "Microsoft.AspNetCore.Http": "2.3.9",
+          "Microsoft.AspNetCore.Http": "2.3.14",
+          "Microsoft.AspNetCore.WebUtilities": "2.3.14",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.14",
           "Stef.Validation": "0.3.0",
-          "WireMock.Net.Abstractions": "2.30.0"
+          "WireMock.Net.Abstractions": "2.31.0"
         }
       },
       "WireMock.Org.Abstractions": {
         "type": "Transitive",
-        "resolved": "2.30.0",
-        "contentHash": "D3kFLeIhtX5w3PJI4GSUQoEGJ4Apb6HJcclFL9FUF5scns1Um+UrqbSQEE/ovAJSDy9SeZqTBDyntp79QDWkgA=="
+        "resolved": "2.31.0",
+        "contentHash": "fUcBoriWEC9hoVSAAqcC/pkBQk3YSBKyjl+H2jXeC/K1Sms84Xxqw1vuUUoc7j+39bv89EsC5jgtv0Fo34hs7g=="
       },
       "XPath2": {
         "type": "Transitive",
@@ -1264,7 +1279,7 @@
       "dcledger.infrastructure": {
         "type": "Project",
         "dependencies": {
-          "AWSSDK.S3": "[4.0.104.11, )",
+          "AWSSDK.S3": "[4.1.0.1, )",
           "DcLedger.Application": "[0.1.0, )",
           "DcLedger.Domain": "[0.1.0, )",
           "Microsoft.Extensions.Http.Resilience": "[10.11.0, )",
@@ -1273,11 +1288,11 @@
       },
       "AWSSDK.S3": {
         "type": "CentralTransitive",
-        "requested": "[4.0.104.11, )",
-        "resolved": "4.0.104.11",
-        "contentHash": "leP2ZC3gVaNHXZleKOMHmedex6fTrr6u1ZQFuezIGjT01oPwP0j6YI00jlPwlakTC0Uo5a0eOOY2Q/eYzsU9wg==",
+        "requested": "[4.1.0.1, )",
+        "resolved": "4.1.0.1",
+        "contentHash": "ZgNjIc7GwxRvkKbbZVjzEm7Q2H5ZDCAWxsryGahq1/xF292U4UTUEwoiqsSAAPG2kvfmejI1cuVj3VMkKnXJKg==",
         "dependencies": {
-          "AWSSDK.Core": "[4.0.102.19, 5.0.0)"
+          "AWSSDK.Core": "[4.1.1, 5.0.0)"
         }
       },
       "Microsoft.AspNetCore.WebUtilities": {
