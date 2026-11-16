@@ -14,7 +14,7 @@ namespace DcLedger.Publishing.Tests;
 /// </summary>
 public sealed class CorrectionsExporterTests
 {
-    private static readonly string[] EntryKeys = ["id", "reported_on", "corrected_on", "record_ids", "summary", "issue"];
+    private static readonly string[] EntryKeys = ["id", "reported_on", "corrected_on", "record_ids", "summary", "report"];
 
     [Fact]
     public void Writes_one_site_data_file_and_nothing_public()
@@ -52,7 +52,7 @@ public sealed class CorrectionsExporterTests
         vote.GetProperty("corrected_on").GetString().ShouldBe("2026-11-24");
         vote.GetProperty("record_ids").EnumerateArray().Select(e => e.GetString()!).ShouldBe(ExportSamples.VoteCorrection.RecordIds);
         vote.GetProperty("summary").GetString().ShouldBe(ExportSamples.VoteCorrection.Summary, "quotes and markup survive as data");
-        vote.GetProperty("issue").GetInt32().ShouldBe(131);
+        vote.GetProperty("report").GetInt32().ShouldBe(131);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class CorrectionsExporterTests
         var wording = document.RootElement.GetProperty("corrections")[0];
 
         wording.GetProperty("record_ids").GetArrayLength().ShouldBe(0);
-        wording.GetProperty("issue").ValueKind.ShouldBe(JsonValueKind.Null);
+        wording.GetProperty("report").ValueKind.ShouldBe(JsonValueKind.Null);
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public sealed class CorrectionsExporterTests
         {
             entry.EnumerateObject().Select(p => p.Name).ShouldBe(EntryKeys);
             entry.GetProperty("record_ids").ValueKind.ShouldBe(JsonValueKind.Array);
-            (entry.GetProperty("issue").ValueKind is JsonValueKind.Number or JsonValueKind.Null).ShouldBeTrue();
+            (entry.GetProperty("report").ValueKind is JsonValueKind.Number or JsonValueKind.Null).ShouldBeTrue();
         }
     }
 

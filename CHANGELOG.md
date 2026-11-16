@@ -3,9 +3,9 @@
 Changes to what NC Data Center Ledger publishes: its pages, calendars, feed and downloads. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
-What may change and what may not is in [`docs/export.md`, "Stability"](docs/export.md#stability). A breaking change is
+What may change and what may not is in [Stability](docs/stability.md). A breaking change is
 listed here at least 90 days before it ships, with what to use instead. Column-level detail is in
-[`docs/data-dictionary.md`](docs/data-dictionary.md).
+the [data dictionary](docs/data-dictionary.md).
 
 ## [Unreleased]
 
@@ -20,6 +20,10 @@ The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcled
 - **Methodology and corrections** (`/methodology/`): how items get in, what the labels mean, provenance, coverage,
   who publishes the ledger, how to cite an item, how to report a mistake, and a dated corrections log that opens
   Nov 22, 2026 (#117).
+- **Report form** (`/report/`): report a mistake, ask a question or ask us to stop fetching, with an optional email
+  address for a reply. Reports are private; a fix shows in the corrections log. Linked from every footer.
+- **Using the data** (`/data/`), with the stability promise and the data dictionary, and this changelog
+  (`/changelog/`), both on the site.
 - **Coverage:** Guilford County, Winston-Salem and Chatham County (automated Legistar ingest), and Greensboro, Stokes
   County and Vance County (entered by hand). Each jurisdiction states its coverage tier; all six are `watched`.
   Forsyth County and Davidson County are `decisions`: decisions recorded from the official record, hearings not

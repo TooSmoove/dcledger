@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import {
   SUPPORTED_CORRECTIONS_VERSION,
-  issueHref,
+  reportReference,
   newestFirst,
   parseCorrections,
   recordHref,
@@ -18,7 +18,7 @@ const entry = {
   corrected_on: '2026-11-24',
   record_ids: [],
   summary: 'The vote was recorded as 9-0; the minutes show 8-1.',
-  issue: null,
+  report: null,
 };
 const log = (corrections) =>
   JSON.stringify({ schema_version: 1, opened_on: '2026-11-22', corrections });
@@ -46,7 +46,7 @@ test('malformed entries fail the build instead of rendering a partial log', () =
     [{ corrected_on: 'Nov 24' }, /corrected_on must be a date/],
     [{ record_ids: 'guilford' }, /record_ids must be a list/],
     [{ summary: ' ' }, /summary is required/],
-    [{ issue: 0 }, /issue must be a positive whole number or null/],
+    [{ report: 0 }, /report must be a positive whole number or null/],
   ]) {
     assert.throws(() => parseCorrections(log([{ ...entry, ...change }])), message);
   }
@@ -85,8 +85,8 @@ test('a corrected record links to where it is shown, and an unknown one stops th
   assert.throws(() => recordHref('missing', records), /'missing'/);
 });
 
-test('issue links point at the repository', () => {
-  assert.equal(issueHref(131), 'https://github.com/TooSmoove/dcledger/issues/131');
+test('a log entry names its form report as plain text, not a link', () => {
+  assert.equal(reportReference(131), 'R-131');
 });
 
 test('the log opens with a date without its weekday', () => {

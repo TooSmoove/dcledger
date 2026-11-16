@@ -12,7 +12,7 @@ public sealed class CorrectionRulesTests
     [Fact]
     public void A_complete_entry_naming_a_jurisdiction_and_an_action_is_valid()
     {
-        Validate(Entry() with { RecordIds = ["fixture", "fixture-moratorium-2026-11-05"], Issue = 131 }).ShouldBeEmpty();
+        Validate(Entry() with { RecordIds = ["fixture", "fixture-moratorium-2026-11-05"], Report = 131 }).ShouldBeEmpty();
     }
 
     [Fact]
@@ -48,9 +48,9 @@ public sealed class CorrectionRulesTests
     }
 
     [Fact]
-    public void Issue_number_zero_is_reported()
+    public void Report_number_zero_is_reported()
     {
-        Rule(Entry() with { Issue = 0 }).ShouldBe(ValidationRule.CorrectionInvalid);
+        Rule(Entry() with { Report = 0 }).ShouldBe(ValidationRule.CorrectionInvalid);
     }
 
     [Fact]

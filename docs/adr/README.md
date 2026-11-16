@@ -12,3 +12,4 @@ Lightweight ADRs in Michael Nygard's format. To change a decision, add a new ADR
 | [0006](0006-testing.md) | Testing strategy | Accepted |
 | [0007](0007-cli-artifact-handoff.md) | CLI artifact handoff from ci to scheduled workflows | Accepted |
 | [0008](0008-outcome-watching.md) | Outcome watching | Accepted |
+| [0009](0009-reader-reports.md) | Reader reports through a site form | Accepted |

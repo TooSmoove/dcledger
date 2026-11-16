@@ -3,7 +3,7 @@
 # site/, so nothing unreviewed is ever published. Three jobs, so the Cloudflare token never shares a runner with the
 # site's npm dependencies:
 #   build   no secrets: ingest-status.json from ingest history -> dcl validate -> dcl export -> site build
-#   deploy  environment cloudflare-pages: wrangler pages deploy, then checks the live site
+#   deploy  environment cloudflare-pages: wrangler pages deploy (site plus Pages Functions), then checks the live site
 #   report  opens, comments on or closes the "Publish failing" issue
 # See docs/publish.md.
 name: publish
@@ -189,6 +189,16 @@ jobs:
         with:
           name: site
           path: ${{ runner.temp }}/site
+      # The report form's and inbox's Pages Functions, from the same commit as the site (docs/reports.md). wrangler
+      # bundles the functions/ folder in its working directory; bindings come from the Pages project's settings.
+      - name: Check out the Pages Functions at the build's commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.build.outputs.head-sha }}
+          path: build
+          persist-credentials: false
+          sparse-checkout: |
+            site/functions
 
       - name: Deploy to Cloudflare Pages
         id: deploy
@@ -201,7 +211,8 @@ jobs:
         run: |
           set -o pipefail
           # Actions logs are public; a Cloudflare account's default name contains its owner's email.
-          tools/deploy/node_modules/.bin/wrangler pages deploy "$RUNNER_TEMP/site" --project-name "$PROJECT" \
+          cd build/site
+          "$GITHUB_WORKSPACE/tools/deploy/node_modules/.bin/wrangler" pages deploy "$RUNNER_TEMP/site" --project-name "$PROJECT" \
             --branch main --commit-hash "$HEAD_SHA" --commit-message "publish ${HEAD_SHA:0:7}, run $GITHUB_RUN_ID" \
             --commit-dirty=true 2>&1 | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/<email redacted>/g'
           url="$(jq -r 'select(.type == "pages-deploy-detailed") | .url' "$WRANGLER_OUTPUT_FILE_PATH" | tail -1)"
@@ -232,6 +243,12 @@ jobs:
               exit 1
             fi
           done
+          # The report endpoint is a Function that refuses a POST without this site's Origin; the inbox never answers
+          # 200 without Cloudflare Access (docs/reports.md).
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X POST "$SITE_URL/api/report")"
+          [ "$code" = 403 ] || { echo "::error title=publish::POST /api/report answered $code, expected 403 (Functions missing?)"; exit 1; }
+          code="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$SITE_URL/inbox/")"
+          [ "$code" != 200 ] || { echo "::error title=publish::/inbox/ answered 200 without Cloudflare Access"; exit 1; }
           {
             echo "### Deployed"
             echo

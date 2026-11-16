@@ -59,13 +59,13 @@ public sealed class CorrectionsExporter : IExporter
 
         json.WriteEndArray();
         json.WriteString("summary", correction.Summary);
-        if (correction.Issue is { } issue)
+        if (correction.Report is { } report)
         {
-            json.WriteNumber("issue", issue);
+            json.WriteNumber("report", report);
         }
         else
         {
-            json.WriteNull("issue");
+            json.WriteNull("report");
         }
 
         json.WriteEndObject();

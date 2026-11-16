@@ -14,7 +14,7 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /**
- * @typedef {{ id: string, reported_on: string, corrected_on: string, record_ids: string[], summary: string, issue: number | null }} Correction
+ * @typedef {{ id: string, reported_on: string, corrected_on: string, record_ids: string[], summary: string, report: number | null }} Correction
  * @typedef {{ schema_version: number, opened_on: string, corrections: Correction[] }} CorrectionLog
  */
 
@@ -62,8 +62,8 @@ function checkEntry(entry, index) {
   if (typeof e.summary !== 'string' || e.summary.trim() === '') {
     throw new Error(`${where} (${e.id}): summary is required.`);
   }
-  if (e.issue !== null && !(Number.isInteger(e.issue) && /** @type {number} */ (e.issue) > 0)) {
-    throw new Error(`${where} (${e.id}): issue must be a positive whole number or null.`);
+  if (e.report !== null && !(Number.isInteger(e.report) && /** @type {number} */ (e.report) > 0)) {
+    throw new Error(`${where} (${e.id}): report must be a positive whole number or null.`);
   }
 }
 
@@ -108,7 +108,11 @@ export function recordHref(id, records) {
   );
 }
 
-/** The repository's issue page for a correction report, for example #131. */
-export function issueHref(issue) {
-  return `https://github.com/TooSmoove/dcledger/issues/${issue}`;
+/**
+ * How the log names the form report a correction came from, for example R-131: the reference the reporter sees in a
+ * reply. Plain text, not a link; reports themselves are private.
+ * @param {number} report
+ */
+export function reportReference(report) {
+  return `R-${report}`;
 }

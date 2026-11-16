@@ -24,19 +24,16 @@ live unwritten. Combine one block from each part: **publisher**, **funding**, th
 **P1. Company only (before outreach).**
 
 > NC Data Center Ledger is published by [Company name], a [state] [LLC / corporation] based in [city], North
-> Carolina. One person maintains it. The code and data are public at
-> [github.com/TooSmoove/dcledger](https://github.com/TooSmoove/dcledger).
+> Carolina. One person maintains it.
 
 **P2. Company and named maintainer.**
 
 > NC Data Center Ledger is published by [Company name], a [state] [LLC / corporation] based in [city], North
-> Carolina. It is maintained by [Full name], [role at the company, for example "its owner"]. The code and data are
-> public at [github.com/TooSmoove/dcledger](https://github.com/TooSmoove/dcledger).
+> Carolina. It is maintained by [Full name], [role at the company, for example "its owner"].
 
 **P3. Individual, no company.**
 
-> NC Data Center Ledger is published and maintained by [Full name], who lives in [county], North Carolina. The code
-> and data are public at [github.com/TooSmoove/dcledger](https://github.com/TooSmoove/dcledger).
+> NC Data Center Ledger is published and maintained by [Full name], who lives in [county], North Carolina.
 
 ### Funding
 
@@ -111,17 +108,19 @@ Notes:
 
 ## Replies to correction reports
 
-Post on the report's GitHub issue within 48 hours.
+Reports arrive in the private inbox (`/inbox/`, see `docs/reports.md`). When the reporter left an email address, reply
+within 48 hours with the inbox's **Email** link, which quotes their report and puts its number (`R-<n>`) in the
+subject. Then set the report's status. With no email address, the fix in the corrections log is the answer.
 
 **Corrected.**
 
-> Thanks for the report. The record is corrected in [#PR] and is live on the site now: [item link]. The corrections
-> log lists it at [link to /methodology/#log].
+> Thanks for the report. The record is corrected and live on the site now: [item link]. The corrections log lists it
+> at [link to /methodology/#log].
 
 **The record stands.**
 
 > Thanks for the report. We checked [source] ([date]), and it shows [what it shows], which matches the record, so the
-> record stays as it is. If you have a document that shows otherwise, add it here and we'll look again.
+> record stays as it is. If you have a document that shows otherwise, reply with it and we'll look again.
 
 **Need more information.**
 
@@ -131,15 +130,10 @@ Post on the report's GitHub issue within 48 hours.
 **Still checking (when the fix can't be finished in 48 hours).**
 
 > Thanks for the report. We're checking it against [source]. That needs [what is pending, for example "the posted
-> minutes"], expected by [date]. We'll update this issue then.
+> minutes"], expected by [date]. We'll write again then.
 
 **Out of scope.**
 
 > Thanks for writing. The ledger records only [scope, for example "meetings, hearings and decisions on data center
 > land use by local governments in its covered jurisdictions"], so this isn't something it will record. [Optional:
 > where else to look.]
-
-**Contains a private person's name.**
-
-> Thanks for the report. We've edited it to remove a private person's name; the ledger doesn't store names of
-> private individuals. The report itself is still open.

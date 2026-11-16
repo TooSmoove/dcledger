@@ -143,7 +143,7 @@ internal static class ExportSamples
         CorrectedOn = new DateOnly(2026, 11, 24),
         RecordIds = [November5Moratorium.Id, County.Id],
         Summary = "The vote was recorded as \"9-0\"; the <minutes> show 8-1 & one absence.",
-        Issue = 131,
+        Report = 131,
     };
 
     /// <summary>A correction to page wording only: no record, no issue, corrected the day it was reported.</summary>

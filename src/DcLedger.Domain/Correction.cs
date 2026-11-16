@@ -34,6 +34,9 @@ public sealed record Correction
     /// <summary>What was wrong and what the record says now, in neutral words (SPEC §E), on one line.</summary>
     public required string Summary { get; init; }
 
-    /// <summary>The GitHub issue where it was reported or tracked, when there is one.</summary>
-    public int? Issue { get; init; }
+    /// <summary>
+    /// The number of the site form report it came from (shown as R-&lt;n&gt;), when there is one. Reports themselves are
+    /// private (docs/reports.md); only the number is published.
+    /// </summary>
+    public int? Report { get; init; }
 }

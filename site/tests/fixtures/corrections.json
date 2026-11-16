@@ -8,7 +8,7 @@
       "corrected_on": "2026-11-22",
       "record_ids": [],
       "summary": "The methodology page gave the publish interval as 12 hours; it is 6 hours.",
-      "issue": null
+      "report": null
     },
     {
       "id": "2026-11-24-fixture-guilford-vote-count",
@@ -20,7 +20,7 @@
         "guilford"
       ],
       "summary": "The vote was recorded as \"9-0\"; the <minutes> show 8-1 & one absence.",
-      "issue": 131
+      "report": 131
     }
   ]
 }

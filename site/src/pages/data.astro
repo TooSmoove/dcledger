@@ -1,0 +1,31 @@
+---
+// Using the data: the stability promise and the data dictionary, rendered from docs/stability.md and
+// docs/data-dictionary.md so the site and the repository never disagree (remark-public-docs.js).
+import Base from '../layouts/Base.astro';
+import { Content as Stability } from '../../../docs/stability.md';
+import { Content as Dictionary } from '../../../docs/data-dictionary.md';
+---
+
+<Base title="Using the data">
+  <h1>Using the data</h1>
+  <p>
+    What stays stable in the ledger's calendars, feed and downloads, and what every column means.
+    Changes are listed in the <a href="/changelog/">changelog</a>.
+  </p>
+  <nav aria-label="On this page">
+    <ul>
+      <li>
+        <a href="#stability">Stability</a>
+      </li>
+      <li>
+        <a href="#data-dictionary">Data dictionary</a>
+      </li>
+    </ul>
+  </nav>
+  <div class="doc">
+    <Stability />
+  </div>
+  <div class="doc">
+    <Dictionary />
+  </div>
+</Base>

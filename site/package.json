@@ -21,6 +21,7 @@
     "a11y": "node scripts/quality/axe.mjs"
   },
   "dependencies": {
+    "@astrojs/markdown-satteri": "0.4.10",
     "@protomaps/basemaps": "5.7.2",
     "astro": "7.4.12",
     "maplibre-gl": "6.16.0",

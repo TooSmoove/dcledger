@@ -320,7 +320,7 @@ public sealed class YamlLedgerReader : ILedgerReader
         var correctedOn = f.Date("corrected_on");
         var recordIds = f.Slugs("record_ids");
         var summary = f.RequiredLine("summary", Correction.MaxSummaryLength);
-        var issue = f.OptionalWholeNumber("issue", int.MaxValue);
+        var report = f.OptionalWholeNumber("report", int.MaxValue);
 
         return id is null || reportedOn is null || correctedOn is null || summary is null
             ? null
@@ -331,7 +331,7 @@ public sealed class YamlLedgerReader : ILedgerReader
                 CorrectedOn = correctedOn.Value,
                 RecordIds = recordIds,
                 Summary = summary,
-                Issue = issue is null ? null : (int)issue.Value,
+                Report = report is null ? null : (int)report.Value,
             };
     }
 
