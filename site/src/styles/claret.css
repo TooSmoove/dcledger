@@ -1,0 +1,727 @@
+/* Claret: the site's design (issue #133). Burgundy band and brass rail over parchment; ink-black is the one signal.
+   Every colour and font is a token below. No web fonts: system stacks only (SPEC §E: no third-party requests).
+   The old token names (--ink, --muted, --rule, --link, --paper, --flag) are kept: the map page uses them. */
+
+:root {
+  color-scheme: light dark;
+
+  --paper: #f4ede0;
+  --surface: #eadfcb;
+  --ink: #2a1219;
+  --muted: #5e4148;
+  --rule: #cdbda5;
+  --link: #1a0e11;
+  --link-line: #b08a3a;
+  --band: #3d0f1f;
+  --band-rule: #5a1d31;
+  --on-band: #f4ede0;
+  --on-band-2: #e6c9d1;
+  --brass: #c9a453;
+  --brass-hover: #d8b768;
+  --focus: #1a0e11;
+  --focus-on-band: #c9a453;
+  --mark: #e5d09a;
+  --mark-ink: #2a1219;
+  --flag: #4b3305;
+  --flag-bg: #efdcae;
+  --seat-ink: #3d0f1f;
+  --day: #eadfcb;
+  --day-weekend: #e0d2ba;
+  --day-item: #3d0f1f;
+  --g0: #e5d8c3;
+  --g1: #c9a453;
+  --g2: #1a0e11;
+  --g3: #3d0f1f;
+
+  --f-head:
+    Garamond, 'EB Garamond', Baskerville, 'Baskerville Old Face', 'Hoefler Text', 'URW Palladio L',
+    P052, serif;
+  --f-body:
+    Garamond, 'EB Garamond', Baskerville, 'Baskerville Old Face', 'Hoefler Text', 'URW Palladio L',
+    P052, serif;
+  --f-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --f-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+
+  --print-paper: #fffdf8;
+  --print-ink: #160b0e;
+
+  --wrap: 72rem;
+  --gutter: 1.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #170a0e;
+    --surface: #24111a;
+    --ink: #f1e6d8;
+    --muted: #c8b3ab;
+    --rule: #4a2b35;
+    --link: #f1e6d8;
+    --link-line: #d4b062;
+    --band: #3d0f1f;
+    --band-rule: #5a1d31;
+    --brass: #d4b062;
+    --brass-hover: #e2c37c;
+    --focus: #d4b062;
+    --mark: #6b4d14;
+    --mark-ink: #f1e6d8;
+    --flag: #f3d58a;
+    --flag-bg: #3a2a08;
+    --seat-ink: #e6c9d1;
+    --day: #24111a;
+    --day-weekend: #1d0d14;
+    --day-item: #d4b062;
+    --g0: #2e1822;
+    --g1: #d4b062;
+    --g2: #f1e6d8;
+    --g3: #8a3350;
+  }
+}
+
+/* ---------- base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  overflow-x: clip;
+}
+html {
+  font-family: var(--f-body);
+  font-size: 100%;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  font-size: 1.125rem;
+}
+::selection {
+  background: var(--mark);
+  color: var(--mark-ink);
+}
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--wrap));
+  margin-inline: auto;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--f-head);
+  font-weight: 500;
+  line-height: 1.1;
+  overflow-wrap: break-word;
+  min-width: 0;
+  text-wrap: balance;
+}
+h1 {
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  margin: 0;
+}
+h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 2.5rem 0 1rem;
+}
+h3 {
+  font-size: 1.5rem;
+  margin: 0 0 0.75rem;
+}
+h4 {
+  font-family: var(--f-ui);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+}
+p {
+  text-wrap: pretty;
+}
+a {
+  color: var(--link);
+  text-decoration-color: var(--link-line);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 0.12em;
+}
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+.skip:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+time,
+td,
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+code {
+  font-family: var(--f-mono);
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- skip link ---------- */
+.skip {
+  position: absolute;
+  left: -999px;
+}
+.skip:focus {
+  position: static;
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background: var(--paper);
+}
+
+/* ---------- header: the burgundy band ---------- */
+body > header {
+  background: var(--band);
+  color: var(--on-band);
+  border-bottom: 1px solid var(--band-rule);
+}
+header nav {
+  width: min(100% - 2 * var(--gutter), var(--wrap));
+  margin-inline: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.75rem;
+  padding: 1.1rem 0;
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+header nav a {
+  color: var(--on-band-2);
+  text-decoration: none;
+  padding-block: 0.2rem;
+  border-bottom: 2px solid transparent;
+}
+header nav a:hover {
+  color: var(--on-band);
+  border-bottom-color: var(--brass);
+}
+header nav a:first-child {
+  margin-right: auto;
+  font-family: var(--f-head);
+  font-size: 1.3rem;
+  color: var(--on-band);
+}
+header a:focus-visible {
+  outline-color: var(--focus-on-band);
+}
+
+/* ---------- masthead: the band continues behind a page's title, a brass rail beneath ---------- */
+.masthead {
+  background: var(--band);
+  color: var(--on-band);
+  box-shadow: 0 3px 0 0 var(--brass);
+  margin-bottom: 3rem;
+  padding-block: clamp(1.5rem, 5vw, 3.5rem) clamp(2rem, 4vw, 3rem);
+}
+.masthead h1 {
+  color: var(--on-band);
+}
+.masthead p {
+  color: var(--on-band-2);
+  max-width: 46rem;
+}
+.masthead time {
+  color: var(--on-band);
+}
+.masthead a {
+  color: var(--on-band);
+  text-decoration-color: var(--brass);
+}
+.masthead a:focus-visible {
+  outline-color: var(--focus-on-band);
+}
+.masthead .back {
+  margin: 0 0 1.25rem;
+  font-family: var(--f-ui);
+  font-size: 0.875rem;
+}
+.masthead .lede {
+  font-size: 1.25rem;
+  margin: 1rem 0 0;
+}
+.masthead .feeds {
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+  margin: 1.25rem 0 0;
+}
+.masthead .flag {
+  color: var(--flag);
+}
+.masthead dl {
+  margin-top: 1.5rem;
+}
+.masthead dt {
+  color: var(--on-band-2);
+}
+.masthead dd {
+  color: var(--on-band);
+}
+.masthead code {
+  color: var(--on-band-2);
+}
+main > .page {
+  padding-bottom: 4rem;
+}
+main > .page:first-child {
+  padding-top: 2.5rem;
+}
+
+/* ---------- footer ---------- */
+footer {
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-family: var(--f-ui);
+  font-size: 0.875rem;
+  padding: 2rem var(--gutter) 3rem;
+}
+footer p {
+  width: min(100%, var(--wrap));
+  margin: 0 auto;
+  max-width: var(--wrap);
+}
+
+/* ---------- tables ---------- */
+.table-scroll {
+  overflow-x: auto;
+}
+.table-scroll table {
+  min-width: 40rem;
+}
+.table-scroll:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+caption {
+  text-align: left;
+  font-family: var(--f-head);
+  font-size: 1.375rem;
+  font-weight: 500;
+  padding-block: 0.5rem 0.75rem;
+}
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.7rem 0.9rem 0.7rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+th {
+  font-weight: 600;
+}
+thead th {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  border-bottom: 3px solid var(--band);
+}
+tbody tr:hover {
+  background: var(--surface);
+}
+td .item {
+  font-family: var(--f-head);
+  font-size: 1.1875rem;
+}
+
+/* ---------- definition lists ---------- */
+dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.45rem 1.5rem;
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+dt {
+  font-weight: 600;
+  color: var(--muted);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- utilities used across pages ---------- */
+.muted {
+  color: var(--muted);
+}
+.flag {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.6rem;
+  color: var(--flag);
+  background: var(--flag-bg);
+  border: 1px solid currentColor;
+  font-family: var(--f-ui);
+  font-weight: 600;
+}
+.cancelled td {
+  color: var(--muted);
+}
+.cancelled td a {
+  color: var(--link);
+}
+.cancelled .item {
+  text-decoration: line-through;
+}
+.feeds {
+  margin: 1rem 0;
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+.citation {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  border-left: 3px solid var(--brass);
+  overflow-wrap: anywhere;
+}
+.log li {
+  margin-bottom: 1rem;
+}
+.log p {
+  margin: 0.2rem 0;
+}
+
+/* ---------- jurisdiction lists on the radar ---------- */
+.freshness-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  column-gap: 2.5rem;
+}
+.freshness-list > li {
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--rule);
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+.freshness-list > li > a {
+  font-family: var(--f-head);
+  font-size: 1.25rem;
+}
+.freshness-list p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+.freshness-list time {
+  color: var(--ink);
+}
+
+/* ---------- decisions ---------- */
+.decisions article {
+  padding: 1.75rem 0;
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: 1rem;
+}
+.decisions article:target {
+  background: var(--surface);
+  padding-inline: 1rem;
+}
+.decisions ol {
+  padding-left: 1.5rem;
+}
+.decisions ol > li,
+.sources > li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.sources {
+  padding-left: 1.5rem;
+}
+.sources li::marker,
+.decisions ol > li::marker {
+  font-family: var(--f-head);
+  color: var(--brass);
+}
+
+/* ---------- vote seats: a half circle of seats, filled for aye, open for no ---------- */
+.seats {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  inline-size: calc(var(--arc-r) * 2 + var(--seat) + 0.5rem);
+  block-size: calc(var(--arc-r) + var(--seat) + 0.25rem);
+  margin-left: 0.75rem;
+  border-bottom: 2px solid var(--brass);
+  --arc-r: 2.4rem;
+  --seat: 0.65rem;
+}
+.seats span {
+  position: absolute;
+  left: calc(50% - var(--seat) / 2);
+  bottom: 0.15rem;
+  inline-size: var(--seat);
+  block-size: var(--seat);
+  border-radius: 50%;
+  border: 2px solid var(--seat-ink);
+  transform: rotate(calc((var(--i) + 0.5) * 180deg / var(--n))) translateX(calc(var(--arc-r) * -1));
+}
+.seats .aye {
+  background: var(--seat-ink);
+}
+
+/* ---------- hash glyph: the 64 hex digits of a SHA-256 as an 8 x 8 grid, four shades by value ---------- */
+.glyph {
+  display: inline-grid;
+  grid-template-columns: repeat(8, 4px);
+  grid-auto-rows: 4px;
+  gap: 1px;
+  padding: 3px;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+  background: var(--paper);
+  outline: 1px solid var(--rule);
+}
+.glyph i {
+  display: block;
+}
+.glyph .q0 {
+  background: var(--g0);
+}
+.glyph .q1 {
+  background: var(--g1);
+}
+.glyph .q2 {
+  background: var(--g2);
+}
+.glyph .q3 {
+  background: var(--g3);
+}
+
+/* ---------- the 30-day window, one cell per date ---------- */
+.window {
+  margin: 0 0 2rem;
+}
+.window-scroll {
+  overflow-x: auto;
+}
+.strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(31, minmax(2rem, 1fr));
+  gap: 2px;
+  min-inline-size: 44rem;
+  font-family: var(--f-ui);
+  font-variant-numeric: tabular-nums;
+}
+.strip li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 0.1rem;
+  min-block-size: 4.25rem;
+  padding: 0.35rem 0 0.4rem;
+  background: var(--day);
+}
+.strip .weekend {
+  background: var(--day-weekend);
+}
+.strip .today {
+  box-shadow: inset 0 0 0 2px var(--link);
+}
+.strip .wd {
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+.strip .d {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.strip .mon {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.strip .has-items::after {
+  content: '';
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  background: var(--day-item);
+}
+.window figcaption {
+  margin-top: 0.75rem;
+  font-family: var(--f-ui);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* ---------- report form ---------- */
+.report-form label {
+  display: block;
+  font-family: var(--f-ui);
+  font-weight: 600;
+  margin-top: 1rem;
+}
+.report-form fieldset label {
+  display: inline;
+  font-weight: normal;
+  margin: 0 0 0 0.35rem;
+}
+.report-form fieldset {
+  border: 1px solid var(--rule);
+  margin: 1rem 0 0;
+}
+.report-form input[type='text'],
+.report-form input[type='url'],
+.report-form input[type='email'],
+.report-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 40rem;
+  font: inherit;
+  padding: 0.5rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--muted);
+}
+.report-form button {
+  font: 600 1rem var(--f-ui);
+  padding: 0.6rem 1.25rem;
+  margin-top: 1rem;
+  color: var(--on-band);
+  background: var(--band);
+  border: 2px solid var(--band);
+  cursor: pointer;
+}
+.report-form button:hover {
+  background: var(--band-rule);
+}
+.report-form button:active {
+  transform: translateY(1px);
+}
+.hint {
+  margin: 0.1rem 0 0.3rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.trap {
+  position: absolute;
+  left: -9999px;
+}
+
+/* ---------- documents published as pages ---------- */
+.doc h2,
+.doc h3 {
+  scroll-margin-top: 1rem;
+}
+.doc th,
+.doc td {
+  overflow-wrap: anywhere;
+}
+.doc pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+}
+
+@media (max-width: 40rem) {
+  dl {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+  dd {
+    margin-bottom: 0.6rem;
+  }
+  table {
+    font-size: 0.875rem;
+  }
+  th,
+  td {
+    padding-right: 0.6rem;
+  }
+}
+
+/* ---------- motion, forced colours, print ---------- */
+@view-transition {
+  navigation: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+@media (forced-colors: active) {
+  .seats span,
+  .glyph,
+  .strip .today {
+    forced-color-adjust: none;
+  }
+}
+@media print {
+  html,
+  body {
+    background: var(--print-paper);
+    color: var(--print-ink);
+  }
+  body > header,
+  .feeds,
+  .seats,
+  .glyph,
+  .window {
+    display: none !important;
+  }
+  .masthead {
+    background: none;
+    box-shadow: none;
+    border-bottom: 2pt solid var(--print-ink);
+  }
+  .masthead *,
+  .masthead a {
+    color: var(--print-ink) !important;
+  }
+  .flag {
+    background: none;
+    border: 1.5pt solid var(--print-ink);
+    color: var(--print-ink);
+  }
+  a[href^='http']::after {
+    content: ' <' attr(href) '>';
+    font-size: 8pt;
+    overflow-wrap: anywhere;
+  }
+  footer::after {
+    content: 'Printed from ncdcledger.org. Check the live page for changes since it was built.';
+    display: block;
+    margin-top: 0.5rem;
+  }
+}

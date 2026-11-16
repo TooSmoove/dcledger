@@ -4,6 +4,7 @@
 import { getCollection } from 'astro:content';
 import EventTable from '../components/EventTable.astro';
 import Freshness from '../components/Freshness.astro';
+import WindowStrip from '../components/WindowStrip.astro';
 import Base from '../layouts/Base.astro';
 import {
   WINDOW_DAYS,
@@ -29,24 +30,27 @@ const events = byStart(
 ---
 
 <Base title="Hearing Radar">
-  <h1>Hearing Radar</h1>
-  <p>
-    Meetings and hearings about data centers in the next {WINDOW_DAYS} days, as of{' '}
-    <time datetime={generated}>{easternText(generated)}</time>. Every item was reviewed by a person
-    and links to its official source.
-  </p>
-  <p class="feeds">
-    Subscribe: <a href="/radar.ics">calendar (iCal)</a> · <a href="/feed.xml">feed (RSS)</a> ·
-    download meetings: <a href="/events.csv">CSV</a> · <a href="/events.parquet">Parquet</a>;
-    decisions:
-    <a href="/actions.csv">CSV</a> · <a href="/actions.parquet">Parquet</a> · see them on the{' '}
-    <a href="/map/">map</a>
-  </p>
+  <Fragment slot="masthead">
+    <h1>Hearing Radar</h1>
+    <p class="lede">
+      Meetings and hearings about data centers in the next {WINDOW_DAYS} days, as of{' '}
+      <time datetime={generated}>{easternText(generated)}</time>. Every item was reviewed by a
+      person and links to its official source.
+    </p>
+    <p class="feeds">
+      Subscribe: <a href="/radar.ics">calendar (iCal)</a> · <a href="/feed.xml">feed (RSS)</a> ·
+      download meetings: <a href="/events.csv">CSV</a> · <a href="/events.parquet">Parquet</a>;
+      decisions: <a href="/actions.csv">CSV</a> · <a href="/actions.parquet">Parquet</a> · see them
+      on the <a href="/map/">map</a>
+    </p>
+  </Fragment>
+
+  <WindowStrip generatedUtc={generated} events={events} />
 
   <EventTable caption="Upcoming items, soonest first" events={events} jurisdictions={names} />
 
   <h2>Jurisdictions</h2>
-  <ul>
+  <ul class="freshness-list">
     {watched.map(({ id, data }) => (
       <li>
         <a href={`/jurisdictions/${id}/`}>{data.name}</a>
@@ -63,7 +67,7 @@ const events = byStart(
     <>
       <h2>Other jurisdictions</h2>
       <p>Their hearings are not on the radar.</p>
-      <ul>
+      <ul class="freshness-list">
         {others.map(({ id, data }) => (
           <li>
             <a href={`/jurisdictions/${id}/`}>{data.name}</a>

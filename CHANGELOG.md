@@ -22,6 +22,10 @@ The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcled
   Nov 22, 2026 (#117).
 - **Freshness deadline:** each watched jurisdiction's "last checked" line also says when it counts as stale if
   nothing checks it again, so a page from a publish that stopped running still dates itself (#103).
+- **Design (Claret):** a burgundy band and brass rail over parchment, with a dark scheme, inlined CSS and no web
+  fonts. The radar draws its 30-day window as dated cells, each recorded vote is drawn as a half circle of seats, and
+  each SHA-256 is drawn as an 8 by 8 pattern beside the hash. All three are decorative; the text stays the record
+  (#133).
 - **Report form** (`/report/`): report a mistake, ask a question or ask us to stop fetching, with an optional email
   address for a reply. Reports are private; a fix shows in the corrections log. Linked from every footer.
 - **Using the data** (`/data/`), with the stability promise and the data dictionary, and this changelog

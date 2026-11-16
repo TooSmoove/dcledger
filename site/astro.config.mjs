@@ -7,6 +7,8 @@ import { publicDocsPlugin } from './src/lib/public-docs.js';
 // private inbox are Pages Functions in functions/, deployed beside the static build (docs/reports.md).
 export default defineConfig({
   output: 'static',
+  // Each page's CSS is inlined: no second request, and /map/ keeps no stylesheet link before MapLibre loads (AC12).
+  build: { inlineStylesheets: 'always' },
   markdown: {
     // Repository documents published as pages (/data/, /changelog/) read as part of the site (public-docs.js).
     processor: satteri({ mdastPlugins: [publicDocsPlugin] }),

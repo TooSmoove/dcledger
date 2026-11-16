@@ -33,43 +33,45 @@ const decisions = byDecisionNewestFirst(
 ---
 
 <Base title={data.title}>
-  <p>
-    <a href="/radar/">← Hearing Radar</a>
-  </p>
-  <h1>
-    {cancelled && 'Cancelled: '}
-    {data.title}
-  </h1>
+  <Fragment slot="masthead">
+    <p class="back">
+      <a href="/radar/">← Hearing Radar</a>
+    </p>
+    <h1>
+      {cancelled && 'Cancelled: '}
+      {data.title}
+    </h1>
 
-  <dl>
-    <dt>When (Eastern)</dt>
-    <dd>
-      <time datetime={easternIso(data.starts_utc)}>{easternText(data.starts_utc)}</time>
-    </dd>
-    <dt>Jurisdiction</dt>
-    <dd>
-      <a href={`/jurisdictions/${data.jurisdiction_id}/`}>{jurisdictionName}</a>
-    </dd>
-    <dt>Body</dt>
-    <dd>{data.body}</dd>
-    {data.case_number && (
-      <>
-        <dt>Case</dt>
-        <dd>{data.case_number}</dd>
-      </>
-    )}
-    <dt>Status</dt>
-    <dd>
-      {statusText(data.status)}
-      {data.sequence > 0 && ` (revision ${data.sequence})`}
-    </dd>
-    <dt>Sourcing</dt>
-    <dd>{labelText(data.label)}</dd>
-    <dt>Calendar ID</dt>
-    <dd>
-      <code>{data.uid}</code>
-    </dd>
-  </dl>
+    <dl>
+      <dt>When (Eastern)</dt>
+      <dd>
+        <time datetime={easternIso(data.starts_utc)}>{easternText(data.starts_utc)}</time>
+      </dd>
+      <dt>Jurisdiction</dt>
+      <dd>
+        <a href={`/jurisdictions/${data.jurisdiction_id}/`}>{jurisdictionName}</a>
+      </dd>
+      <dt>Body</dt>
+      <dd>{data.body}</dd>
+      {data.case_number && (
+        <>
+          <dt>Case</dt>
+          <dd>{data.case_number}</dd>
+        </>
+      )}
+      <dt>Status</dt>
+      <dd>
+        {statusText(data.status)}
+        {data.sequence > 0 && ` (revision ${data.sequence})`}
+      </dd>
+      <dt>Sourcing</dt>
+      <dd>{labelText(data.label)}</dd>
+      <dt>Calendar ID</dt>
+      <dd>
+        <code>{data.uid}</code>
+      </dd>
+    </dl>
+  </Fragment>
 
   <Decisions
     actions={decisions}

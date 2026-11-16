@@ -3,6 +3,7 @@
 // the bytes kept. A copy a person saved in a browser says so in words (issue #113); a fetched one says nothing more.
 // Shared by events and decisions so both show sources the same way.
 import { easternIso, easternText, retrievalText } from '../lib/radar.js';
+import Glyph from './Glyph.astro';
 
 interface Props {
   documents: {
@@ -16,7 +17,7 @@ interface Props {
 const { documents } = Astro.props;
 ---
 
-<ol>
+<ol class="sources">
   {documents.map((document) => (
     <li>
       <dl>
@@ -41,6 +42,7 @@ const { documents } = Astro.props;
         <dt>SHA-256</dt>
         <dd>
           <code>{document.sha256}</code>
+          <Glyph sha256={document.sha256} />
         </dd>
       </dl>
     </li>

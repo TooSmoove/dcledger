@@ -11,6 +11,7 @@ import {
   termRows,
   voteText,
 } from '../lib/radar.js';
+import Seats from './Seats.astro';
 import Sources from './Sources.astro';
 
 interface Props {
@@ -39,7 +40,10 @@ const { actions, heading, linkMeetings } = Astro.props;
           {(data.votes !== null || data.unanimous) && (
             <>
               <dt>Vote</dt>
-              <dd>{voteText(data.votes, data.unanimous)}</dd>
+              <dd>
+                {voteText(data.votes, data.unanimous)}
+                <Seats votes={data.votes} />
+              </dd>
             </>
           )}
           {linkMeetings && data.event_id !== null && (

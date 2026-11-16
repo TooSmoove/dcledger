@@ -590,6 +590,17 @@ test('no component renders raw HTML with set:html', async () => {
   }
 });
 
+test('Claret: CSS is inlined, the radar draws its window, decisions draw seats, sources draw glyphs (#133)', () => {
+  for (const { name, html } of pages) {
+    assert.doesNotMatch(html, /rel="stylesheet"/, `${name}: no stylesheet request`);
+  }
+  assert.match(radar, /<figure class="window" aria-hidden="true">/);
+  assert.equal((radar.match(/<ol class="strip">[\s\S]*?<\/ol>/)[0].match(/<li/g) ?? []).length, 31);
+  const meeting = page('items/fixture-guilford-boc-2026-11-05/index.html');
+  assert.match(meeting, /8 in favor, 1 against<span class="seats" aria-hidden="true"/);
+  assert.match(meeting, /<code>4{64}<\/code><span class="glyph" aria-hidden="true">/);
+});
+
 test('the home page links the radar', () => {
   assert.match(page('index.html'), /href="\/radar\/"/);
 });
