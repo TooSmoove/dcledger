@@ -725,3 +725,142 @@ dd {
     margin-top: 0.5rem;
   }
 }
+
+/* ---------- home page (issue #134) ---------- */
+.masthead .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  margin: 1.75rem 0 0;
+  font-family: var(--f-ui);
+}
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  font: 600 1rem var(--f-ui);
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--brass);
+  border: 2px solid var(--brass);
+}
+.masthead .btn {
+  color: var(--band);
+}
+.btn:hover {
+  background: var(--brass-hover);
+  border-color: var(--brass-hover);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.home-section {
+  padding-block: 0.5rem 1rem;
+}
+.home-section > h2 {
+  border-bottom: 3px solid var(--band);
+  padding-bottom: 0.4rem;
+}
+.statement {
+  font-family: var(--f-head);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  line-height: 1.1;
+  margin: 0.5rem 0 1rem;
+}
+.next-list,
+.latest-list,
+.effect-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+.next-list li,
+.latest-list li,
+.effect-list li {
+  display: grid;
+  gap: 0.15rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--rule);
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+.next-list .item,
+.latest-list .item,
+.effect-list a {
+  font-family: var(--f-head);
+  font-size: 1.375rem;
+}
+.next-list .cancelled .item {
+  text-decoration: line-through;
+}
+.effect-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: 0 2.5rem;
+}
+.effect-end {
+  font-weight: 600;
+}
+.latest-list .seats {
+  --arc-r: 1.6rem;
+  --seat: 0.5rem;
+}
+.trust-list {
+  padding-left: 1.5rem;
+  font-size: 1.1875rem;
+  max-width: 44rem;
+}
+.trust-list li {
+  margin-bottom: 0.5rem;
+}
+.trust-list li::marker {
+  font-family: var(--f-head);
+  color: var(--brass);
+}
+.hash-example {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: var(--surface);
+}
+.hash-example .glyph {
+  grid-template-columns: repeat(8, 10px);
+  grid-auto-rows: 10px;
+  gap: 2px;
+  padding: 6px;
+  margin: 0;
+}
+.hash-example figcaption {
+  display: grid;
+  gap: 0.4rem;
+  flex: 1 1 20rem;
+  font-family: var(--f-ui);
+  font-size: 0.875rem;
+}
+.verify {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--rule);
+  font-family: var(--f-ui);
+}
+.verify summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.verify pre {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem;
+  background: var(--surface);
+  overflow-x: auto;
+}
+.data-list {
+  font-size: 1rem;
+}
+.data-list dt {
+  font-weight: 600;
+  color: var(--ink);
+}

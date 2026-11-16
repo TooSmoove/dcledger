@@ -375,3 +375,26 @@ export function windowDays(generatedUtc, startsUtc) {
   }
   return days;
 }
+
+/**
+ * Decisions in effect on the export's Eastern date (home page, issue #134): status in_effect as the record states it,
+ * and not past its stated end. A decision whose record states no status is never listed, whatever its outcome.
+ * Soonest end first; open-ended last.
+ * @template {{ id: string, data: { status: string | null, expires_on: string | null } }} T
+ * @param {readonly T[]} entries
+ * @param {string} generatedUtc
+ * @returns {T[]}
+ */
+export function inEffect(entries, generatedUtc) {
+  const today = easternIso(generatedUtc).slice(0, 10);
+  return entries
+    .filter(
+      (a) =>
+        a.data.status === 'in_effect' && (a.data.expires_on === null || a.data.expires_on >= today),
+    )
+    .sort(
+      (a, b) =>
+        (a.data.expires_on ?? '9999-12-31').localeCompare(b.data.expires_on ?? '9999-12-31') ||
+        a.id.localeCompare(b.id),
+    );
+}

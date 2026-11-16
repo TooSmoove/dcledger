@@ -12,6 +12,7 @@ import {
   easternText,
   freshnessText,
   glyphCells,
+  inEffect,
   inWindow,
   isWatched,
   labelText,
@@ -251,4 +252,24 @@ test('the window strip runs 31 Eastern days from the export and counts items per
   assert.equal(days.find((d) => d.iso === '2026-12-01').month, 'Dec');
   assert.equal(days[30].iso, '2026-12-15');
   assert.ok(days[0].weekend && days[6].weekend && !days[1].weekend);
+});
+
+test('in effect: only when the record says so, and not past its stated end, soonest end first (#134)', () => {
+  const a = (id, status, expires_on) => ({ id, data: { status, expires_on } });
+  const list = inEffect(
+    [
+      a('open', 'in_effect', null),
+      a('later', 'in_effect', '2027-02-14'),
+      a('sooner', 'in_effect', '2026-11-15'),
+      a('ended', 'in_effect', '2026-11-14'),
+      a('no-status', null, null),
+      a('expired', 'expired', '2026-10-01'),
+    ],
+    // 02:00 UTC on Nov 16 is still Nov 15 in Eastern time, so a decision ending Nov 15 is still in effect.
+    '2026-11-16T02:00:00Z',
+  );
+  assert.deepEqual(
+    list.map((x) => x.id),
+    ['sooner', 'later', 'open'],
+  );
 });
