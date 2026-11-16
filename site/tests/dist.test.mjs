@@ -174,6 +174,11 @@ test('jurisdiction pages show freshness with a text stale flag and link their fe
     /Last checked <time datetime="2026-10-25T20:17:00Z">Sun, Oct 25, 2026, 4:17 PM EDT<\/time>/,
   );
   assert.doesNotMatch(guilford, /Stale:/);
+  assert.match(
+    guilford,
+    /counts as stale after <time datetime="2026-10-27T20:17:00Z">Tue, Oct 27, 2026, 4:17 PM EDT<\/time>/,
+    'a fresh jurisdiction prints its own deadline, so a frozen build still dates itself (#103)',
+  );
   assert.match(guilford, /href="\/radar\/guilford.ics"/);
   assert.match(
     guilford,
@@ -187,6 +192,7 @@ test('jurisdiction pages show freshness with a text stale flag and link their fe
     /Stale: no successful check in 7 days/,
     'checked by hand: 7 days (issue #27)',
   );
+  assert.doesNotMatch(stale, /counts as stale after/, 'no deadline once the flag is up');
   assert.match(
     page('jurisdictions/never-checked/index.html'),
     /Never checked\.[\s\S]*Stale: no successful check in 48 hours/,
