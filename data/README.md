@@ -260,9 +260,11 @@ work.
 2. **Render page 1 from the archived bytes.** For a file you saved in a browser (and archived with `--file`), run
    `python3 tools/render_thumbnail.py --file <that file> --data data` (PDF needs `pdftoppm` from poppler-utils; HTML
    needs `--chrome <path to Chrome>`; both need `pip install Pillow==12.3.0`). For a fetched document, merge the
-   `kind` first, then run the **thumbnail** workflow (Actions → thumbnail → Run workflow) with its SHA-256, and download
-   its artifact into `data/thumbnails/`. Either way the tool refuses a file whose SHA-256 isn't a record's ID, and any
-   document that isn't official minutes or legislation. It prints the `thumbnail:` block with `reviewed: false`.
+   `kind` first, then run the **thumbnail** workflow (Actions → thumbnail → Run workflow on `main`). Leave its input
+   at `pending` to render every official minutes or legislation record that has no picture yet, or give SHA-256s
+   separated by spaces. Download its **thumbnails** artifact into `data/thumbnails/`. Either way the tool refuses a
+   file whose SHA-256 isn't a record's ID, and any document that isn't official minutes or legislation. It prints the
+   `thumbnail:` block with `reviewed: false`.
 3. **Check the picture for private individuals' names** (residents who spoke, applicants, property owners). Public
    officials acting in office are fine. If you find one, delete the picture and leave the record without
    `thumbnail`. If not, paste the block into the record, set `reviewed: true` and open the PR. Review it at full
