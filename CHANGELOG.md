@@ -20,6 +20,8 @@ The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcled
 - **Methodology and corrections** (`/methodology/`): how items get in, what the labels mean, provenance, coverage,
   who publishes the ledger, how to cite an item, how to report a mistake, and a dated corrections log that opens
   Nov 22, 2026 (#117).
+- **Freshness deadline:** each watched jurisdiction's "last checked" line also says when it counts as stale if
+  nothing checks it again, so a page from a publish that stopped running still dates itself (#103).
 - **Report form** (`/report/`): report a mistake, ask a question or ask us to stop fetching, with an optional email
   address for a reply. Reports are private; a fix shows in the corrections log. Linked from every footer.
 - **Using the data** (`/data/`), with the stability promise and the data dictionary, and this changelog

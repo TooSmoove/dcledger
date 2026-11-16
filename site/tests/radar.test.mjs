@@ -16,6 +16,7 @@ import {
   labelText,
   outcomeText,
   retrievalText,
+  staleAfterUtc,
   statusText,
   termRows,
   votesText,
@@ -108,6 +109,16 @@ test('freshness shows last checked in Eastern and a text stale flag', () => {
   assert.equal(
     freshnessText({ last_checked_utc: null, stale: true }),
     'Never checked ⚠ Stale: no successful check in 48 hours',
+  );
+});
+
+test('the stale deadline is the last check plus the threshold, across a DST change (AC10, #103)', () => {
+  assert.equal(staleAfterUtc('2026-10-25T20:17:00Z', 48), '2026-10-27T20:17:00Z');
+  assert.equal(staleAfterUtc('2026-11-09T01:10:00Z', 168), '2026-11-16T01:10:00Z');
+  assert.equal(
+    easternText(staleAfterUtc('2026-10-30T22:24:00Z', 48)),
+    'Sun, Nov 1, 2026, 5:24 PM EST',
+    'elapsed hours, not wall-clock hours, across the Nov 1 fall-back',
   );
 });
 

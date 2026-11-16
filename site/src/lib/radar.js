@@ -203,6 +203,21 @@ export function staleWindowText(hours) {
   return hours > 48 && hours % 24 === 0 ? `${hours / 24} days` : `${hours} hours`;
 }
 
+/**
+ * The instant after which a jurisdiction counts as stale if nothing checks it again: last check plus its threshold
+ * (SPEC AC10). The stale flag itself is decided at build time, so a build that stops being replaced (a failing
+ * publish, issue #103) can't flag itself; printing this deadline lets a reader judge freshness against their own
+ * clock without any script.
+ * @param {string} lastCheckedUtc an ISO 8601 UTC instant
+ * @param {number} hours the jurisdiction's stale_after_hours
+ * @returns {string} an ISO 8601 UTC instant, for example "2026-10-27T20:17:00Z"
+ */
+export function staleAfterUtc(lastCheckedUtc, hours) {
+  return new Date(parseUtc(lastCheckedUtc).getTime() + hours * 60 * 60 * 1000)
+    .toISOString()
+    .replace('.000Z', 'Z');
+}
+
 const COVERAGE_TIERS = {
   watched:
     'Coverage: hearings watched. Upcoming meetings and hearings are on the Hearing Radar, and decisions are recorded.',
