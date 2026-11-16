@@ -6,12 +6,13 @@ using DcLedger.Publishing.Feed;
 using DcLedger.Publishing.Ics;
 using DcLedger.Publishing.SiteData;
 using DcLedger.Publishing.Tabular;
+using DcLedger.Publishing.Thumbnails;
 
 namespace DcLedger.Cli;
 
 /// <summary>
 /// <c>dcl export --data &lt;dir&gt; --status &lt;file&gt; --out &lt;dir&gt;</c> (issue #20, ADR-0004): the site data, calendars,
-/// feed, CSV and Parquet from the validated ledger. Exit 0 when the files were written, 1 when the ledger fails the quality gate
+/// feed, CSV, Parquet and reviewed first-page pictures from the validated ledger. Exit 0 when the files were written, 1 when the ledger fails the quality gate
 /// (nothing is written), 2 for bad arguments or an unusable ingest status.
 /// </summary>
 internal static class ExportCommand
@@ -21,7 +22,7 @@ internal static class ExportCommand
 
     /// <summary>Every exporter, in the order they run. Their files are written in path order.</summary>
     private static IExporter[] Exporters(Uri siteUrl) =>
-        [new SiteDataExporter(), new CorrectionsExporter(), new RadarCalendarExporter(), new FeedExporter(siteUrl), new TabularExporter()];
+        [new SiteDataExporter(), new CorrectionsExporter(), new RadarCalendarExporter(), new FeedExporter(siteUrl), new TabularExporter(), new ThumbnailExporter()];
 
     internal static Command Create(TextWriter output, TextWriter error)
     {
@@ -52,7 +53,7 @@ internal static class ExportCommand
             DefaultValueFactory = _ => DefaultSiteUrl,
         };
 
-        var command = new Command("export", "Write the site data, calendars, feed, CSV and Parquet from the validated ledger.")
+        var command = new Command("export", "Write the site data, calendars, feed, CSV, Parquet and reviewed first-page pictures from the validated ledger.")
         {
             data, status, outDirectory, format, siteUrl,
         };

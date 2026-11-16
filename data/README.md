@@ -4,6 +4,7 @@ The reviewed, canonical records (ADR-0002). One YAML file per record; the file n
 
 ```
 jurisdictions/<id>.yaml   documents/<sha256>.yaml   events/<id>.yaml   actions/<id>.yaml
+thumbnails/<sha256>.webp  (optional: a reviewed picture of a document's first page)
 ```
 
 Check your changes before opening a PR:
@@ -29,6 +30,10 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
   Carolina (`LOCATION_OUT_OF_RANGE` otherwise; usually a swapped pair or a missing minus sign). Only `lat` and `lon`:
   never a name, address or owner. It puts the item on the map.
 - A corrections log entry (`corrections/<id>.yaml`, see "Logging a correction") names only jurisdictions, events or actions that exist (`FK_MISSING`), each once; is reported on or after Nov 22, 2026, when the log opened, and corrected on or after it was reported; and cites a report number of 1 or more (`CORRECTION_INVALID`). Its `summary` is one line of at most 500 characters (`INVALID_VALUE`). Entries are permanent like every record (`SLUG_CHANGED`).
+- A document's first-page picture (`thumbnail`, see "Showing a document's first page") is allowed only on an
+  `official` document of `kind` `minutes` or `legislation`; `data/thumbnails/<id>.webp` must exist with the
+  `sha256` the record states, and every file there needs such a record (`THUMBNAIL_INVALID`). A picture nobody has
+  marked `reviewed: true` fails (`THUMBNAIL_UNREVIEWED`). Pictures are WebP, at most 100 KB, 480 × 820 pixels.
 - Files are UTF-8, at most 64 KB, one YAML mapping, no anchors or aliases. Quote values that start with a special character or look like numbers you want kept as text.
 
 ## Shapes
@@ -51,6 +56,12 @@ media_type: application/pdf
 bytes: 123456
 source_type: official         # official | news
 retrieval: manual             # optional: only for a file a person saved (see below); left out means fetched
+kind: minutes                 # optional: minutes | legislation | agenda | agenda_packet | notice | news_release | news_article | other
+thumbnail:                    # optional: official minutes or legislation only (see "Showing a document's first page")
+  sha256: <SHA-256 of data/thumbnails/<id>.webp>
+  width: 240
+  height: 311
+  reviewed: true              # a person checked the picture for private individuals' names
 
 # events/<id>.yaml  (example values)
 id: fixture-county-boc-2026-11-05
@@ -235,6 +246,30 @@ Instead, a person saves the public file, and `--file` records that a person save
    "Saved by a person in a browser (the source does not allow automated downloads)." A fetched copy gets no note (issue #113).
 5. **Label as usual.** The publisher is what decides the label, not who saved the file: a manual copy of an official
    record (`source_type: official`) can back `confirmed_official`.
+
+## Showing a document's first page
+
+Item and jurisdiction pages can show a small picture of page 1 beside a source (issue #132), rendered from the exact
+copy whose SHA-256 the page prints. Only official **minutes** and **legislation** pages (a Legistar legislation or
+action-detail page, an ordinance or resolution's adopted text) get one. Agendas, agenda packets, notices, news
+releases and news stories never do: packets stay in the private bucket (SPEC §E), and news pages are other publishers'
+work.
+
+1. **Say what the document is.** Add `kind` to its `documents/` record. You can add `kind` to any document; it shows
+   nothing by itself.
+2. **Render page 1 from the archived bytes.** For a file you saved in a browser (and archived with `--file`), run
+   `python3 tools/render_thumbnail.py --file <that file> --data data` (PDF needs `pdftoppm` from poppler-utils; HTML
+   needs `--chrome <path to Chrome>`; both need `pip install Pillow==12.3.0`). For a fetched document, merge the
+   `kind` first, then run the **thumbnail** workflow (Actions → thumbnail → Run workflow) with its SHA-256, and download
+   its artifact into `data/thumbnails/`. Either way the tool refuses a file whose SHA-256 isn't a record's ID, and any
+   document that isn't official minutes or legislation. It prints the `thumbnail:` block with `reviewed: false`.
+3. **Check the picture for private individuals' names** (residents who spoke, applicants, property owners). Public
+   officials acting in office are fine. If you find one, delete the picture and leave the record without
+   `thumbnail`. If not, paste the block into the record, set `reviewed: true` and open the PR. Review it at full
+   size: the site shows it at half size, but anyone can open the file.
+4. The gate checks the rest: the picture's hash matches the record, the kind may be shown, and nothing in
+   `thumbnails/` is unclaimed. Replacing a picture means a new file and a new `sha256`; no `sequence` changes, since
+   the picture isn't part of an event or action.
 
 ## Logging a correction
 

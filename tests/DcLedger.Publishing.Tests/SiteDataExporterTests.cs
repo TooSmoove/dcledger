@@ -12,7 +12,7 @@ namespace DcLedger.Publishing.Tests;
 public sealed class SiteDataExporterTests
 {
     private static readonly string[] LatLon = ["lat", "lon"];
-    private static readonly string[] DocumentKeys = ["url", "retrieved_utc", "sha256", "retrieval"];
+    private static readonly string[] DocumentKeys = ["url", "retrieved_utc", "sha256", "retrieval", "kind", "thumbnail"];
 
     private static string EventsJson() =>
         TestFiles.Text(TestFiles.Single(new SiteDataExporter().Export(ExportSamples.Model()), ExportPaths.SiteData));
@@ -78,7 +78,7 @@ public sealed class SiteDataExporterTests
         var saved = events[1].GetProperty("documents").EnumerateArray().ShouldHaveSingleItem();
         saved.GetProperty("sha256").GetString().ShouldBe(ExportSamples.CityAgenda.Id.Value);
         saved.GetProperty("retrieval").GetString().ShouldBe("manual");
-        saved.EnumerateObject().Select(p => p.Name).ShouldBe(DocumentKeys); // retrieval was added last, within schema version 1
+        saved.EnumerateObject().Select(p => p.Name).ShouldBe(DocumentKeys); // retrieval, then kind and thumbnail, were added last, within schema version 1
         events[0].GetProperty("documents").EnumerateArray().Select(d => d.GetProperty("retrieval").GetString()).ShouldAllBe(retrieval => retrieval == "fetched");
         document.RootElement.GetProperty("actions")[0].GetProperty("documents")[0].GetProperty("retrieval").GetString().ShouldBe("fetched");
     }

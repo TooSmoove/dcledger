@@ -1,6 +1,34 @@
 /* Claret: the site's design (issue #133). Burgundy band and brass rail over parchment; ink-black is the one signal.
-   Every colour and font is a token below. No web fonts: system stacks only (SPEC §E: no third-party requests).
-   The old token names (--ink, --muted, --rule, --link, --paper, --flag) are kept: the map page uses them. */
+   Every colour and font is a token below. The old token names (--ink, --muted, --rule, --link, --paper, --flag) are
+   kept: the map page uses them.
+
+   One web font (issue #132): EB Garamond, roman only, served from this site (no third-party request). It is one
+   variable WOFF2, weights 400 to 700, subset to Latin and the punctuation the site uses, built and measured by
+   tools/subset_font.py (37,120 bytes). Base.astro preloads it. Text that needs a glyph outside the subset, or italic,
+   falls back to the system serif. Until it loads (font-display: swap), the fallback face below draws Times New Roman
+   (or its metric twin Liberation Serif) scaled to EB Garamond's width and line box, so the swap barely moves text.
+   The descriptor values are the script's output; rerun it if the font or the fallback changes. */
+
+@font-face {
+  font-family: 'EB Garamond Ledger';
+  src: url('../fonts/eb-garamond-latin-wght.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-00FF, U+2009, U+2013-2014, U+2018-2019, U+201C-201D, U+2022, U+2026, U+202F,
+    U+2032-2033, U+2190-2193, U+2212;
+}
+
+@font-face {
+  font-family: 'EB Garamond Ledger Fallback';
+  src:
+    local('Times New Roman'), local('TimesNewRomanPSMT'), local('Liberation Serif'), local('Tinos');
+  size-adjust: 94.21%;
+  ascent-override: 106.89%;
+  descent-override: 31.63%;
+  line-gap-override: 0%;
+}
 
 :root {
   color-scheme: light dark;
@@ -34,11 +62,11 @@
   --g3: #3d0f1f;
 
   --f-head:
-    Garamond, 'EB Garamond', Baskerville, 'Baskerville Old Face', 'Hoefler Text', 'URW Palladio L',
-    P052, serif;
+    'EB Garamond Ledger', 'EB Garamond Ledger Fallback', Garamond, 'EB Garamond', Baskerville,
+    'Baskerville Old Face', 'Hoefler Text', 'URW Palladio L', P052, serif;
   --f-body:
-    Garamond, 'EB Garamond', Baskerville, 'Baskerville Old Face', 'Hoefler Text', 'URW Palladio L',
-    P052, serif;
+    'EB Garamond Ledger', 'EB Garamond Ledger Fallback', Garamond, 'EB Garamond', Baskerville,
+    'Baskerville Old Face', 'Hoefler Text', 'URW Palladio L', P052, serif;
   --f-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --f-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
 
@@ -572,6 +600,72 @@ dd {
 }
 .window figcaption {
   margin-top: 0.75rem;
+  font-family: var(--f-ui);
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+/* ---------- first page of an archived copy (issue #132): beside its source entry, at a fixed size ---------- */
+.sources .page-one {
+  float: inline-end;
+  inline-size: min(7.5rem, 35%);
+  margin: 0 0 0.75rem 1rem;
+}
+.sources .page-one img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  border: 1px solid var(--rule);
+  background: #fff;
+}
+.sources .page-one figcaption {
+  margin-top: 0.35rem;
+  font-family: var(--f-ui);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.sources li.has-page::after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+/* ---------- locator map (issue #132): the jurisdiction filled within the state and its county lines ---------- */
+.locator {
+  margin: 0 0 2rem;
+  max-width: 40rem;
+}
+.locator svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+.locator-state {
+  fill: var(--surface);
+}
+.locator-counties {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+}
+.locator-area {
+  fill: var(--day-item);
+}
+.locator-state-line {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.locator-ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+.locator figcaption {
+  margin-top: 0.5rem;
   font-family: var(--f-ui);
   font-size: 0.875rem;
   color: var(--muted);

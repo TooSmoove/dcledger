@@ -3,6 +3,9 @@
 // Claret (src/styles/claret.css, issue #133), inlined into each page so no page makes a second request for it.
 // A page may pass a "masthead" slot: its title block, set on the burgundy band under the header.
 import '../styles/claret.css';
+// The one web font (issue #132): preloaded so the first paint after the swap is short. Same hashed URL as the
+// @font-face rule in claret.css. Fonts are fetched in CORS mode even from this origin, hence crossorigin.
+import fontUrl from '../fonts/eb-garamond-latin-wght.woff2?url';
 
 interface Props {
   title: string;
@@ -19,6 +22,7 @@ const hasMasthead = Astro.slots.has('masthead');
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#3d0f1f" />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
     <link
       rel="alternate"
       type="application/rss+xml"

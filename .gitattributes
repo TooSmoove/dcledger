@@ -2,3 +2,6 @@
 *.sh text eol=lf
 # iCalendar requires CRLF; the pinned VTIMEZONE is hash-checked byte for byte.
 *.ics -text
+# Vendored and generated binaries (issue #132): hashed in tools/license-policy.json and data/, so never converted.
+*.woff2 binary
+*.webp binary

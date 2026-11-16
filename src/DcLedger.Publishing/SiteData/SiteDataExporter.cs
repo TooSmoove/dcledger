@@ -134,7 +134,9 @@ public sealed class SiteDataExporter : IExporter
 
     /// <summary>
     /// Provenance for one item (SPEC AC2): URL, retrieval time and SHA-256 of each document, and how it was obtained
-    /// (<c>fetched</c> or <c>manual</c>; added within schema version 1, issue #113).
+    /// (<c>fetched</c> or <c>manual</c>; added within schema version 1, issue #113). Then, also within schema version 1
+    /// (issue #132), the document's <c>kind</c> and its first-page <c>thumbnail</c> (path, width and height), each null
+    /// when the record has none.
     /// </summary>
     private static void WriteDocuments(Utf8JsonWriter json, IReadOnlyList<Document> documents)
     {
@@ -146,10 +148,28 @@ public sealed class SiteDataExporter : IExporter
             json.WriteString("retrieved_utc", IsoTime.Utc(document.RetrievedAtUtc));
             json.WriteString("sha256", document.Id.Value);
             json.WriteString("retrieval", document.Retrieval.ToToken());
+            WriteStringOrNull(json, "kind", document.Kind?.ToToken());
+            WriteThumbnail(json, document);
             json.WriteEndObject();
         }
 
         json.WriteEndArray();
+    }
+
+    /// <summary><c>"thumbnail": {"path": "/thumbnails/{sha256}.webp", "width": 240, "height": 311}</c>, or null.</summary>
+    private static void WriteThumbnail(Utf8JsonWriter json, Document document)
+    {
+        if (document.Thumbnail is not { } thumbnail)
+        {
+            json.WriteNull("thumbnail");
+            return;
+        }
+
+        json.WriteStartObject("thumbnail");
+        json.WriteString("path", ExportPaths.ThumbnailUrlPath(document.Id.Value));
+        json.WriteNumber("width", thumbnail.Width);
+        json.WriteNumber("height", thumbnail.Height);
+        json.WriteEndObject();
     }
 
     /// <summary><c>"location": {"lat": 36.0726, "lon": -79.792}</c>, or null. Numbers use the shortest exact form.</summary>

@@ -2,9 +2,11 @@ import { defineCollection } from 'astro:content';
 import { file } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { SITE_DATA_FILE, actionsFrom, eventsFrom, jurisdictionsFrom } from './lib/site-data.js';
+import { DOCUMENT_KINDS } from './lib/thumbnails.js';
 
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
-// retrieval (issue #113): how the copy was obtained. Defaults for an events.json written before the field.
+// retrieval (issue #113): how the copy was obtained. kind and thumbnail (issue #132): what the document is, and a
+// reviewed picture of its first page. Each defaults for an events.json written before the field.
 const documents = z
   .array(
     z.object({
@@ -12,6 +14,15 @@ const documents = z
       retrieved_utc: z.iso.datetime(),
       sha256,
       retrieval: z.enum(['fetched', 'manual']).default('fetched'),
+      kind: z.enum(DOCUMENT_KINDS).nullable().default(null),
+      thumbnail: z
+        .object({
+          path: z.string().regex(/^\/thumbnails\/[0-9a-f]{64}\.webp$/),
+          width: z.number().int().positive(),
+          height: z.number().int().positive(),
+        })
+        .nullable()
+        .default(null),
     }),
   )
   .min(1);

@@ -1,8 +1,11 @@
 ---
 // One item's provenance (SPEC AC2): each source URL, when it was retrieved (Eastern, with its zone) and the SHA-256 of
 // the bytes kept. A copy a person saved in a browser says so in words (issue #113); a fetched one says nothing more.
-// Shared by events and decisions so both show sources the same way.
+// Shared by events and decisions so both show sources the same way. Official minutes and legislation pages may also
+// show a reviewed picture of the first page of the copy kept (issue #132), lazy-loaded at a fixed size so nothing
+// shifts when it arrives.
 import { easternIso, easternText, retrievalText } from '../lib/radar.js';
+import { pageOne } from '../lib/thumbnails.js';
 import Glyph from './Glyph.astro';
 
 interface Props {
@@ -11,6 +14,8 @@ interface Props {
     retrieved_utc: string;
     sha256: string;
     retrieval: 'fetched' | 'manual';
+    kind: string | null;
+    thumbnail: { path: string; width: number; height: number } | null;
   }[];
 }
 
@@ -18,33 +23,49 @@ const { documents } = Astro.props;
 ---
 
 <ol class="sources">
-  {documents.map((document) => (
-    <li>
-      <dl>
-        <dt>URL</dt>
-        <dd>
-          <a href={document.url} rel="external noreferrer">
-            {document.url}
-          </a>
-        </dd>
-        <dt>Retrieved</dt>
-        <dd>
-          <time datetime={easternIso(document.retrieved_utc)}>
-            {easternText(document.retrieved_utc)}
-          </time>
-        </dd>
-        {retrievalText(document.retrieval) !== null && (
-          <>
-            <dt>How retrieved</dt>
-            <dd>{retrievalText(document.retrieval)}.</dd>
-          </>
+  {documents.map((document) => {
+    const page = pageOne(document);
+    return (
+      <li class={page ? 'has-page' : undefined}>
+        {page && (
+          <figure class="page-one">
+            <img
+              src={page.src}
+              width={page.width}
+              height={page.height}
+              alt={page.alt}
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>{page.caption}</figcaption>
+          </figure>
         )}
-        <dt>SHA-256</dt>
-        <dd>
-          <code>{document.sha256}</code>
-          <Glyph sha256={document.sha256} />
-        </dd>
-      </dl>
-    </li>
-  ))}
+        <dl>
+          <dt>URL</dt>
+          <dd>
+            <a href={document.url} rel="external noreferrer">
+              {document.url}
+            </a>
+          </dd>
+          <dt>Retrieved</dt>
+          <dd>
+            <time datetime={easternIso(document.retrieved_utc)}>
+              {easternText(document.retrieved_utc)}
+            </time>
+          </dd>
+          {retrievalText(document.retrieval) !== null && (
+            <>
+              <dt>How retrieved</dt>
+              <dd>{retrievalText(document.retrieval)}.</dd>
+            </>
+          )}
+          <dt>SHA-256</dt>
+          <dd>
+            <code>{document.sha256}</code>
+            <Glyph sha256={document.sha256} />
+          </dd>
+        </dl>
+      </li>
+    );
+  })}
 </ol>

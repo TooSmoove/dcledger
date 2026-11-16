@@ -13,6 +13,14 @@ internal sealed class TempLedger : IDisposable
         return this;
     }
 
+    public TempLedger WriteBytes(string relativePath, byte[] content)
+    {
+        var full = System.IO.Path.Combine(Path, relativePath);
+        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(full)!);
+        File.WriteAllBytes(full, content);
+        return this;
+    }
+
     public void Dispose()
     {
         Directory.Delete(Path, recursive: true);

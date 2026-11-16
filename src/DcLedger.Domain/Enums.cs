@@ -44,6 +44,39 @@ public enum Retrieval
     Manual,
 }
 
+/// <summary>
+/// What a document is (issue #132). Optional on a document record, and set by the reviewer who read it. It decides
+/// whether the site may show a picture of the document's first page: only official <see cref="Minutes"/> and
+/// <see cref="Legislation"/> pages may (<see cref="Thumbnail.MayShow"/>). Agenda packets stay in the private bucket
+/// (SPEC §E), and news pages are other publishers' work.
+/// </summary>
+public enum DocumentKind
+{
+    /// <summary>Minutes of a meeting, draft or approved.</summary>
+    Minutes,
+
+    /// <summary>A platform's record of one item or its adopted text: a Legistar legislation or action-detail page, an ordinance or resolution.</summary>
+    Legislation,
+
+    /// <summary>A meeting agenda without its attachments.</summary>
+    Agenda,
+
+    /// <summary>An agenda with its attachments (staff reports, applications, maps). Never shown (SPEC §E).</summary>
+    AgendaPacket,
+
+    /// <summary>A public notice or a meeting notice, such as a cancellation.</summary>
+    Notice,
+
+    /// <summary>A government's own news release.</summary>
+    NewsRelease,
+
+    /// <summary>A news organization's story.</summary>
+    NewsArticle,
+
+    /// <summary>Anything else.</summary>
+    Other,
+}
+
 /// <summary>What kind of decision a local action is. Extend by adding members; the YAML tokens are fixed in <see cref="EnumTokens"/>.</summary>
 public enum ActionType
 {

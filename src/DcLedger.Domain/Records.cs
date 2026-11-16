@@ -54,6 +54,12 @@ public sealed record Document
     /// browser at <see cref="RetrievedAtUtc"/>; the YAML leaves the key out for <see cref="Retrieval.Fetched"/>.
     /// </summary>
     public Retrieval Retrieval { get; init; } = Retrieval.Fetched;
+
+    /// <summary>What the document is, as the reviewer read it (issue #132); null when the record doesn't say.</summary>
+    public DocumentKind? Kind { get; init; }
+
+    /// <summary>A picture of the first page of these exact bytes, when one was rendered and reviewed (issue #132).</summary>
+    public Thumbnail? Thumbnail { get; init; }
 }
 
 /// <summary>A reviewed meeting or hearing on the radar. Named LedgerEvent to avoid the C# <c>event</c> keyword.</summary>

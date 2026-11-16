@@ -22,10 +22,13 @@ The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcled
   Nov 22, 2026 (#117).
 - **Freshness deadline:** each watched jurisdiction's "last checked" line also says when it counts as stale if
   nothing checks it again, so a page from a publish that stopped running still dates itself (#103).
-- **Design (Claret):** a burgundy band and brass rail over parchment, with a dark scheme, inlined CSS and no web
-  fonts. The radar draws its 30-day window as dated cells, each recorded vote is drawn as a half circle of seats, and
-  each SHA-256 is drawn as an 8 by 8 pattern beside the hash. All three are decorative; the text stays the record
-  (#133).
+- **Design (Claret):** a burgundy band and brass rail over parchment, with a dark scheme and inlined CSS. The radar
+  draws its 30-day window as dated cells, each recorded vote is drawn as a half circle of seats, and each SHA-256 is
+  drawn as an 8 by 8 pattern beside the hash. All three are decorative; the text stays the record (#133).
+- **Imagery** (#132): each jurisdiction page draws a static locator map of where it is in North Carolina, from U.S.
+  Census Bureau boundaries, with no script. Sources that are official minutes or legislation pages can show a
+  reviewed picture of page 1 of the exact copy whose SHA-256 they print, at `/thumbnails/{sha256}.webp`; agenda
+  packets never do. Headings and body text are set in EB Garamond, one 37 KB font file served from this site.
 - **Home page** (`/`): the record at a glance, built from the export. Next up from the radar's window, decisions
   the record states are in effect with their end dates, the latest decisions, coverage with freshness, how to check
   a hash, and the feeds (#134).

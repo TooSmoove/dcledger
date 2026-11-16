@@ -6,6 +6,7 @@ import { getCollection, getEntry } from 'astro:content';
 import Decisions from '../../components/Decisions.astro';
 import EventTable from '../../components/EventTable.astro';
 import Freshness from '../../components/Freshness.astro';
+import Locator from '../../components/Locator.astro';
 import Base from '../../layouts/Base.astro';
 import { byDecisionNewestFirst, byStart, coverageText, isWatched } from '../../lib/radar.js';
 
@@ -48,6 +49,8 @@ const decisions = byDecisionNewestFirst(
       </>
     )}
   </Fragment>
+
+  <Locator id={id} name={data.name} />
 
   {watched && (
     <>

@@ -1,0 +1,81 @@
+# Render the first page of an archived document (issue #132): download the exact bytes from the private bucket by
+# their SHA-256, render page 1 with tools/render_thumbnail.py, and hand back the WebP and the `thumbnail:` block to add
+# to the record in a pull request. Only official minutes and legislation pages are rendered; the record must say so
+# (kind) on main first. Nothing is committed and nothing is published here: the picture reaches the site only after a
+# person checks it for private individuals' names, marks it reviewed and merges it (SPEC §E, AC8).
+# Dispatch only; r2-docs releases its secrets only on main (ADR-0003). The bucket's key is read, never written.
+name: thumbnail
+run-name: thumbnail (${{ inputs.sha256 }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha256:
+        description: "SHA-256 of the archived document (its data/documents/ file name)"
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: thumbnail
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: r2-docs
+    permissions:
+      contents: read
+    env:
+      SHA256: ${{ inputs.sha256 }}
+    steps:
+      - name: Check the input
+        run: |
+          [[ "$SHA256" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::sha256 must be 64 lowercase hex characters"; exit 1; }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            data/documents
+            tools
+      - name: Install the renderers (poppler for PDF, Pillow for WebP; Chrome is on the runner image)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          python3 -m pip install --user --no-cache-dir --disable-pip-version-check Pillow==12.3.0
+      - name: Download the archived bytes
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_PRIVATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_PRIVATE_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: WHEN_REQUIRED
+          AWS_RESPONSE_CHECKSUM_VALIDATION: WHEN_REQUIRED
+          BUCKET: ${{ vars.R2_PRIVATE_BUCKET }}
+          ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+        run: |
+          # The private bucket's layout (DcLedger.Infrastructure.Storage.StorageKeys): docs/sha256/{first two}/{sha256}.
+          aws s3 cp "s3://$BUCKET/docs/sha256/${SHA256:0:2}/$SHA256" "$RUNNER_TEMP/document" \
+            --endpoint-url "$ENDPOINT" --only-show-errors
+          echo "$SHA256  $RUNNER_TEMP/document" | sha256sum --check --quiet
+      - name: Render page 1
+        run: |
+          python3 -I tools/render_thumbnail.py --file "$RUNNER_TEMP/document" --data data \
+            --chrome "$(command -v google-chrome)" | tee "$RUNNER_TEMP/render.txt"
+          {
+            echo "### Page 1 of \`${SHA256:0:12}…\`"
+            echo
+            echo "Download the **thumbnail** artifact into \`data/thumbnails/\`, open it, and check it for private"
+            echo "individuals' names. If there are none, add this to \`data/documents/$SHA256.yaml\` with"
+            echo "\`reviewed: true\` and open a pull request. If there are, don't use it."
+            echo
+            echo '```yaml'
+            sed -n '/^kind:/,$p' "$RUNNER_TEMP/render.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: thumbnail
+          path: data/thumbnails/${{ inputs.sha256 }}.webp
+          if-no-files-found: error
+          retention-days: 3

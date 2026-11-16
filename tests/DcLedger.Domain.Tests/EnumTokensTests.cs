@@ -35,6 +35,19 @@ public sealed class EnumTokensTests
     }
 
     [Fact]
+    public void Document_kind_tokens_are_fixed()
+    {
+        DocumentKind.Minutes.ToToken().ShouldBe("minutes");
+        DocumentKind.Legislation.ToToken().ShouldBe("legislation");
+        DocumentKind.Agenda.ToToken().ShouldBe("agenda");
+        DocumentKind.AgendaPacket.ToToken().ShouldBe("agenda_packet");
+        DocumentKind.Notice.ToToken().ShouldBe("notice");
+        DocumentKind.NewsRelease.ToToken().ShouldBe("news_release");
+        DocumentKind.NewsArticle.ToToken().ShouldBe("news_article");
+        DocumentKind.Other.ToToken().ShouldBe("other");
+    }
+
+    [Fact]
     public void Action_type_tokens_are_fixed()
     {
         ActionType.Moratorium.ToToken().ShouldBe("moratorium");

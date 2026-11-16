@@ -3,6 +3,9 @@
 NuGet: every package resolved in any packages.lock.json under src/ and tests/, with the license read
 from its .nuspec in the local package folder (run after `dotnet restore`).
 npm: every non-dev package in site/package-lock.json (lockfile v3 records each package's license).
+Vendored: every file committed from outside the project that ships in the site, such as the web font (issue #132),
+listed in the policy's "vendored" section with its SHA-256, license and the license text beside it. A changed file,
+a missing license text or a license outside "vendored_allowed" fails; each one is printed in the report.
 
 Usage:
   python3 tools/license_check.py --policy tools/license-policy.json --repo . \
@@ -14,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import hashlib
 import json
 import re
 import sys
@@ -100,6 +104,37 @@ def npm_packages(lock_path: Path) -> list[Package]:
     return sorted(packages, key=lambda p: (p.name, p.version))
 
 
+@dataclass(frozen=True)
+class VendoredAsset:
+    path: str  # relative to the repository root
+    sha256: str
+    license: str  # an SPDX id, or a LicenseRef- for terms SPDX has no id for
+    license_file: str  # relative to the repository root
+    source: str
+
+
+def vendored_assets(policy: dict) -> list[VendoredAsset]:
+    return [
+        VendoredAsset(entry["path"], entry["sha256"], entry["license"], entry["license_file"], entry["source"])
+        for entry in policy.get("vendored", [])
+    ]
+
+
+def vendored_problems(asset: VendoredAsset, repo: Path, policy: dict) -> list[str]:
+    """Why a vendored file fails the check: missing, changed, license not allowed or license text missing."""
+    problems = []
+    file = repo / asset.path
+    if not file.is_file():
+        problems.append("file is missing")
+    elif hashlib.sha256(file.read_bytes()).hexdigest() != asset.sha256:
+        problems.append("SHA-256 differs from the policy (rebuild it with its tool, then update the policy)")
+    if asset.license not in set(policy.get("vendored_allowed", [])):
+        problems.append(f"license '{asset.license}' is not in vendored_allowed")
+    if not (repo / asset.license_file).is_file():
+        problems.append(f"license text {asset.license_file} is missing")
+    return problems
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--policy", type=Path, required=True)
@@ -116,7 +151,14 @@ def main(argv: list[str]) -> int:
     for p in rejected:
         message = f"{p.ecosystem} {p.name} {p.version}: license '{p.license}' is not allowed by {args.policy}"
         print(f"::error title=License not allowed::{message}")
-    return 1 if rejected else 0
+
+    failed_assets = 0
+    for asset in vendored_assets(policy):
+        print(f"Vendored {asset.path}: {asset.license} ({asset.license_file}; {asset.source})")
+        for problem in vendored_problems(asset, args.repo, policy):
+            failed_assets += 1
+            print(f"::error title=Vendored file::{asset.path}: {problem}")
+    return 1 if rejected or failed_assets else 0
 
 
 if __name__ == "__main__":

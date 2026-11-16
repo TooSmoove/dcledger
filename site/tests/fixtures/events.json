@@ -65,7 +65,9 @@
           "url": "https://guilford.legistar.com/",
           "retrieved_utc": "2026-10-10T12:00:00Z",
           "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
-          "retrieval": "fetched"
+          "retrieval": "fetched",
+          "kind": null,
+          "thumbnail": null
         }
       ]
     },
@@ -90,7 +92,13 @@
           "url": "https://guilford.legistar.com/",
           "retrieved_utc": "2026-10-25T21:17:05Z",
           "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "retrieval": "fetched"
+          "retrieval": "fetched",
+          "kind": "legislation",
+          "thumbnail": {
+            "path": "/thumbnails/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.webp",
+            "width": 240,
+            "height": 311
+          }
         }
       ]
     },
@@ -112,13 +120,17 @@
           "url": "https://news.example.org/fixture-story?a=1&b=<2>",
           "retrieved_utc": "2026-10-10T12:00:00Z",
           "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "retrieval": "fetched"
+          "retrieval": "fetched",
+          "kind": null,
+          "thumbnail": null
         },
         {
           "url": "https://fixture-city.example.org/agenda.pdf",
           "retrieved_utc": "2026-10-24T09:05:00Z",
           "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
-          "retrieval": "manual"
+          "retrieval": "manual",
+          "kind": null,
+          "thumbnail": null
         }
       ]
     },
@@ -143,7 +155,9 @@
           "url": "https://guilford.legistar.com/",
           "retrieved_utc": "2026-10-25T21:17:05Z",
           "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
-          "retrieval": "fetched"
+          "retrieval": "fetched",
+          "kind": null,
+          "thumbnail": null
         }
       ]
     }
@@ -165,7 +179,9 @@
           "url": "https://guilford.legistar.com/fixture-action?ID=7&b=<3>",
           "retrieved_utc": "2026-11-06T13:00:00Z",
           "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
-          "retrieval": "fetched"
+          "retrieval": "fetched",
+          "kind": null,
+          "thumbnail": null
         }
       ],
       "instrument_number": "2026-11",
@@ -194,7 +210,9 @@
           "url": "https://news.example.org/fixture-continued",
           "retrieved_utc": "2026-10-21T12:00:00Z",
           "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
-          "retrieval": "manual"
+          "retrieval": "manual",
+          "kind": null,
+          "thumbnail": null
         }
       ],
       "instrument_number": null,
@@ -223,7 +241,9 @@
           "url": "https://news.example.org/fixture-unanimous",
           "retrieved_utc": "2026-11-05T12:00:00Z",
           "sha256": "6666666666666666666666666666666666666666666666666666666666666666",
-          "retrieval": "fetched"
+          "retrieval": "fetched",
+          "kind": null,
+          "thumbnail": null
         }
       ],
       "instrument_number": null,
@@ -252,7 +272,9 @@
           "url": "https://news.example.org/fixture-decided",
           "retrieved_utc": "2026-09-03T12:00:00Z",
           "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
-          "retrieval": "fetched"
+          "retrieval": "fetched",
+          "kind": null,
+          "thumbnail": null
         }
       ],
       "instrument_number": null,
