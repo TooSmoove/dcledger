@@ -601,6 +601,49 @@ test('Claret: CSS is inlined, the radar draws its window, decisions draw seats, 
   assert.match(meeting, /<code>4{64}<\/code><span class="glyph" aria-hidden="true">/);
 });
 
+test('the home page shows the record at a glance, built from the export (#134)', () => {
+  const home = page('index.html');
+  assert.match(home, /<h1>Data-center hearings and decisions, on the record<\/h1>/);
+  assert.match(home, /<a class="btn" href="\/radar\/">Open the Hearing Radar<\/a>/);
+  for (const id of ['next', 'effect', 'latest', 'coverage', 'trust', 'data']) {
+    assert.match(home, new RegExp(`<h2 id="${id}-heading">`), id);
+  }
+  const between = (a, b) =>
+    home.slice(home.indexOf(`id="${a}-heading"`), home.indexOf(`id="${b}-heading"`));
+  const next = between('next', 'effect');
+  assert.match(next, /<figure class="window" aria-hidden="true">/);
+  assert.match(next, /<li class="cancelled">[\s\S]*?Cancelled\./, 'a cancelled meeting says so');
+  assert.match(next, /All 2 items in the next 30 days/);
+  const effect = between('effect', 'latest');
+  assert.match(
+    effect,
+    /href="\/jurisdictions\/guilford\/#decision-fixture-guilford-moratorium-2026-11-05"/,
+  );
+  assert.match(effect, /Ends <time datetime="2028-05-05">Fri, May 5, 2028<\/time>/);
+  assert.match(effect, /&lt;script&gt;/, 'the threshold is escaped');
+  const latest = between('latest', 'coverage');
+  assert.equal((latest.match(/<li>/g) ?? []).length, 3, 'three latest decisions');
+  assert.match(latest, /8 in favor, 1 against<span class="seats"/);
+  const coverage = between('coverage', 'trust');
+  assert.match(
+    coverage,
+    /Decisions only, hearings not watched: <a href="\/jurisdictions\/decided-county\/">/,
+  );
+  assert.match(coverage, /Listed only: <a href="\/jurisdictions\/registered-county\/">/);
+  assert.match(home, /<figure class="hash-example"><span class="glyph" aria-hidden="true">/);
+  assert.match(home, /<code>4{64}<\/code>/, "the example hash is the latest decision's source");
+  for (const feed of [
+    '/radar.ics',
+    '/feed.xml',
+    '/events.csv',
+    '/actions.csv',
+    '/events.parquet',
+    '/actions.parquet',
+  ]) {
+    assert.match(home, new RegExp(`href="${feed}"`), feed);
+  }
+});
+
 test('the home page links the radar', () => {
   assert.match(page('index.html'), /href="\/radar\/"/);
 });

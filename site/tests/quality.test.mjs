@@ -36,11 +36,12 @@ test('the no-script check catches a planted script tag', async () => {
   assert.equal(hasScriptTag('<p>No scripts, just a <code>script</code> word.</p>'), false);
 });
 
-test('Lighthouse still asserts mobile performance and accessibility of at least 0.9 on /radar, /map and /methodology (AC12, #117)', async () => {
+test('Lighthouse still asserts mobile performance and accessibility of at least 0.9 on /, /radar, /map and /methodology (AC12, #117, #134)', async () => {
   const config = JSON.parse(
     await readFile(new URL('../lighthouserc.json', import.meta.url), 'utf8'),
   ).ci;
   assert.deepEqual(config.collect.url.toSorted(), [
+    'http://localhost/index.html',
     'http://localhost/map/index.html',
     'http://localhost/methodology/index.html',
     'http://localhost/radar/index.html',

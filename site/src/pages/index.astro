@@ -1,14 +1,234 @@
 ---
+// The home page (issue #134): what the ledger is, then the record at a glance, every part built from the export so
+// nothing on it is invented. Next up from the radar's window, decisions the record states are in effect, the latest
+// decisions, coverage with freshness, how to check the record, and the feeds. No script (AC12).
+import { getCollection } from 'astro:content';
+import Freshness from '../components/Freshness.astro';
+import Glyph from '../components/Glyph.astro';
+import Seats from '../components/Seats.astro';
+import WindowStrip from '../components/WindowStrip.astro';
 import Base from '../layouts/Base.astro';
+import {
+  WINDOW_DAYS,
+  actionTypeText,
+  byDecisionNewestFirst,
+  byStart,
+  dateText,
+  easternIso,
+  easternText,
+  inEffect,
+  inWindow,
+  isWatched,
+  labelText,
+  outcomeText,
+  statusText,
+  voteText,
+  windowDays,
+} from '../lib/radar.js';
+import { generatedUtc } from '../lib/site-data-file.js';
+
+const generated = await generatedUtc();
+const jurisdictions = (await getCollection('jurisdictions')).sort((a, b) =>
+  a.data.name.localeCompare(b.data.name, 'en'),
+);
+const names = new Map(jurisdictions.map((j) => [j.id, j.data.name]));
+const watched = jurisdictions.filter((j) => isWatched(j.data.coverage_tier));
+const others = jurisdictions.filter((j) => !isWatched(j.data.coverage_tier));
+const COVERAGE_GROUPS = [
+  ['decisions', 'Decisions only, hearings not watched'],
+  ['registered', 'Listed only'],
+] as const;
+const upcoming = byStart(
+  (await getCollection('events')).filter((event) => inWindow(event.data, generated)),
+);
+const next = upcoming.slice(0, 3);
+const windowEnd = windowDays(generated, []).at(-1)?.iso ?? '';
+const actions = await getCollection('actions');
+const effective = inEffect(actions, generated);
+const latest = byDecisionNewestFirst(actions).slice(0, 3);
+const example = latest[0]?.data.documents[0];
+const decisionHref = (a: (typeof actions)[number]) =>
+  `/jurisdictions/${a.data.jurisdiction_id}/#decision-${a.id}`;
 ---
 
 <Base title="Home">
-  <h1>NC Data Center Ledger</h1>
-  <p>
-    Source-linked public records on data-center decisions in North Carolina's Triad. See the{' '}
-    <a href="/radar/">Hearing Radar</a>.
-  </p>
-  <p>
-    <a href="/about/">About this project and its fetcher</a>
-  </p>
+  <Fragment slot="masthead">
+    <h1>Data-center hearings and decisions, on the record</h1>
+    <p class="lede">North Carolina meetings and votes, each linked to its official source.</p>
+    <p class="actions">
+      <a class="btn" href="/radar/">
+        Open the Hearing Radar
+      </a>
+      <a href="/radar.ics">Subscribe (iCal)</a>
+    </p>
+  </Fragment>
+
+  <section aria-labelledby="next-heading" class="home-section">
+    <h2 id="next-heading">Next up</h2>
+    <WindowStrip generatedUtc={generated} events={upcoming} />
+    {next.length === 0 ? (
+      <p class="statement">
+        Nothing scheduled through <time datetime={windowEnd}>{dateText(windowEnd)}</time>.
+      </p>
+    ) : (
+      <ol class="next-list">
+        {next.map(({ id, data }) => (
+          <li class={data.status === 'cancelled' ? 'cancelled' : undefined}>
+            <time datetime={easternIso(data.starts_utc)}>{easternText(data.starts_utc)}</time>
+            <a class="item" href={`/items/${id}/`}>
+              {data.title}
+            </a>
+            <span class="muted">
+              {names.get(data.jurisdiction_id) ?? data.jurisdiction_id}, {data.body}.{' '}
+              {labelText(data.label)}. {statusText(data.status)}.
+            </span>
+          </li>
+        ))}
+      </ol>
+    )}
+    <p>
+      <a href="/radar/">
+        All {upcoming.length} item{upcoming.length === 1 ? '' : 's'} in the next {WINDOW_DAYS} days
+      </a>
+    </p>
+  </section>
+
+  <section aria-labelledby="effect-heading" class="home-section">
+    <h2 id="effect-heading">In effect now</h2>
+    {effective.length === 0 ? (
+      <p>No decision on record is stated to be in effect.</p>
+    ) : (
+      <ul class="effect-list">
+        {effective.map((a) => (
+          <li>
+            <a href={decisionHref(a)}>
+              {names.get(a.data.jurisdiction_id) ?? a.data.jurisdiction_id}:{' '}
+              {actionTypeText(a.data.action_type).toLowerCase()}
+            </a>
+            <span class="effect-end">
+              {a.data.expires_on === null ? (
+                'No end date on record'
+              ) : (
+                <>
+                  Ends <time datetime={a.data.expires_on}>{dateText(a.data.expires_on)}</time>
+                </>
+              )}
+            </span>
+            {a.data.threshold && <span class="muted">Applies to: “{a.data.threshold}”</span>}
+          </li>
+        ))}
+      </ul>
+    )}
+    <p class="muted">Listed only when the official record states the decision is in effect.</p>
+  </section>
+
+  <section aria-labelledby="latest-heading" class="home-section">
+    <h2 id="latest-heading">Latest decisions</h2>
+    <ol class="latest-list">
+      {latest.map((a) => (
+        <li>
+          <time datetime={a.data.decided_on}>{dateText(a.data.decided_on)}</time>
+          <a class="item" href={decisionHref(a)}>
+            {names.get(a.data.jurisdiction_id) ?? a.data.jurisdiction_id}:{' '}
+            {actionTypeText(a.data.action_type)}, {outcomeText(a.data.outcome).toLowerCase()}
+          </a>
+          {(a.data.votes !== null || a.data.unanimous) && (
+            <span class="muted">
+              {voteText(a.data.votes, a.data.unanimous)}
+              <Seats votes={a.data.votes} />
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section aria-labelledby="coverage-heading" class="home-section">
+    <h2 id="coverage-heading">Coverage</h2>
+    <ul class="freshness-list">
+      {watched.map(({ id, data }) => (
+        <li>
+          <a href={`/jurisdictions/${id}/`}>{data.name}</a>
+          <Freshness
+            lastCheckedUtc={data.last_checked_utc}
+            stale={data.stale}
+            staleAfterHours={data.stale_after_hours}
+          />
+        </li>
+      ))}
+    </ul>
+    {COVERAGE_GROUPS.map(([tier, words]) => {
+      const group = others.filter((j) => j.data.coverage_tier === tier);
+      return (
+        group.length > 0 && (
+          <p class="muted">
+            {words}:{' '}
+            {group.map(({ id, data }, i) => (
+              <>
+                {i > 0 && ', '}
+                <a href={`/jurisdictions/${id}/`}>{data.name}</a>
+              </>
+            ))}
+            .
+          </p>
+        )
+      );
+    })}
+  </section>
+
+  <section aria-labelledby="trust-heading" class="home-section trust">
+    <h2 id="trust-heading">How to check the record</h2>
+    <ol class="trust-list">
+      <li>A person reviews every item before it is published.</li>
+      <li>Each item links its official source and says when we retrieved it, in Eastern time.</li>
+      <li>We keep a copy and print its SHA-256, so anyone can confirm it hasn't changed.</li>
+    </ol>
+    {example && (
+      <figure class="hash-example">
+        <Glyph sha256={example.sha256} />
+        <figcaption>
+          <code>{example.sha256}</code>
+          <span class="muted">
+            The pattern is drawn from the hash itself, so two copies with the same hash always look
+            alike.
+          </span>
+        </figcaption>
+      </figure>
+    )}
+    <details class="verify">
+      <summary>Check a hash yourself</summary>
+      <p>Download the source, run one of these, and compare the result with the hash we print.</p>
+      <pre><code>sha256sum downloaded-file
+certutil -hashfile downloaded-file SHA256</code></pre>
+    </details>
+    <p>
+      <a href="/methodology/">How items get in, what the labels mean, and corrections</a>
+    </p>
+  </section>
+
+  <section aria-labelledby="data-heading" class="home-section">
+    <h2 id="data-heading">Use the data</h2>
+    <dl class="data-list">
+      <dt>
+        <a href="/radar.ics">Calendar (iCal)</a>
+      </dt>
+      <dd>Every upcoming meeting in your calendar app; cancellations update in place.</dd>
+      <dt>
+        <a href="/feed.xml">Feed (RSS)</a>
+      </dt>
+      <dd>One entry for each new, changed or cancelled item.</dd>
+      <dt>
+        <a href="/events.csv">Meetings CSV</a>, <a href="/actions.csv">decisions CSV</a>
+      </dt>
+      <dd>For spreadsheets. Licensed CC BY 4.0.</dd>
+      <dt>
+        <a href="/events.parquet">Meetings Parquet</a>,{' '}
+        <a href="/actions.parquet">decisions Parquet</a>
+      </dt>
+      <dd>With native types, for analysis.</dd>
+    </dl>
+    <p>
+      <a href="/data/">Data dictionary and stability promise</a>
+    </p>
+  </section>
 </Base>

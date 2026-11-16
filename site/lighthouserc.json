@@ -3,6 +3,7 @@
     "collect": {
       "staticDistDir": "./dist",
       "url": [
+        "http://localhost/index.html",
         "http://localhost/map/index.html",
         "http://localhost/radar/index.html",
         "http://localhost/methodology/index.html"

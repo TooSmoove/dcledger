@@ -26,6 +26,9 @@ The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcled
   fonts. The radar draws its 30-day window as dated cells, each recorded vote is drawn as a half circle of seats, and
   each SHA-256 is drawn as an 8 by 8 pattern beside the hash. All three are decorative; the text stays the record
   (#133).
+- **Home page** (`/`): the record at a glance, built from the export. Next up from the radar's window, decisions
+  the record states are in effect with their end dates, the latest decisions, coverage with freshness, how to check
+  a hash, and the feeds (#134).
 - **Report form** (`/report/`): report a mistake, ask a question or ask us to stop fetching, with an optional email
   address for a reply. Reports are private; a fix shows in the corrections log. Linked from every footer.
 - **Using the data** (`/data/`), with the stability promise and the data dictionary, and this changelog
