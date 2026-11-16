@@ -24,15 +24,15 @@
     "@astrojs/markdown-satteri": "0.4.10",
     "@protomaps/basemaps": "5.7.2",
     "astro": "7.4.12",
-    "maplibre-gl": "6.16.0",
+    "maplibre-gl": "6.18.0",
     "pmtiles": "4.5.0"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.12",
-    "@lhci/cli": "0.15.1",
+    "@lhci/cli": "0.16.1",
     "axe-core": "4.14.0",
-    "playwright-core": "1.64.1",
-    "prettier": "3.9.10",
+    "playwright-core": "1.65.0",
+    "prettier": "3.10.1",
     "prettier-plugin-astro": "1.1.2",
     "typescript": "6.0.3"
   }
