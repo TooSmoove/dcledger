@@ -1,21 +1,25 @@
-# Render the first page of an archived document (issue #132): download the exact bytes from the private bucket by
-# their SHA-256, render page 1 with tools/render_thumbnail.py, and hand back the WebP and the `thumbnail:` block to add
-# to the record in a pull request. Only official minutes and legislation pages are rendered; the record must say so
-# (kind) on main first. Nothing is committed and nothing is published here: the picture reaches the site only after a
-# person checks it for private individuals' names, marks it reviewed and merges it (SPEC §E, AC8).
+# Render the first page of archived documents (issue #132): download the exact bytes from the private bucket by
+# their SHA-256, render page 1 with tools/render_thumbnail.py, and hand back the WebP files and the `thumbnail:`
+# blocks to add to the records in a pull request. Only official minutes and legislation pages are rendered; each
+# record must say so (kind) on main first. Nothing is committed and nothing is published here: a picture reaches the
+# site only after a person checks it for private individuals' names, marks it reviewed and merges it (SPEC §E, AC8).
 # Dispatch only; r2-docs releases its secrets only on main (ADR-0003). The bucket's key is read, never written.
 name: thumbnail
-run-name: thumbnail (${{ inputs.sha256 }})
+run-name: thumbnail (${{ inputs.documents }})
 
 on:
   workflow_dispatch:
     inputs:
-      sha256:
-        description: "SHA-256 of the archived document (its data/documents/ file name)"
+      documents:
+        description: >-
+          "pending" for every official minutes or legislation record without a thumbnail, or one or more SHA-256s
+          (data/documents/ file names) separated by spaces
         required: true
+        default: pending
 
 permissions: {}
 
+# One run at a time. One run handles every pending document, so there's no need to dispatch several.
 concurrency:
   group: thumbnail
   cancel-in-progress: false
@@ -23,28 +27,49 @@ concurrency:
 jobs:
   render:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 30
     environment: r2-docs
     permissions:
       contents: read
     env:
-      SHA256: ${{ inputs.sha256 }}
+      DOCUMENTS: ${{ inputs.documents }}
     steps:
-      - name: Check the input
-        run: |
-          [[ "$SHA256" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::sha256 must be 64 lowercase hex characters"; exit 1; }
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           sparse-checkout: |
             data/documents
             tools
-      - name: Install the renderers (poppler for PDF, Pillow for WebP; Chrome is on the runner image)
+      - name: List the documents to render
+        run: |
+          python3 -I - <<'EOF' > "$RUNNER_TEMP/documents.txt"
+          import os, re, sys
+          from pathlib import Path
+          requested = os.environ["DOCUMENTS"].split()
+          if requested == ["pending"]:
+              for path in sorted(Path("data/documents").glob("*.yaml")):
+                  text = path.read_text(encoding="utf-8")
+                  shown = re.search(r"^kind: *(minutes|legislation) *$", text, re.M)
+                  official = re.search(r"^source_type: *official *$", text, re.M)
+                  if shown and official and not re.search(r"^thumbnail:", text, re.M):
+                      print(path.stem)
+          else:
+              for sha in requested:
+                  if not re.fullmatch(r"[0-9a-f]{64}", sha):
+                      sys.exit(f"::error::{sha!r} isn't a SHA-256 (64 lowercase hex characters)")
+                  print(sha)
+          EOF
+          count=$(wc -l < "$RUNNER_TEMP/documents.txt")
+          [ "$count" -gt 0 ] || { echo "::error::No documents to render"; exit 1; }
+          echo "Rendering $count document(s):"; cat "$RUNNER_TEMP/documents.txt"
+      - name: Install the renderers (poppler for PDF, Pillow in a venv for WebP; Chrome is on the runner image)
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
-          python3 -m pip install --user --no-cache-dir --disable-pip-version-check Pillow==12.3.0
-      - name: Download the archived bytes
+          # A venv, not pip --user: python3 -I (below) ignores the user site directory.
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --no-cache-dir --disable-pip-version-check -q Pillow==12.3.0
+      - name: Download and render each document
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_PRIVATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_PRIVATE_SECRET_ACCESS_KEY }}
@@ -54,28 +79,50 @@ jobs:
           BUCKET: ${{ vars.R2_PRIVATE_BUCKET }}
           ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
         run: |
-          # The private bucket's layout (DcLedger.Infrastructure.Storage.StorageKeys): docs/sha256/{first two}/{sha256}.
-          aws s3 cp "s3://$BUCKET/docs/sha256/${SHA256:0:2}/$SHA256" "$RUNNER_TEMP/document" \
-            --endpoint-url "$ENDPOINT" --only-show-errors
-          echo "$SHA256  $RUNNER_TEMP/document" | sha256sum --check --quiet
-      - name: Render page 1
-        run: |
-          python3 -I tools/render_thumbnail.py --file "$RUNNER_TEMP/document" --data data \
-            --chrome "$(command -v google-chrome)" | tee "$RUNNER_TEMP/render.txt"
+          chrome="$(command -v google-chrome)"
+          failed=0
           {
-            echo "### Page 1 of \`${SHA256:0:12}…\`"
+            echo "### First-page pictures"
             echo
-            echo "Download the **thumbnail** artifact into \`data/thumbnails/\`, open it, and check it for private"
-            echo "individuals' names. If there are none, add this to \`data/documents/$SHA256.yaml\` with"
-            echo "\`reviewed: true\` and open a pull request. If there are, don't use it."
-            echo
-            echo '```yaml'
-            sed -n '/^kind:/,$p' "$RUNNER_TEMP/render.txt"
-            echo '```'
+            echo "Download the **thumbnails** artifact into \`data/thumbnails/\` and open each picture at full size."
+            echo "Check it for private individuals' names (residents who spoke, applicants, property owners)."
+            echo "If there are none, add its block to the record with \`reviewed: true\`. If there are, delete that"
+            echo "picture and leave its record alone. Then open one pull request."
           } >> "$GITHUB_STEP_SUMMARY"
+          while read -r sha; do
+            echo "::group::$sha"
+            document="$RUNNER_TEMP/$sha"
+            # The private bucket's layout (DcLedger.Infrastructure.Storage.StorageKeys): docs/sha256/{first two}/{sha256}.
+            if aws s3 cp "s3://$BUCKET/docs/sha256/${sha:0:2}/$sha" "$document" --endpoint-url "$ENDPOINT" --only-show-errors \
+              && echo "$sha  $document" | sha256sum --check --quiet \
+              && "$RUNNER_TEMP/venv/bin/python" -I tools/render_thumbnail.py --file "$document" --data data \
+                   --chrome "$chrome" > "$RUNNER_TEMP/$sha.txt"; then
+              cat "$RUNNER_TEMP/$sha.txt"
+              {
+                echo
+                echo "#### \`data/documents/$sha.yaml\`"
+                echo
+                echo '```yaml'
+                sed -n '/^thumbnail:/,$p' "$RUNNER_TEMP/$sha.txt"
+                echo '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+            else
+              failed=$((failed + 1))
+              echo "::error title=Not rendered::$sha (see the log above)"
+              printf '\n- **Not rendered:** `%s` (see the log)\n' "$sha" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            rm -f "$document"
+            echo "::endgroup::"
+          done < "$RUNNER_TEMP/documents.txt"
+          echo "failed=$failed" >> "$GITHUB_ENV"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: thumbnail
-          path: data/thumbnails/${{ inputs.sha256 }}.webp
+          name: thumbnails
+          path: data/thumbnails/*.webp
           if-no-files-found: error
           retention-days: 3
+      - name: Fail if any document wasn't rendered
+        if: env.failed != '0'
+        run: |
+          echo "::error::$failed document(s) weren't rendered; the others are in the artifact."
+          exit 1

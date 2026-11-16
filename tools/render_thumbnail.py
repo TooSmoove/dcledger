@@ -20,7 +20,7 @@ Usage:
   python3 tools/render_thumbnail.py --file ~/Downloads/minutes.pdf --data data
   python3 tools/render_thumbnail.py --file saved-page.html --data data --chrome "$(command -v google-chrome)"
 The archived bytes of a fetched document are in the private bucket: the thumbnail workflow downloads and renders
-them (Actions -> thumbnail -> Run workflow, with the document's SHA-256).
+them (Actions -> thumbnail -> Run workflow; "pending" renders every record that needs a picture).
 """
 
 from __future__ import annotations
