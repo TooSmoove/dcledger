@@ -1,0 +1,20 @@
+---
+// A recorded vote drawn as a half circle of seats: filled for aye, open for no (issue #133). Decorative: the tally is
+// already in words beside it, so this is aria-hidden. Drawn only from a recorded tally like "8-0"; a vote reported
+// unanimous with no tally gets no seats, since the size of the board is not the vote.
+import { seatList } from '../lib/radar.js';
+
+interface Props {
+  votes: string | null;
+}
+
+const seats = seatList(Astro.props.votes);
+---
+
+{seats.length > 0 && (
+  <span class="seats" aria-hidden="true" style={`--n:${seats.length}`}>
+    {seats.map((seat, i) => (
+      <span class={seat} style={`--i:${i}`} />
+    ))}
+  </span>
+)}

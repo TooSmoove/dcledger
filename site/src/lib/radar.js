@@ -310,3 +310,68 @@ function parseUtc(utc) {
   }
   return new Date(utc);
 }
+
+/**
+ * Seats for a recorded tally (issue #133): "8-1" gives eight "aye" then one "no". No tally, no seats: a vote
+ * reported unanimous without a count is never drawn from the size of the board.
+ * @param {string | null} votes
+ * @returns {('aye' | 'no')[]}
+ */
+export function seatList(votes) {
+  if (votes === null || votes === undefined) {
+    return [];
+  }
+  const match = /^(\d{1,2})-(\d{1,2})$/.exec(votes);
+  if (!match) {
+    throw new Error(`Expected votes like "9-0", got ${JSON.stringify(votes)}.`);
+  }
+  return [...Array(Number(match[1])).fill('aye'), ...Array(Number(match[2])).fill('no')];
+}
+
+/**
+ * The hash glyph's cells (issue #133): each of the 64 hex digits as a shade from 0 to 3 (its value divided by 4).
+ * @param {string} sha256 64 lowercase hex digits
+ * @returns {number[]}
+ */
+export function glyphCells(sha256) {
+  if (!/^[0-9a-f]{64}$/.test(sha256)) {
+    throw new Error(
+      `Expected a SHA-256 of 64 lowercase hex digits, got ${JSON.stringify(sha256)}.`,
+    );
+  }
+  return [...sha256].map((digit) => Math.floor(parseInt(digit, 16) / 4));
+}
+
+/**
+ * The radar window's days in Eastern time (issue #133): the export's Eastern date and the 30 days after it, each with
+ * its weekday initial, day of month, a month label on the first day and on each 1st, and how many items start on it.
+ * @param {string} generatedUtc
+ * @param {string[]} startsUtc the start of each item in the window
+ */
+export function windowDays(generatedUtc, startsUtc) {
+  const dateOf = (utc) => easternIso(utc).slice(0, 10);
+  const counts = new Map();
+  for (const start of startsUtc) {
+    counts.set(dateOf(start), (counts.get(dateOf(start)) ?? 0) + 1);
+  }
+  const [y, m, d] = dateOf(generatedUtc).split('-').map(Number);
+  const days = [];
+  for (let i = 0; i <= WINDOW_DAYS; i++) {
+    const date = new Date(Date.UTC(y, m - 1, d + i));
+    const iso = date.toISOString().slice(0, 10);
+    const weekday = date.getUTCDay();
+    days.push({
+      iso,
+      day: date.getUTCDate(),
+      weekday: 'SMTWTFS'[weekday],
+      weekend: weekday === 0 || weekday === 6,
+      today: i === 0,
+      month:
+        i === 0 || date.getUTCDate() === 1
+          ? new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' }).format(date)
+          : null,
+      items: counts.get(iso) ?? 0,
+    });
+  }
+  return days;
+}

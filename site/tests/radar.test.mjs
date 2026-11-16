@@ -11,16 +11,19 @@ import {
   easternIso,
   easternText,
   freshnessText,
+  glyphCells,
   inWindow,
   isWatched,
   labelText,
   outcomeText,
   retrievalText,
+  seatList,
   staleAfterUtc,
   statusText,
   termRows,
   votesText,
   voteText,
+  windowDays,
 } from '../src/lib/radar.js';
 
 test('Eastern text carries the zone and crosses the daylight-saving change', () => {
@@ -220,4 +223,32 @@ test('a decision without terms has no term rows, and one term gives one row (#11
     { label: 'Expires', text: 'Sun, Feb 14, 2027', date: '2027-02-14' },
   ]);
   assert.throws(() => termRows({ status: 'active' }), /Unknown action status/);
+});
+
+test('seats come only from a recorded tally, never from the size of the board (#133)', () => {
+  assert.deepEqual(seatList('2-1'), ['aye', 'aye', 'no']);
+  assert.deepEqual(seatList('0-0'), []);
+  assert.deepEqual(seatList(null), [], 'unanimous with no tally: no seats');
+  assert.throws(() => seatList('nine'), /Expected votes/);
+});
+
+test('the hash glyph is the 64 hex digits as shades 0 to 3 (#133)', () => {
+  const cells = glyphCells('0123456789abcdef'.repeat(4));
+  assert.equal(cells.length, 64);
+  assert.deepEqual(cells.slice(0, 16), [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3]);
+  assert.throws(() => glyphCells('ABC'), /64 lowercase hex/);
+});
+
+test('the window strip runs 31 Eastern days from the export and counts items per day (#133)', () => {
+  // 01:30 UTC on Nov 16 is still Nov 15 in Eastern time.
+  const days = windowDays('2026-11-16T01:30:00Z', ['2026-11-17T22:30:00Z', '2026-11-17T23:00:00Z']);
+  assert.equal(days.length, 31);
+  assert.deepEqual(
+    { iso: days[0].iso, today: days[0].today, weekday: days[0].weekday, month: days[0].month },
+    { iso: '2026-11-15', today: true, weekday: 'S', month: 'Nov' },
+  );
+  assert.equal(days[2].items, 2, 'two items on Nov 17, Eastern');
+  assert.equal(days.find((d) => d.iso === '2026-12-01').month, 'Dec');
+  assert.equal(days[30].iso, '2026-12-15');
+  assert.ok(days[0].weekend && days[6].weekend && !days[1].weekend);
 });

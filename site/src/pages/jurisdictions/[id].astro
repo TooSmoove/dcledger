@@ -29,22 +29,28 @@ const decisions = byDecisionNewestFirst(
 ---
 
 <Base title={data.name}>
-  <p>
-    <a href="/radar/">← Hearing Radar</a>
-  </p>
-  <h1>{data.name}</h1>
-  <p class="coverage">{coverageText(data.coverage_tier)}</p>
+  <Fragment slot="masthead">
+    <p class="back">
+      <a href="/radar/">← Hearing Radar</a>
+    </p>
+    <h1>{data.name}</h1>
+    <p class="coverage lede">{coverageText(data.coverage_tier)}</p>
+    {watched && (
+      <>
+        <Freshness
+          lastCheckedUtc={data.last_checked_utc}
+          stale={data.stale}
+          staleAfterHours={data.stale_after_hours}
+        />
+        <p class="feeds">
+          Subscribe: <a href={`/radar/${id}.ics`}>calendar (iCal) for {data.name}</a>
+        </p>
+      </>
+    )}
+  </Fragment>
+
   {watched && (
     <>
-      <Freshness
-        lastCheckedUtc={data.last_checked_utc}
-        stale={data.stale}
-        staleAfterHours={data.stale_after_hours}
-      />
-      <p class="feeds">
-        Subscribe: <a href={`/radar/${id}.ics`}>calendar (iCal) for {data.name}</a>
-      </p>
-
       <EventTable
         caption={`Every reviewed item for ${data.name}, newest first`}
         events={events}

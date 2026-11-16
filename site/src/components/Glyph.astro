@@ -1,0 +1,18 @@
+---
+// A SHA-256 drawn as an 8 x 8 grid, one cell per hex digit, four shades by value (issue #133). Two copies with the
+// same hash always look alike, so a reader can compare them by eye. Decorative: the hash is printed in full beside
+// it, so this is aria-hidden.
+import { glyphCells } from '../lib/radar.js';
+
+interface Props {
+  sha256: string;
+}
+
+const cells = glyphCells(Astro.props.sha256);
+---
+
+<span class="glyph" aria-hidden="true">
+  {cells.map((q) => (
+    <i class={`q${q}`} />
+  ))}
+</span>

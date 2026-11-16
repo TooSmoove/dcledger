@@ -1,0 +1,37 @@
+---
+// The radar's 30-day window as dated cells, from the export day to 30 days on, with a mark on each day that has an
+// item (issue #133). Decorative: the table below is the record, so the strip is aria-hidden and links nothing.
+import type { CollectionEntry } from 'astro:content';
+import { windowDays } from '../lib/radar.js';
+
+interface Props {
+  generatedUtc: string;
+  events: CollectionEntry<'events'>[];
+}
+
+const { generatedUtc, events } = Astro.props;
+const days = windowDays(
+  generatedUtc,
+  events.map((event) => event.data.starts_utc),
+);
+---
+
+<figure class="window" aria-hidden="true">
+  <div class="window-scroll">
+    <ol class="strip">
+      {days.map((day) => (
+        <li
+          class={
+            [day.weekend && 'weekend', day.today && 'today', day.items > 0 && 'has-items']
+              .filter(Boolean)
+              .join(' ') || undefined
+          }
+        >
+          {day.month && <span class="mon">{day.month}</span>}
+          <span class="wd">{day.weekday}</span>
+          <span class="d">{day.day}</span>
+        </li>
+      ))}
+    </ol>
+  </div>
+</figure>
