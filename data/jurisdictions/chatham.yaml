@@ -7,3 +7,10 @@ legistar_client: chathamnc
 # sessions are listed under it too (#94).
 bodies:
   - Board of Commissioners
+# Note (Nov 17, 2026): the summary-judgment order in the developer's challenge to the Feb 11, 2026 moratorium, quoted
+# from the order itself (archived dad999cf…, the copy Carolina Journal posted; filed stamp Sept 18, 2026, signed
+# Sept 17). The order's decretal paragraphs don't say whether the moratorium is valid or whether the project is exempt,
+# so the note doesn't either. Replace the copy with one from the court or the county if either posts it.
+note: "Order Granting Plaintiff's Motion for Summary Judgment, Eco TIP West LLC v. Chatham County, Superior Court, 26CV000456-180, filed Sept. 18, 2026. The case \"relates to Chatham County's decision to adopt a twelve (12) month moratorium on data centers on February 11, 2026.\" The order: \"Plaintiff's motion for summary judgment is GRANTED as to the issues of liability and attorney's fees\"; \"the determination and award of Plaintiff's damages is reserved for further proceedings.\""
+note_document_ids:
+  - dad999cff5e5b3441f0200df1fec31f48e9a4a5e9bf3349db8b428ae958761b7

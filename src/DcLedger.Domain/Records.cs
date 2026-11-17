@@ -26,6 +26,19 @@ public sealed record Jurisdiction
     /// jurisdiction by hand on the tier every jurisdiction had before the key existed.
     /// </summary>
     public CoverageTier CoverageTier { get; init; } = CoverageTier.Watched;
+
+    /// <summary>The most characters a <see cref="Note"/> may hold; longer text belongs in the cited document.</summary>
+    public const int MaxNoteLength = 500;
+
+    /// <summary>
+    /// A neutral note shown on the jurisdiction's page about something that bears on its record but isn't one of its
+    /// decisions, such as a court order on a moratorium. One line, worded only as <see cref="NoteDocumentIds"/>
+    /// state it (SPEC §E, neutrality); null when there is none.
+    /// </summary>
+    public string? Note { get; init; }
+
+    /// <summary>The documents that state the <see cref="Note"/>; required with a note, and only with one.</summary>
+    public IReadOnlyList<Sha256Hash> NoteDocumentIds { get; init; } = [];
 }
 
 /// <summary>A retrieved source document. Only metadata is public; the bytes stay in the private bucket (ADR-0003).</summary>

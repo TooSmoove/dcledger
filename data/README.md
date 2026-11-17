@@ -118,6 +118,25 @@ Every jurisdiction states how closely it is covered, and its page says so in a s
 
 Changing a jurisdiction's tier changes what the site promises about it, so say why in the PR.
 
+## Adding a note to a jurisdiction
+
+Some things bear on a jurisdiction's record without being one of its body's decisions, so they aren't `actions/`
+records: a court order on a moratorium, for example. A jurisdiction can carry one such note, shown on its page under
+"Note on the record" with its sources, before its decisions.
+
+```yaml
+# jurisdictions/chatham.yaml (excerpt)
+note: "Order Granting Plaintiff's Motion for Summary Judgment, Eco TIP West LLC v. Chatham County, 26CV000456-180 (Sept. 18, 2026): \"GRANTED as to the issues of liability and attorney's fees\"; damages \"reserved for further proceedings.\""
+note_document_ids:
+  - <sha256 of the archived order>
+```
+
+- **Neutral and sourced.** Say only what the archived documents state, quoting the operative words; no adjectives and
+  no reading of what it means (SPEC §E). One line of at most 500 characters.
+- **A document is required.** `note_document_ids` needs at least one archived document, and is only allowed with a
+  `note` (`DOC_MISSING`, `INVALID_VALUE`). Archive it like any other source.
+- **Say where it came from** in a comment above the key, as for a decision's terms.
+
 ## Cancelling or rescheduling a meeting
 
 Ingest comments on a meeting's review issue when the platform moves it, hints at a cancellation, withdraws its agenda or

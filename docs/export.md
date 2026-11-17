@@ -105,6 +105,9 @@ Publish builds `ingest-status.json` from ingest run history with `tools/ingest_s
 - A jurisdiction that isn't watched (`coverage_tier` `decisions` or `registered`, issue #115) has no "last checked"
   and is never stale: it exports `last_checked_utc: null` and `stale: false`, and a status entry for it is ignored
   with the warning above.
+- Each jurisdiction ends with `note` (a line of text, or `null`) and `note_documents` (the same document objects as an
+  item's `documents`; empty without a note). A note is about the jurisdiction's record without being one of its
+  body's decisions, such as a court order on a moratorium, and the gate requires a document for it.
 
 A jurisdiction is **stale** when it has no successful check, or the last one is more than 48 hours before
 `generated_utc` (exactly 48 hours is still fresh). For a manual jurisdiction the threshold is 7 days (issue #27), and a

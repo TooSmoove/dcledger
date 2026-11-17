@@ -516,6 +516,24 @@ test('freshness, the calendar and the meeting table are for watched jurisdiction
   assert.doesNotMatch(otherList, /Last checked|Never checked|Stale:/);
 });
 
+test("a jurisdiction's note shows as text with its sources, and only where there is one", () => {
+  const decided = page('jurisdictions/decided-county/index.html');
+  const note = decided.slice(decided.indexOf('id="note-heading"'));
+  assert.match(note, /Note on the record/);
+  assert.match(note, /Fixture court order: \u201C?&quot;?judgment for the plaintiff/);
+  assert.match(note, /&lt;b&gt;not markup&lt;\/b&gt;/, 'the note is text, never HTML');
+  assert.match(note, /Not a decision of Decided County\./);
+  assert.match(note, /href="https:\/\/news\.example\.org\/fixture-order\.pdf"/);
+  assert.match(note, /4c3f0e1d2b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0/);
+  assert.ok(
+    decided.indexOf('id="note-heading"') < decided.indexOf('id="decisions-heading"'),
+    'the note comes before the decisions',
+  );
+  for (const id of ['guilford', 'fixture-city', 'registered-county']) {
+    assert.doesNotMatch(page(`jurisdictions/${id}/index.html`), /note-heading/, `${id}: no note`);
+  }
+});
+
 test('a decision renders every term its record states, and only those (#115)', () => {
   const guilford = page('jurisdictions/guilford/index.html');
   const moratorium = guilford.slice(

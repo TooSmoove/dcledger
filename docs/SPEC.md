@@ -255,8 +255,12 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
     it doesn't reach readers, and an expiry date; an expired exception fails like none. An npm error fails too.
   - First exception: GHSA-fc5q-39xc-vjpf (picomatch ReDoS, every release through 4.0.7, no fix yet), until
     Dec 31, 2026. picomatch runs only at build time on the repository's own glob patterns, and the site is static.
-- **Nov 17, 2026 — Henderson, decisions only (AC1, AC6, §D):**
-  - The City of Henderson (Vance County seat, place FIPS 3730660) joins as `platform: manual`,
-    `coverage_tier: decisions`, like Forsyth and Davidson: decisions recorded from the record, no hearing watch. First
-    decision: the Nov 9, 2026 six-month moratorium (`reported_news` until the minutes are archived). Its locator map
-    needs `site/src/geo/nc-boundaries.json` rebuilt with `tools/build_locators.py`.
+- **Nov 17, 2026 — A note on a jurisdiction's page (AC2, AC6, §E, ADR-0004):**
+  - A jurisdiction may carry one neutral `note` with `note_document_ids`, for something that bears on its record
+    without being one of its body's decisions (first use: the Sept 18, 2026 summary-judgment order against Chatham
+    County in the challenge to its Feb 11, 2026 moratorium). The note is one line of at most 500 characters, worded
+    only as the cited documents state it. The gate requires at least one document with a note, and rejects documents
+    without one (`DOC_MISSING`, `INVALID_VALUE`).
+  - `events.json` jurisdictions gain `note` and `note_documents` after `coverage_tier` (schema version 1, additive;
+    ADR-0004). The jurisdiction page shows the note under "Note on the record", with its sources, before the
+    decisions. The CSV and Parquet downloads are unchanged.

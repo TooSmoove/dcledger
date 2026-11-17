@@ -23,8 +23,15 @@ public sealed class SiteContractTests
     private static readonly HashSet<string> NullablePaths = new(
         new[] { "instrument_number", "threshold", "scope", "effective_on", "expires_on", "early_termination", "exemptions", "successor_id", "status" }
             .Select(key => $"$.actions[].{key}")
-            .Concat(new[] { "events", "actions" }.SelectMany(items => new[] { "kind", "thumbnail" }.Select(key => $"$.{items}[].documents[].{key}"))),
+            .Concat(new[] { "events", "actions" }.SelectMany(items => new[] { "kind", "thumbnail" }.Select(key => $"$.{items}[].documents[].{key}")))
+            .Concat(new[] { "$.jurisdictions[].note", "$.jurisdictions[].note_documents[].kind", "$.jurisdictions[].note_documents[].thumbnail" }),
         StringComparer.Ordinal);
+
+    /// <summary>
+    /// Arrays that are empty unless the record has something to list: a jurisdiction's note documents. When either
+    /// side is empty there is nothing to compare; when both have elements, they are compared as usual.
+    /// </summary>
+    private static readonly HashSet<string> MayBeEmptyPaths = new(StringComparer.Ordinal) { "$.jurisdictions[].note_documents" };
 
     [Fact]
     public void Exported_events_json_has_the_shape_of_the_site_fixture()
@@ -81,6 +88,11 @@ public sealed class SiteContractTests
         }
         else if (expected.ValueKind == JsonValueKind.Array)
         {
+            if (MayBeEmptyPaths.Contains(path) && (expected.GetArrayLength() == 0 || actual.GetArrayLength() == 0))
+            {
+                return;
+            }
+
             if (expected.GetArrayLength() == 0 || actual.GetArrayLength() == 0)
             {
                 problems.Add($"{path}: both sides need at least one element to compare.");
