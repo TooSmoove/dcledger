@@ -47,6 +47,7 @@ public static class LedgerValidator
         {
             CheckId(errors, file, jurisdiction.Id);
             CheckPlatform(errors, file, jurisdiction);
+            CheckNote(errors, file, jurisdiction, documents);
         }
 
         foreach (var (file, document) in snapshot.Documents)
@@ -122,6 +123,37 @@ public static class LedgerValidator
         {
             errors.Add(new ValidationError(file, jurisdiction.Id, ValidationRule.InvalidValue,
                 "last_manual_check_utc is only allowed when platform is manual; an automated jurisdiction's last check comes from ingest."));
+        }
+    }
+
+    /// <summary>
+    /// A jurisdiction's note shows on its page like any other public statement, so it needs a document that states it
+    /// (SPEC AC2), and the documents need a note to belong to.
+    /// </summary>
+    private static void CheckNote(List<ValidationError> errors, string file, Jurisdiction jurisdiction, Dictionary<Sha256Hash, Document> documents)
+    {
+        if (jurisdiction.Note is null)
+        {
+            if (jurisdiction.NoteDocumentIds.Count > 0)
+            {
+                errors.Add(new ValidationError(file, jurisdiction.Id, ValidationRule.InvalidValue,
+                    "note_document_ids is only allowed with a note."));
+            }
+
+            return;
+        }
+
+        if (jurisdiction.NoteDocumentIds.Count == 0)
+        {
+            errors.Add(new ValidationError(file, jurisdiction.Id, ValidationRule.DocMissing,
+                "A note needs at least one document in note_document_ids that states it (SPEC AC2)."));
+            return;
+        }
+
+        foreach (var documentId in jurisdiction.NoteDocumentIds.Where(id => !documents.ContainsKey(id)))
+        {
+            errors.Add(new ValidationError(file, jurisdiction.Id, ValidationRule.DocMissing,
+                $"document '{documentId}' is missing or failed to load."));
         }
     }
 

@@ -10,8 +10,8 @@ namespace DcLedger.Publishing.SiteData;
 /// <summary>
 /// Writes <c>site-data/events.json</c>, the site's only input (ADR-0001, ADR-0004). Field names and order are spelled
 /// out here and mirrored by <c>site/src/content.config.ts</c>; a breaking change bumps <see cref="SchemaVersion"/>.
-/// Adding a key the site can ignore, such as <c>actions</c> (issue #25) or a jurisdiction's <c>coverage_tier</c> and a
-/// decision's terms (issue #115), isn't breaking.
+/// Adding a key the site can ignore, such as <c>actions</c> (issue #25), a jurisdiction's <c>coverage_tier</c> and a
+/// decision's terms (issue #115), or a jurisdiction's <c>note</c> and <c>note_documents</c>, isn't breaking.
 /// The output is LF-terminated UTF-8 without a BOM, the same on every operating system.
 /// </summary>
 public sealed class SiteDataExporter : IExporter
@@ -73,6 +73,8 @@ public sealed class SiteDataExporter : IExporter
         json.WriteBoolean("stale", item.Stale);
         json.WriteNumber("stale_after_hours", (int)item.StaleAfter.TotalHours);
         json.WriteString("coverage_tier", item.Jurisdiction.CoverageTier.ToToken());
+        WriteStringOrNull(json, "note", item.Jurisdiction.Note);
+        WriteDocuments(json, "note_documents", item.NoteDocuments);
         json.WriteEndObject();
     }
 
@@ -92,7 +94,7 @@ public sealed class SiteDataExporter : IExporter
         json.WriteNumber("sequence", ledgerEvent.Sequence);
         json.WriteString("label", ledgerEvent.Label.ToToken());
         WriteLocation(json, ledgerEvent.Location);
-        WriteDocuments(json, item.Documents);
+        WriteDocuments(json, "documents", item.Documents);
         json.WriteEndObject();
     }
 
@@ -110,7 +112,7 @@ public sealed class SiteDataExporter : IExporter
         json.WriteBoolean("unanimous", action.Unanimous);
         json.WriteNumber("sequence", action.Sequence);
         json.WriteString("label", action.Label.ToToken());
-        WriteDocuments(json, item.Documents);
+        WriteDocuments(json, "documents", item.Documents);
         WriteTerms(json, action.Terms);
         json.WriteEndObject();
     }
@@ -136,11 +138,11 @@ public sealed class SiteDataExporter : IExporter
     /// Provenance for one item (SPEC AC2): URL, retrieval time and SHA-256 of each document, and how it was obtained
     /// (<c>fetched</c> or <c>manual</c>; added within schema version 1, issue #113). Then, also within schema version 1
     /// (issue #132), the document's <c>kind</c> and its first-page <c>thumbnail</c> (path, width and height), each null
-    /// when the record has none.
+    /// when the record has none. A jurisdiction's note writes the same objects under <c>note_documents</c>.
     /// </summary>
-    private static void WriteDocuments(Utf8JsonWriter json, IReadOnlyList<Document> documents)
+    private static void WriteDocuments(Utf8JsonWriter json, string name, IReadOnlyList<Document> documents)
     {
-        json.WriteStartArray("documents");
+        json.WriteStartArray(name);
         foreach (var document in documents)
         {
             json.WriteStartObject();

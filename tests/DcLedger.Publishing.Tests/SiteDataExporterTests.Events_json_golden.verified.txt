@@ -8,7 +8,9 @@
       "last_checked_utc": "2026-10-27T09:00:00Z",
       "stale": true,
       "stale_after_hours": 168,
-      "coverage_tier": "watched"
+      "coverage_tier": "watched",
+      "note": null,
+      "note_documents": []
     },
     {
       "id": "fixture-county",
@@ -16,7 +18,9 @@
       "last_checked_utc": "2026-11-05T12:17:43Z",
       "stale": false,
       "stale_after_hours": 48,
-      "coverage_tier": "watched"
+      "coverage_tier": "watched",
+      "note": null,
+      "note_documents": []
     }
   ],
   "events": [

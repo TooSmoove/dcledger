@@ -7,25 +7,22 @@ import { DOCUMENT_KINDS } from './lib/thumbnails.js';
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
 // retrieval (issue #113): how the copy was obtained. kind and thumbnail (issue #132): what the document is, and a
 // reviewed picture of its first page. Each defaults for an events.json written before the field.
-const documents = z
-  .array(
-    z.object({
-      url: z.url(),
-      retrieved_utc: z.iso.datetime(),
-      sha256,
-      retrieval: z.enum(['fetched', 'manual']).default('fetched'),
-      kind: z.enum(DOCUMENT_KINDS).nullable().default(null),
-      thumbnail: z
-        .object({
-          path: z.string().regex(/^\/thumbnails\/[0-9a-f]{64}\.webp$/),
-          width: z.number().int().positive(),
-          height: z.number().int().positive(),
-        })
-        .nullable()
-        .default(null),
-    }),
-  )
-  .min(1);
+const document = z.object({
+  url: z.url(),
+  retrieved_utc: z.iso.datetime(),
+  sha256,
+  retrieval: z.enum(['fetched', 'manual']).default('fetched'),
+  kind: z.enum(DOCUMENT_KINDS).nullable().default(null),
+  thumbnail: z
+    .object({
+      path: z.string().regex(/^\/thumbnails\/[0-9a-f]{64}\.webp$/),
+      width: z.number().int().positive(),
+      height: z.number().int().positive(),
+    })
+    .nullable()
+    .default(null),
+});
+const documents = z.array(document).min(1);
 
 const events = defineCollection({
   loader: file(SITE_DATA_FILE, { parser: eventsFrom }),
@@ -57,6 +54,10 @@ const jurisdictions = defineCollection({
     stale_after_hours: z.number().int().positive().default(48),
     // Issue #115; defaults for an events.json written before the field, when every jurisdiction was watched.
     coverage_tier: z.enum(['watched', 'decisions', 'registered']).default('watched'),
+    // A neutral note about the jurisdiction's record and the documents that state it; each defaults for an events.json
+    // written before the field.
+    note: z.string().nullable().default(null),
+    note_documents: z.array(document).default([]),
   }),
 });
 

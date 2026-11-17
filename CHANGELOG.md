@@ -40,6 +40,9 @@ The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcled
   County and Vance County (entered by hand). Each jurisdiction states its coverage tier; all six are `watched`.
   Forsyth County and Davidson County are `decisions`: decisions recorded from the official record, hearings not
   watched (#118).
+- **Jurisdiction notes:** a jurisdiction page can show one neutral "Note on the record", with its sources, for
+  something that bears on its record without being one of its body's decisions, such as a court order on a
+  moratorium. `events.json` jurisdictions gain `note` and `note_documents`; the downloads are unchanged.
 - **Decisions** (local actions) on meeting and jurisdiction pages, with outcome, vote and sourcing label, and, for an
   adopted decision, the terms its archived text states: threshold, scope, start and expiry dates, early termination,
   exemptions, a successor and a status.
