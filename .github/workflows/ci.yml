@@ -177,8 +177,14 @@ jobs:
           dotnet restore DcLedger.slnx -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=low \
             2>&1 | tee -a "$RUNNER_TEMP/ci.log"
       - name: npm vulnerabilities (non-dev)
+        # Every advisory at any severity fails, except a reviewed, expiring exception in tools/audit-exceptions.json
+        # (tools/npm_audit_gate.py). npm audit's own exit code is ignored; the gate reads its JSON report.
         working-directory: site
-        run: npm audit --omit=dev --audit-level=low 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
+        run: |
+          npm audit --omit=dev --audit-level=low 2>&1 | tee -a "$RUNNER_TEMP/ci.log" || true
+          npm audit --omit=dev --json > "$RUNNER_TEMP/npm-audit.json" || true
+          python3 ../tools/npm_audit_gate.py ../tools/audit-exceptions.json < "$RUNNER_TEMP/npm-audit.json" \
+            2>&1 | tee -a "$RUNNER_TEMP/ci.log"
       - name: Licenses
         run: |
           python3 tools/license_check.py --policy tools/license-policy.json --repo . \

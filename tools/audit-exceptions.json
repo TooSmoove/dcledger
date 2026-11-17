@@ -1,0 +1,11 @@
+{
+  "comment": "npm advisories CI accepts for a while, read by tools/npm_audit_gate.py. Each entry needs the GHSA id, the package, why it doesn't reach readers, and an expiry no more than about six weeks out. Remove an entry once the fix ships; the gate warns when one no longer matches.",
+  "exceptions": [
+    {
+      "ghsa": "GHSA-fc5q-39xc-vjpf",
+      "package": "picomatch",
+      "reason": "ReDoS needs attacker-supplied glob patterns or matched strings; Astro, Vite and unstorage run picomatch only at build time on the repository's own config, and the site ships static files. No fixed release exists (4.0.7 is the newest). Reviewed Nov 17, 2026.",
+      "expires": "2026-12-31"
+    }
+  ]
+}
