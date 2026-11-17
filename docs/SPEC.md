@@ -249,3 +249,9 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
     punctuation in use, one 37,120-byte WOFF2 preloaded with `font-display: swap` and a metric-matched Times
     fallback (`tools/subset_font.py`). Italic stays on the system serif to keep within 60 KB. The license report
     gains a "vendored" section that checks the font's and the boundaries' hashes and license texts.
+- **Nov 17, 2026 — Expiring npm audit exceptions (§E, Gate 0B §6):**
+  - The audit job's npm step now pipes `npm audit --omit=dev --json` to `tools/npm_audit_gate.py`. Every advisory at
+    any severity still fails, except one listed in `tools/audit-exceptions.json` with its GHSA id, package, a reason
+    it doesn't reach readers, and an expiry date; an expired exception fails like none. An npm error fails too.
+  - First exception: GHSA-fc5q-39xc-vjpf (picomatch ReDoS, every release through 4.0.7, no fix yet), until
+    Dec 31, 2026. picomatch runs only at build time on the repository's own glob patterns, and the site is static.
