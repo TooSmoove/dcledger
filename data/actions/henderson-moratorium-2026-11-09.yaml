@@ -1,0 +1,16 @@
+# Henderson Daily Dispatch, Nov 12, 2026, as syndicated on Yahoo News (archived 1606d6a3…; the Dispatch's own page
+# wasn't found): "After public remarks and brief discussions Monday night, the city council voted 4-3 to adopt a
+# 6-month moratorium on data center development in the city and its extraterritorial jurisdiction." Monday was Nov 9.
+# The story names the three no votes and one absent member, so votes is 4-3.
+# reported_news until the City Council's minutes or the adopted ordinance are archived; then add them, switch to
+# confirmed_official, fill the terms (instrument_number, scope, effective_on, expires_on, early_termination,
+# exemptions, status) as they state them, and raise sequence.
+id: henderson-moratorium-2026-11-09
+jurisdiction_id: henderson
+action_type: moratorium
+outcome: adopted
+decided_on: 2026-11-09
+votes: "4-3"
+label: reported_news
+document_ids:
+  - 1606d6a376d21e4bd39f3efb45729bf9513137122f299309725cb0e6232b3172

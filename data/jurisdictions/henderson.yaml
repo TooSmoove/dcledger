@@ -1,0 +1,11 @@
+# The City of Henderson (Vance County seat), next to the site of the Vance County rezoning recorded in
+# data/actions/vance-rezoning-2026-04-20.yaml. Decisions only (owner decision, Nov 17, 2026): no hearing watch, so no
+# events and no last_manual_check_utc.
+# Where the City Council posts agendas and approved minutes isn't recorded yet: find it on the city's website and
+# check its robots.txt before archiving anything (if it disallows robots, save in a browser and use --file).
+id: henderson
+name: Henderson
+platform: manual
+coverage_tier: decisions
+bodies:
+  - City Council

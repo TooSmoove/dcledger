@@ -45,6 +45,7 @@ JURISDICTIONS: dict[str, tuple[str, str]] = {
     "forsyth": ("county", "37067"),
     "greensboro": ("place", "3728000"),
     "guilford": ("county", "37081"),
+    "henderson": ("place", "3730660"),
     "stokes": ("county", "37169"),
     "vance": ("county", "37181"),
     "winston-salem": ("place", "3775000"),

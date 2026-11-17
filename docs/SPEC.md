@@ -255,3 +255,8 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
     it doesn't reach readers, and an expiry date; an expired exception fails like none. An npm error fails too.
   - First exception: GHSA-fc5q-39xc-vjpf (picomatch ReDoS, every release through 4.0.7, no fix yet), until
     Dec 31, 2026. picomatch runs only at build time on the repository's own glob patterns, and the site is static.
+- **Nov 17, 2026 — Henderson, decisions only (AC1, AC6, §D):**
+  - The City of Henderson (Vance County seat, place FIPS 3730660) joins as `platform: manual`,
+    `coverage_tier: decisions`, like Forsyth and Davidson: decisions recorded from the record, no hearing watch. First
+    decision: the Nov 9, 2026 six-month moratorium (`reported_news` until the minutes are archived). Its locator map
+    needs `site/src/geo/nc-boundaries.json` rebuilt with `tools/build_locators.py`.

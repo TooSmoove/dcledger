@@ -216,6 +216,7 @@ Decisions-only jurisdictions (`coverage_tier: decisions`, #118) have no events, 
 |---|---|
 | Forsyth | CivicWeb, `coforsythnc.civicweb.net` (agendas under Meetings; adopted minutes in the Document Center under Minutes → Board of Commissioners Meeting). Its robots.txt disallows all robots (checked Nov 15, 2026): save in a browser and use `--file`. Monday briefings post no minutes |
 | Davidson | AgendaSuite, `agendasuite.org/iip/davidson` (agendas, per-item voting records and approved minutes). It has no robots.txt (checked Nov 15, 2026), so the archive-document workflow can fetch it |
+| Henderson | The City Council's agendas and minutes, on the city's website (where exactly isn't recorded yet; check its robots.txt first) |
 
 Whatever you choose for a platform without IDs, keep it stable: it can't change once published.
 
