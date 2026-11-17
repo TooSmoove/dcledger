@@ -1,16 +1,21 @@
-# Legistar file 26-0061, a legislative public hearing "to consider a temporary twelve (12) month moratorium on the
-# permitting of data centers, data processing facilities, cryptocurrency mining operations, and any other associated
-# uses within the unincorporated areas of Chatham County, pursuant to N.C.G.S. §160D-107" (archived 1a307d09…, Nov 17,
-# 2026). Type "Ordinance", final action 2/11/2026, history row "2/11/2026 | 1 | Board of Commissioners | approved |
-# Pass", at a special session (no event in the ledger: it predates coverage). The page records no tally, so votes is
-# left out.
-# Terms (#115): left out for now, as for Guilford's Nov 5 moratorium. The ordinance attached to the Legistar file
-# (View.ashx?M=F&ID=15166060) is the agenda copy, with blank signature lines. The county's own release
-# (chathamcountync.gov/Home/Components/News/News/17295, Feb 12, 2026: "will remain in place until February 11, 2027,
-# or until new zoning regulations are adopted—whichever comes first") and the signed ordinance (linked from the
-# county's Data Centers page) answer HTTP 403 to the archive workflow: save both in a browser and archive them with
-# --file, then fill scope, effective_on, expires_on, early_termination and status as they state them, and raise
-# sequence. The court order in the developer's challenge is the jurisdiction's note (data/jurisdictions/chatham.yaml).
+# Legistar file 26-0061 (archived 1a307d09…): Type "Ordinance", history row "2/11/2026 | 1 | Board of Commissioners |
+# approved | Pass", at a special meeting (no event in the ledger: it predates coverage). No archived document gives a
+# tally, so votes is left out.
+# Terms (#115, Nov 17, 2026), from the signed ordinance ("Ordinance of the Chatham County Board of Commissioners
+# Instituting a Temporary Moratorium on the Permitting of Data Centers ...", adopted Feb 11, 2026, signed by the Chair
+# and attested by the Clerk; archived 692399b5…, saved in a browser from the county's Data Centers page):
+# - effective_on and expires_on: Section 1, "commencing on February 11th, 2026, and expiring no later than February
+#   11th, 2027" (Section 5: "effective upon adoption").
+# - early_termination: Section 1, as written.
+# - scope: Section 2(2), as written. Section 1 adds that it "specifically includes all land uses that involve
+#   cryptocurrency mining in the unincorporated areas of Chatham County".
+# - No ordinance number, threshold or exemptions are stated, so they are left out.
+# - status: in_effect. The ordinance runs to Feb 11, 2027, and the county's release (Feb 12, 2026; archived 7ed54d37…,
+#   saved in a browser) says it "takes effect immediately and will remain in place until February 11, 2027, or until
+#   new zoning regulations are adopted". If the board adopts the data center text amendments heard Oct 29, 2026
+#   (Legistar 26-0655/26-0656), the moratorium ends early: record that and set status to expired, sourced to the
+#   adoption. The court order in the developer's challenge is the jurisdiction's note (data/jurisdictions/chatham.yaml).
+# chathamcountync.gov answers HTTP 403 to the archive workflow, so its pages are saved in a browser (--file).
 id: chatham-moratorium-2026-02-11
 jurisdiction_id: chatham
 action_type: moratorium
@@ -19,3 +24,14 @@ decided_on: 2026-02-11
 label: confirmed_official
 document_ids:
   - 1a307d09b03a871278f291d214bab7b5748b7b7cbe475dbf90d16cbae95c9f97
+  - 692399b50c46ff731cc1d58121beb1ad113a15de77a787bd20eb458bab6fbdf4
+  - 7ed54d371020bfc5885181c6b96c7e5f2edc46775ee69a6db4000e77dd7a620e
+scope: "the use of property within the unincorporated jurisdiction Chatham County and outside any municipal extraterritorial
+  jurisdictions for data centers, data processing facilities, cryptocurrency mining, and any other uses associated with
+  data processing facilities"
+effective_on: 2026-02-11
+expires_on: 2027-02-11
+early_termination: "or on approval of new zoning regulation regarding data centers, data processing facilities,
+  cryptocurrency mining operations, and uses associated with data processing facilities not yet defined in the Chatham
+  County Zoning Ordinance"
+status: in_effect

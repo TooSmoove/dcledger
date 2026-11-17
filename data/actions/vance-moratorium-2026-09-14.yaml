@@ -1,20 +1,25 @@
-# Henderson Daily Dispatch, Sept 16, 2026 (archived 57d7657c…): at the Monday, Sept 14 regular meeting, the Board of
-# County Commissioners "adopted a 60-day moratorium on submitting proposals for new data center developments". No
-# tally is reported, so votes is left out. WIZS (archived 07c581be…) says the commissioners extended it at a special
-# called meeting on Friday, Nov 13, "the day the original moratorium was to have ended": hence status superseded and
-# successor_id, both under this record's reported_news label.
-# Owner decision (Nov 17, 2026): reported_news until the minutes are archived. Vance's robots.txt disallows all
-# robots, so save the Sept 14 minutes (and the adopted ordinance, if posted) in a browser and archive them with
-# --file; then add them, switch to confirmed_official, fill instrument_number, scope, effective_on and expires_on as
-# they state them, and raise sequence.
+# Signed minutes of the Board of Commissioners regular session of Monday, Sept 14, 2026 (archived 887b582e…, saved in a
+# browser; Vance's robots.txt disallows all robots): after a public hearing "to receive public comments and consider
+# the adoption of a 60-day moratorium ordinance on the acceptance, processing, and approval of development
+# applications for data centers submitted after the adoption of the moratorium within Vance County", a motion "to
+# approve the 60-day moratorium ordinance" passed "5 – 2", two members voting no. The Henderson Daily Dispatch
+# (archived 57d7657c…) reports the same meeting.
+# Terms (#115, Nov 17, 2026): scope as the minutes word the ordinance. The minutes give the attorney's account of
+# what the ordinance would not stop and "the recommendation" that it last "for the sooner of 60 days or upon the
+# adoption of a text zoning amendment", but not the adopted text, so early_termination and exemptions are left out,
+# as are the dates (don't count 60 days). Archive the ordinance itself if the county posts it.
+# The Nov 13 extension (vance-moratorium-2026-11-13) rests on news reports only, so this record doesn't yet say it was
+# superseded: once the Nov 13 minutes are archived, add status: superseded and successor_id:
+# vance-moratorium-2026-11-13 here, sourced to those minutes.
 id: vance-moratorium-2026-09-14
 jurisdiction_id: vance
 action_type: moratorium
 outcome: adopted
 decided_on: 2026-09-14
-label: reported_news
+votes: "5-2"
+label: confirmed_official
 document_ids:
+  - 887b582eff8f76cea76e1fc57515be11d992fe73342029317e709538b555321d
   - 57d7657c55bf8b23a98a45d55330283c55d95489368d0ac5517ec07cb49dfd73
-  - 07c581beaeb1582bfb40bcddbedd0914eac206008635aa64c406ff3794c5aba2
-successor_id: vance-moratorium-2026-11-13
-status: superseded
+scope: "the acceptance, processing, and approval of development applications for data centers submitted after the
+  adoption of the moratorium within Vance County"
