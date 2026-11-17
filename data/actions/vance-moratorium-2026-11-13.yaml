@@ -1,0 +1,18 @@
+# WIZS (archived 07c581be…): the Board of Commissioners "voted unanimously to extend by 30 days the moratorium on data
+# center development" at a special called meeting on Friday, Nov 13, 2026. The Henderson Daily Dispatch (archived
+# 42f594aa…, Nov 16) reports the same unanimous vote. No tally is reported: unanimous, votes left out.
+# No archived document states an end date. Don't count 30 days from Nov 13 (data/README.md, "Recording a decision's
+# terms"): expires_on and status wait for the minutes or the ordinance. Check what the board does before the extension
+# runs out in mid-December, and record any further extension as its own action with this one's successor_id.
+# Owner decision (Nov 17, 2026): reported_news until the minutes are archived (save in a browser, --file), then
+# confirmed_official with the terms they state, and raise sequence.
+id: vance-moratorium-2026-11-13
+jurisdiction_id: vance
+action_type: moratorium
+outcome: adopted
+decided_on: 2026-11-13
+unanimous: true
+label: reported_news
+document_ids:
+  - 07c581beaeb1582bfb40bcddbedd0914eac206008635aa64c406ff3794c5aba2
+  - 42f594aaade21971922175fdba83c6232d79317677faba8624f3fa206cbff700

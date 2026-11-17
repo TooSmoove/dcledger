@@ -1,0 +1,21 @@
+# Legistar file 26-0061, a legislative public hearing "to consider a temporary twelve (12) month moratorium on the
+# permitting of data centers, data processing facilities, cryptocurrency mining operations, and any other associated
+# uses within the unincorporated areas of Chatham County, pursuant to N.C.G.S. §160D-107" (archived 1a307d09…, Nov 17,
+# 2026). Type "Ordinance", final action 2/11/2026, history row "2/11/2026 | 1 | Board of Commissioners | approved |
+# Pass", at a special session (no event in the ledger: it predates coverage). The page records no tally, so votes is
+# left out.
+# Terms (#115): left out for now, as for Guilford's Nov 5 moratorium. The ordinance attached to the Legistar file
+# (View.ashx?M=F&ID=15166060) is the agenda copy, with blank signature lines. The county's own release
+# (chathamcountync.gov/Home/Components/News/News/17295, Feb 12, 2026: "will remain in place until February 11, 2027,
+# or until new zoning regulations are adopted—whichever comes first") and the signed ordinance (linked from the
+# county's Data Centers page) answer HTTP 403 to the archive workflow: save both in a browser and archive them with
+# --file, then fill scope, effective_on, expires_on, early_termination and status as they state them, and raise
+# sequence. The court order in the developer's challenge is the jurisdiction's note (data/jurisdictions/chatham.yaml).
+id: chatham-moratorium-2026-02-11
+jurisdiction_id: chatham
+action_type: moratorium
+outcome: adopted
+decided_on: 2026-02-11
+label: confirmed_official
+document_ids:
+  - 1a307d09b03a871278f291d214bab7b5748b7b7cbe475dbf90d16cbae95c9f97
