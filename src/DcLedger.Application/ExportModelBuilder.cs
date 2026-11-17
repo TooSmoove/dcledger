@@ -20,13 +20,16 @@ public static class ExportModelBuilder
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(status);
 
+        var documents = snapshot.Documents.ToDictionary(loaded => loaded.Record.Id, loaded => loaded.Record);
         var jurisdictions = snapshot.Jurisdictions
             .Select(loaded => loaded.Record)
             .OrderBy(jurisdiction => jurisdiction.Id, StringComparer.Ordinal)
-            .Select(jurisdiction => Freshen(jurisdiction, status))
+            .Select(jurisdiction => Freshen(jurisdiction, status) with
+            {
+                NoteDocuments = [.. jurisdiction.NoteDocumentIds.Select(id => Lookup(documents, id, jurisdiction.Id))],
+            })
             .ToList();
         var byId = jurisdictions.ToDictionary(j => j.Jurisdiction.Id, j => j.Jurisdiction, StringComparer.Ordinal);
-        var documents = snapshot.Documents.ToDictionary(loaded => loaded.Record.Id, loaded => loaded.Record);
 
         var events = snapshot.Events
             .Select(loaded => loaded.Record)
@@ -60,6 +63,7 @@ public static class ExportModelBuilder
 
         var pictured = events.SelectMany(e => e.Documents)
             .Concat(actions.SelectMany(a => a.Documents))
+            .Concat(jurisdictions.SelectMany(j => j.NoteDocuments))
             .Where(document => document.Thumbnail is not null)
             .Select(document => document.Id)
             .ToHashSet();

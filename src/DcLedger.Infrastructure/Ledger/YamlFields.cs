@@ -213,6 +213,27 @@ internal sealed partial class YamlFields
         return value is not null && IsOneLine(key, value, maxLength, "Say what was wrong and what it says now; the linked issue holds the rest.") ? value : null;
     }
 
+    /// <summary>
+    /// An optional line of text, such as a jurisdiction's note: absent is fine; present, it is one line of at most
+    /// <paramref name="maxLength"/> characters with something in it, with the same rules as <see cref="TermText"/>.
+    /// </summary>
+    public string? OptionalLine(string key, int maxLength, string overLengthHint)
+    {
+        var value = Optional(key);
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            Add(ValidationRule.InvalidValue, $"'{key}' is empty; leave the key out when there is nothing to say.");
+            return null;
+        }
+
+        return IsOneLine(key, value, maxLength, overLengthHint) ? value : null;
+    }
+
     private bool IsOneLine(string key, string value, int maxLength, string overLengthHint)
     {
         if (value.Length > maxLength)

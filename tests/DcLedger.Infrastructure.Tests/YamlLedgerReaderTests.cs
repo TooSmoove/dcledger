@@ -446,6 +446,39 @@ public sealed class YamlLedgerReaderTests
         RuleFor("jurisdictions/fixture.yaml", "id: fixture\nname: Fixture County\nplatform: manual\n" + line).ShouldBe(ValidationRule.InvalidValue);
     }
 
+    private const string NotedJurisdiction = "id: fixture\nname: Fixture County\nplatform: manual\ncoverage_tier: decisions";
+
+    [Fact]
+    public void Jurisdiction_reads_its_note_and_the_documents_behind_it()
+    {
+        var yaml = $"{NotedJurisdiction}\nnote: \"A court order: \\\"judgment\\\".\"\nnote_document_ids:\n  - {Doc}";
+
+        var jurisdiction = Load("jurisdictions/fixture.yaml", yaml).Jurisdictions.ShouldHaveSingleItem().Record;
+
+        jurisdiction.Note.ShouldBe("A court order: \"judgment\".");
+        jurisdiction.NoteDocumentIds.ShouldHaveSingleItem().Value.ShouldBe(Doc);
+    }
+
+    [Fact]
+    public void Jurisdiction_note_is_optional()
+    {
+        var jurisdiction = Load("jurisdictions/fixture.yaml", NotedJurisdiction).Jurisdictions.ShouldHaveSingleItem().Record;
+
+        jurisdiction.Note.ShouldBeNull();
+        jurisdiction.NoteDocumentIds.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Jurisdiction_note_is_one_line_of_at_most_500_characters()
+    {
+        var atTheCap = new string('x', Jurisdiction.MaxNoteLength);
+
+        Load("jurisdictions/fixture.yaml", $"{NotedJurisdiction}\nnote: {atTheCap}").LoadErrors.ShouldBeEmpty("exactly at the cap");
+        RuleFor("jurisdictions/fixture.yaml", $"{NotedJurisdiction}\nnote: {atTheCap}x").ShouldBe(ValidationRule.InvalidValue, "one over the cap");
+        RuleFor("jurisdictions/fixture.yaml", $"{NotedJurisdiction}\nnote: \"\"").ShouldBe(ValidationRule.InvalidValue, "empty: leave the key out");
+        RuleFor("jurisdictions/fixture.yaml", $"{NotedJurisdiction}\nnote: |\n  first line\n  second line").ShouldBe(ValidationRule.InvalidValue, "a block scalar keeps its line breaks");
+    }
+
     [Fact]
     public void Broken_file_is_still_listed_as_a_record_file()
     {

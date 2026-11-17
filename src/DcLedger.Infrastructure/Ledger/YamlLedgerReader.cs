@@ -223,6 +223,8 @@ public sealed class YamlLedgerReader : ILedgerReader
         var bodies = f.List("bodies");
         var lastManualCheck = f.UtcTimestamp("last_manual_check_utc", required: false);
         var coverageTier = f.Choice("coverage_tier", CoverageTiers);
+        var note = f.OptionalLine("note", Jurisdiction.MaxNoteLength, "Say what the cited document states; it holds the rest.");
+        var noteDocumentIds = f.Hashes("note_document_ids");
 
         return id is null || name is null || platform is null || coverageTier is null
             ? null
@@ -235,6 +237,8 @@ public sealed class YamlLedgerReader : ILedgerReader
                 Bodies = bodies,
                 LastManualCheckUtc = lastManualCheck,
                 CoverageTier = coverageTier.Value,
+                Note = note,
+                NoteDocumentIds = noteDocumentIds,
             };
     }
 

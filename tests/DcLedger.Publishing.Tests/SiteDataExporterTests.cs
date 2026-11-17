@@ -167,16 +167,45 @@ public sealed class SiteDataExporterTests
         "successor_id", "status",
     ];
 
+    private static readonly string[] JurisdictionTailKeys = ["coverage_tier", "note", "note_documents"];
+
     [Fact]
-    public void Jurisdictions_state_their_coverage_tier_last()
+    public void Jurisdictions_end_with_their_coverage_tier_then_the_note()
     {
         using var document = JsonDocument.Parse(EventsJson());
 
         foreach (var jurisdiction in document.RootElement.GetProperty("jurisdictions").EnumerateArray())
         {
-            jurisdiction.EnumerateObject().Last().Name.ShouldBe("coverage_tier", "new keys are appended (ADR-0004)");
+            jurisdiction.EnumerateObject().Select(p => p.Name).TakeLast(3).ToArray().ShouldBe(JurisdictionTailKeys, "new keys are appended (ADR-0004)");
             jurisdiction.GetProperty("coverage_tier").GetString().ShouldBe("watched");
+            jurisdiction.GetProperty("note").ValueKind.ShouldBe(JsonValueKind.Null);
+            jurisdiction.GetProperty("note_documents").GetArrayLength().ShouldBe(0);
         }
+    }
+
+    [Fact]
+    public void A_jurisdiction_note_is_written_with_its_documents()
+    {
+        var snapshot = ExportSamples.Snapshot();
+        var noted = ExportSamples.County with
+        {
+            Note = "Fixture court order: \"judgment for the plaintiff\".",
+            NoteDocumentIds = [ExportSamples.NewsStory.Id],
+        };
+        var model = ExportModelBuilder.Build(
+            snapshot with
+            {
+                Jurisdictions = [.. snapshot.Jurisdictions.Select(j => j.Record.Id == ExportSamples.County.Id ? j with { Record = noted } : j)],
+            },
+            ExportSamples.Status()).Model;
+        using var document = JsonDocument.Parse(TestFiles.Text(new SiteDataExporter().Export(model)[0]));
+
+        var county = document.RootElement.GetProperty("jurisdictions").EnumerateArray().Single(j => j.GetProperty("id").GetString() == ExportSamples.County.Id);
+        county.GetProperty("note").GetString().ShouldBe(noted.Note);
+        var sources = county.GetProperty("note_documents");
+        sources.GetArrayLength().ShouldBe(1);
+        sources[0].GetProperty("sha256").GetString().ShouldBe(ExportSamples.NewsStory.Id.Value);
+        sources[0].EnumerateObject().Select(p => p.Name).ToArray().ShouldBe(DocumentKeys);
     }
 
     [Fact]

@@ -51,6 +51,9 @@ public sealed record ExportJurisdiction
 
     /// <summary>The threshold that applies: 48 hours when automated, 7 days when checked by hand.</summary>
     public TimeSpan StaleAfter { get; init; } = Freshness.StaleAfter;
+
+    /// <summary>The documents behind the jurisdiction's note, in the order its record lists them; empty without a note.</summary>
+    public IReadOnlyList<Document> NoteDocuments { get; init; } = [];
 }
 
 /// <summary>An event with its jurisdiction and documents resolved.</summary>
