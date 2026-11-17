@@ -8,4 +8,6 @@ platform: manual
 coverage_tier: watched
 bodies:
   - City Council
-last_manual_check_utc: 2026-11-09T01:10:00Z   
+# Nov 17, 2026: a person checked the City Council calendar on eSCRIBE; the Nov 17 meeting agenda had no data-center
+# items. Timestamp: when the check was reported (6:35 p.m. Eastern), not before it finished.
+last_manual_check_utc: 2026-11-17T23:35:00Z   
