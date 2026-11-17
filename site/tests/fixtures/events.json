@@ -27,7 +27,9 @@
       "last_checked_utc": "2026-10-15T14:00:00Z",
       "stale": true,
       "stale_after_hours": 168,
-      "coverage_tier": "watched"
+      "coverage_tier": "watched",
+      "note": null,
+      "note_documents": []
     },
     {
       "id": "guilford",
@@ -35,7 +37,9 @@
       "last_checked_utc": "2026-10-25T20:17:00Z",
       "stale": false,
       "stale_after_hours": 48,
-      "coverage_tier": "watched"
+      "coverage_tier": "watched",
+      "note": null,
+      "note_documents": []
     },
     {
       "id": "never-checked",
@@ -43,7 +47,9 @@
       "last_checked_utc": null,
       "stale": true,
       "stale_after_hours": 48,
-      "coverage_tier": "watched"
+      "coverage_tier": "watched",
+      "note": null,
+      "note_documents": []
     },
     {
       "id": "registered-county",
@@ -51,7 +57,9 @@
       "last_checked_utc": null,
       "stale": false,
       "stale_after_hours": 168,
-      "coverage_tier": "registered"
+      "coverage_tier": "registered",
+      "note": null,
+      "note_documents": []
     }
   ],
   "events": [
