@@ -11,6 +11,10 @@ the [data dictionary](docs/data-dictionary.md).
 
 The first release, v0.1.0 (#35): the site goes live unlisted at <https://ncdcledger.org>.
 
+Some decisions go live labelled "reported (news)", or with terms or a vote count left out, because the government
+has not posted the official record yet. Each gains them, as an update in the feed, once that record is archived
+(#112).
+
 ### Added
 
 - **Hearing Radar** (`/radar/`): every reviewed meeting and hearing about data centers in the next 30 days, in
