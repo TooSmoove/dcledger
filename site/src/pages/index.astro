@@ -1,7 +1,9 @@
 ---
 // The home page (issue #134): what the ledger is, then the record at a glance, every part built from the export so
 // nothing on it is invented. Next up from the radar's window, decisions the record states are in effect, the latest
-// decisions, coverage with freshness, and the feeds. A decision whose jurisdiction has a note on the record links the
+// decisions, coverage with freshness, and the feeds. An empty window says how many jurisdictions are watched and
+// since when they were all checked, so "nothing scheduled" reads as a checked result; "What's new on the record"
+// lists the records most recently added or updated, whatever their kind. A decision whose jurisdiction has a note on the record links the
 // note too. How to check the record lives on /faq/. No script (AC12).
 import { getCollection } from 'astro:content';
 import Freshness from '../components/Freshness.astro';
@@ -22,8 +24,10 @@ import {
   labelText,
   noteHref,
   outcomeText,
+  recentlyUpdated,
   statusText,
   voteText,
+  watchSummary,
   windowDays,
 } from '../lib/radar.js';
 import { generatedUtc } from '../lib/site-data-file.js';
@@ -46,11 +50,45 @@ const next = upcoming.slice(0, 3);
 const windowEnd = windowDays(generated, []).at(-1)?.iso ?? '';
 const actions = await getCollection('actions');
 const effective = inEffect(actions, generated);
+const decisionHref = (a: (typeof actions)[number]) =>
+  `/jurisdictions/${a.data.jurisdiction_id}/#decision-${a.id}`;
+const watch = watchSummary(watched.map((j) => j.data));
+const events = await getCollection('events');
+const eventsById = new Map(events.map((e) => [e.id, e]));
+const actionsById = new Map(actions.map((a) => [a.id, a]));
+const nameOf = (id: string) => names.get(id) ?? id;
+// Each recent record as the line the list prints: its date (Eastern), where it links, and what it is.
+const recent = recentlyUpdated({ events, actions, jurisdictions }, 5).map((r) => {
+  const date = easternIso(r.updatedUtc).slice(0, 10);
+  if (r.kind === 'event') {
+    const { data } = eventsById.get(r.id)!;
+    return {
+      date,
+      href: `/items/${r.id}/`,
+      text: data.title,
+      detail: `Meeting. ${nameOf(data.jurisdiction_id)}, ${data.body}. ${statusText(data.status)}.`,
+    };
+  }
+  if (r.kind === 'action') {
+    const action = actionsById.get(r.id)!;
+    const { data } = action;
+    return {
+      date,
+      href: decisionHref(action),
+      text: `${nameOf(data.jurisdiction_id)}: ${actionTypeText(data.action_type)}, ${outcomeText(data.outcome).toLowerCase()}`,
+      detail: `Decision. ${labelText(data.label)}.`,
+    };
+  }
+  return {
+    date,
+    href: noteHref(r.id),
+    text: `${nameOf(r.id)}: note on the record`,
+    detail: `Not a decision of ${nameOf(r.id)}.`,
+  };
+});
 const latest = byDecisionNewestFirst(actions).slice(0, 3);
 // Jurisdictions with a note on the record (such as a court order): their decisions here point to it (#note).
 const noted = new Set(jurisdictions.filter((j) => j.data.note !== null).map((j) => j.id));
-const decisionHref = (a: (typeof actions)[number]) =>
-  `/jurisdictions/${a.data.jurisdiction_id}/#decision-${a.id}`;
 ---
 
 <Base title="Home">
@@ -70,7 +108,18 @@ const decisionHref = (a: (typeof actions)[number]) =>
     <WindowStrip generatedUtc={generated} events={upcoming} />
     {next.length === 0 ? (
       <p class="statement">
-        Nothing scheduled through <time datetime={windowEnd}>{dateText(windowEnd)}</time>.
+        Nothing scheduled through <time datetime={windowEnd}>{dateText(windowEnd)}</time> in the{' '}
+        {watch.count} jurisdiction{watch.count === 1 ? '' : 's'} whose hearings we watch.{' '}
+        {watch.checkedSinceUtc !== null ? (
+          <span class="checked-since">
+            Each was checked on or after{' '}
+            <time datetime={watch.checkedSinceUtc}>{easternText(watch.checkedSinceUtc)}</time>.
+          </span>
+        ) : (
+          <span class="checked-since">
+            Some haven't been checked recently: see <a href="#coverage-heading">Coverage</a>.
+          </span>
+        )}
       </p>
     ) : (
       <ol class="next-list">
@@ -88,10 +137,32 @@ const decisionHref = (a: (typeof actions)[number]) =>
         ))}
       </ol>
     )}
-    <p>
-      <a href="/radar/">
-        All {upcoming.length} item{upcoming.length === 1 ? '' : 's'} in the next {WINDOW_DAYS} days
-      </a>
+    {upcoming.length > 0 && (
+      <p>
+        <a href="/radar/">
+          All {upcoming.length} item{upcoming.length === 1 ? '' : 's'} in the next {WINDOW_DAYS}{' '}
+          days
+        </a>
+      </p>
+    )}
+  </section>
+
+  <section aria-labelledby="new-heading" class="home-section">
+    <h2 id="new-heading">What's new on the record</h2>
+    <ol class="new-list">
+      {recent.map((r) => (
+        <li>
+          <time datetime={r.date}>{dateText(r.date)}</time>
+          <a class="item" href={r.href}>
+            {r.text}
+          </a>
+          <span class="muted">{r.detail}</span>
+        </li>
+      ))}
+    </ol>
+    <p class="muted">
+      Newest first, by when we last archived a source for the record. Each change is also in the{' '}
+      <a href="/feed.xml">feed</a>.
     </p>
   </section>
 

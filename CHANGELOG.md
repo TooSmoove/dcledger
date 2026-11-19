@@ -37,7 +37,9 @@ has not posted the official record yet. Each gains them, as an update in the fee
 - **Home page** (`/`): the record at a glance, built from the export. Next up from the radar's window, decisions
   the record states are in effect with their end dates, the latest decisions, coverage with freshness, and the feeds
   (#134). "How to check the record" moved to the FAQ, and the home page no longer links the calendar feeds (they stay
-  on the radar, on jurisdiction pages and in the FAQ).
+  on the radar, on jurisdiction pages and in the FAQ). When nothing is scheduled, "Next up" says how many
+  jurisdictions are watched and since when all were checked, and a "What's new on the record" section lists the
+  five records most recently added or updated.
 - **FAQ** (`/faq/`): how to check the record and a hash, what the labels and coverage tiers mean, how to subscribe to
   a calendar feed (and why opening the `.ics` file only imports a copy), other ways to follow new items, and how to
   report a mistake. Linked from every header and footer.

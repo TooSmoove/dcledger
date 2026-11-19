@@ -623,12 +623,12 @@ test('the home page shows the record at a glance, built from the export (#134)',
   const home = page('index.html');
   assert.match(home, /<h1>Data-center hearings and decisions, on the record<\/h1>/);
   assert.match(home, /<a class="btn" href="\/radar\/">Open the Hearing Radar<\/a>/);
-  for (const id of ['next', 'effect', 'latest', 'coverage', 'data']) {
+  for (const id of ['next', 'new', 'effect', 'latest', 'coverage', 'data']) {
     assert.match(home, new RegExp(`<h2 id="${id}-heading">`), id);
   }
   const between = (a, b) =>
     home.slice(home.indexOf(`id="${a}-heading"`), home.indexOf(`id="${b}-heading"`));
-  const next = between('next', 'effect');
+  const next = between('next', 'new');
   assert.match(next, /<figure class="window" aria-hidden="true">/);
   assert.match(next, /<li class="cancelled">[\s\S]*?Cancelled\./, 'a cancelled meeting says so');
   assert.match(next, /All 2 items in the next 30 days/);
@@ -743,6 +743,25 @@ test('a decision on a jurisdiction with a note points to the note; others do not
   ]) {
     assert.doesNotMatch(page(name), /class="note-pointer"/, name);
   }
+});
+
+test("the home page lists what's new on the record, newest first, from every kind of record", () => {
+  const home = page('index.html');
+  const recent = home.slice(home.indexOf('id="new-heading"'), home.indexOf('id="effect-heading"'));
+  const items = recent.match(/<li>[\s\S]*?<\/li>/g) ?? [];
+  assert.equal(items.length, 5, 'five records');
+  const dates = items.map((li) => li.match(/<time datetime="([\d-]+)">/)[1]);
+  assert.deepEqual(dates, [...dates].sort().reverse(), 'newest first');
+  for (const li of items) {
+    assert.match(li, /<a class="item" href="\/(items|jurisdictions)\/[^"]+">/);
+    assert.match(li, /<span class="muted">(Meeting|Decision|Not a decision of)/);
+  }
+  assert.match(recent, /Each change is also in the <a href="\/feed.xml">feed<\/a>/);
+  assert.match(
+    page('index.html'),
+    /All 2 items in the next 30 days/,
+    'a non-empty window keeps its link',
+  );
 });
 
 test('the home page links the radar', () => {

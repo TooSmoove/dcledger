@@ -407,3 +407,53 @@ export function inEffect(entries, generatedUtc) {
 export function noteHref(jurisdictionId) {
   return `/jurisdictions/${encodeURIComponent(jurisdictionId)}/#note`;
 }
+
+/**
+ * What the home page can say about an empty window (issue: the empty "Next up"): how many jurisdictions have their
+ * hearings watched, and the earliest of their last checks, so "nothing scheduled" reads as a checked result. When a
+ * watched jurisdiction was never checked or is stale, `allCurrent` is false and the page doesn't claim the check.
+ * @param {{ last_checked_utc: string | null, stale: boolean }[]} watched the watched jurisdictions' data
+ * @returns {{ count: number, allCurrent: boolean, checkedSinceUtc: string | null }}
+ */
+export function watchSummary(watched) {
+  const checks = watched.map((j) => j.last_checked_utc);
+  const allCurrent =
+    watched.length > 0 && watched.every((j) => j.last_checked_utc !== null && !j.stale);
+  return {
+    count: watched.length,
+    allCurrent,
+    checkedSinceUtc: allCurrent ? [...checks].sort()[0] : null,
+  };
+}
+
+/**
+ * The records most recently added or updated, newest first: meetings, decisions and jurisdictions' notes. A record's
+ * time is the newest retrieval among its documents, the same rule the feed uses for pubDate (SPEC, #29), so a record
+ * moves up when a new document for it is archived. Ties break by kind, then ID, so the same export gives the same list.
+ * @param {{ events: { id: string, data: { documents: { retrieved_utc: string }[] } }[],
+ *   actions: { id: string, data: { documents: { retrieved_utc: string }[] } }[],
+ *   jurisdictions: { id: string, data: { note: string | null, note_documents: { retrieved_utc: string }[] } }[] }} records
+ * @param {number} limit
+ * @returns {{ kind: 'event' | 'action' | 'note', id: string, updatedUtc: string }[]}
+ */
+export function recentlyUpdated({ events, actions, jurisdictions }, limit) {
+  /** @param {{ retrieved_utc: string }[]} documents */
+  const newest = (documents) =>
+    documents.reduce((max, d) => (d.retrieved_utc > max ? d.retrieved_utc : max), '');
+  const order = { note: 0, action: 1, event: 2 };
+  return [
+    ...events.map((e) => ({ kind: 'event', id: e.id, updatedUtc: newest(e.data.documents) })),
+    ...actions.map((a) => ({ kind: 'action', id: a.id, updatedUtc: newest(a.data.documents) })),
+    ...jurisdictions
+      .filter((j) => j.data.note !== null)
+      .map((j) => ({ kind: 'note', id: j.id, updatedUtc: newest(j.data.note_documents) })),
+  ]
+    .filter((r) => r.updatedUtc !== '')
+    .sort(
+      (a, b) =>
+        b.updatedUtc.localeCompare(a.updatedUtc) ||
+        order[a.kind] - order[b.kind] ||
+        a.id.localeCompare(b.id),
+    )
+    .slice(0, limit);
+}
