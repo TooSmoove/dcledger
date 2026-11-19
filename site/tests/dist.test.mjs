@@ -118,7 +118,7 @@ test('every item page shows each source URL, retrieval time in Eastern and SHA-2
   );
   assert.match(
     item,
-    />https:\/\/news.example.org\/fixture-story\?a=1&amp;b=&lt;2&gt;<\/a>/,
+    />https:\/\/news.example.org\/fixture-story\?a=1&amp;b=&lt;2&gt;<span class="new-tab"/,
     'text escaping',
   );
   assert.match(item, /href="https:\/\/fixture-city.example.org\/agenda.pdf"/);
@@ -449,7 +449,7 @@ test('a meeting page shows its decision: outcome, vote, date, label and sources 
     /href="https:\/\/guilford.legistar.com\/fixture-action\?ID=7&amp;b=<3>"/,
     'attribute escaping',
   );
-  assert.match(meeting, /&amp;b=&lt;3&gt;<\/a>/, 'text escaping');
+  assert.match(meeting, /&amp;b=&lt;3&gt;<span class="new-tab"/, 'text escaping');
   assert.doesNotMatch(meeting, /Meeting page/, 'no link from a meeting to itself');
   assert.ok(
     meeting.indexOf('Decision</h2>') < meeting.indexOf('<h2>Sources</h2>'),
@@ -762,6 +762,26 @@ test("the home page lists what's new on the record, newest first, from every kin
     /All 2 items in the next 30 days/,
     'a non-empty window keeps its link',
   );
+});
+
+test('every source link opens in a new tab and says so, visibly and in words', () => {
+  let count = 0;
+  for (const { name, html } of pages) {
+    const sources = html.match(/<ol class="sources">[\s\S]*?<\/ol>/g) ?? [];
+    for (const list of sources) {
+      for (const [link] of list.matchAll(/<dt>URL<\/dt>\s*<dd>\s*<a [\s\S]*?<\/a>/g)) {
+        count += 1;
+        assert.match(link, /target="_blank" rel="external noopener noreferrer"/, name);
+        assert.match(link, /<span class="new-tab" aria-hidden="true">↗<\/span>/, name);
+        assert.match(
+          link,
+          /<span class="visually-hidden"> \(opens in a new tab\)<\/span><\/a>$/,
+          name,
+        );
+      }
+    }
+  }
+  assert.ok(count >= 5, `found ${count} source links`);
 });
 
 test('the home page links the radar', () => {
