@@ -398,3 +398,12 @@ export function inEffect(entries, generatedUtc) {
         a.id.localeCompare(b.id),
     );
 }
+
+/**
+ * Where a jurisdiction's note on the record is: its section on the jurisdiction's page. Decisions on that page, on a
+ * meeting's page and on the home page link it, so a reader who lands on a decision doesn't miss the note.
+ * @param {string} jurisdictionId
+ */
+export function noteHref(jurisdictionId) {
+  return `/jurisdictions/${encodeURIComponent(jurisdictionId)}/#note`;
+}

@@ -11,6 +11,7 @@ import {
   easternIso,
   easternText,
   labelText,
+  noteHref,
   statusText,
 } from '../../lib/radar.js';
 
@@ -77,12 +78,15 @@ const decisions = byDecisionNewestFirst(
     actions={decisions}
     heading={decisions.length === 1 ? 'Decision' : 'Decisions'}
     linkMeetings={false}
+    note={
+      jurisdiction?.data.note ? { href: noteHref(data.jurisdiction_id), jurisdictionName } : null
+    }
   />
 
   <h2>Sources</h2>
   <p class="muted">
-    Each source is the document we retrieved, when we retrieved it (Eastern), and the SHA-256 of the
-    bytes we kept.
+    Each source is the document we retrieved and when we retrieved it (Eastern). Open “More details”
+    under a source for the SHA-256 of the bytes we kept.
   </p>
   <Sources documents={data.documents} />
 </Base>

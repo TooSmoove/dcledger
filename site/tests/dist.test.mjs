@@ -623,7 +623,7 @@ test('the home page shows the record at a glance, built from the export (#134)',
   const home = page('index.html');
   assert.match(home, /<h1>Data-center hearings and decisions, on the record<\/h1>/);
   assert.match(home, /<a class="btn" href="\/radar\/">Open the Hearing Radar<\/a>/);
-  for (const id of ['next', 'effect', 'latest', 'coverage', 'trust', 'data']) {
+  for (const id of ['next', 'effect', 'latest', 'coverage', 'data']) {
     assert.match(home, new RegExp(`<h2 id="${id}-heading">`), id);
   }
   const between = (a, b) =>
@@ -642,16 +642,13 @@ test('the home page shows the record at a glance, built from the export (#134)',
   const latest = between('latest', 'coverage');
   assert.equal((latest.match(/<li>/g) ?? []).length, 3, 'three latest decisions');
   assert.match(latest, /8 in favor, 1 against<span class="seats"/);
-  const coverage = between('coverage', 'trust');
+  const coverage = between('coverage', 'data');
   assert.match(
     coverage,
     /Decisions only, hearings not watched: <a href="\/jurisdictions\/decided-county\/">/,
   );
   assert.match(coverage, /Listed only: <a href="\/jurisdictions\/registered-county\/">/);
-  assert.match(home, /<figure class="hash-example"><span class="glyph" aria-hidden="true">/);
-  assert.match(home, /<code>4{64}<\/code>/, "the example hash is the latest decision's source");
   for (const feed of [
-    '/radar.ics',
     '/feed.xml',
     '/events.csv',
     '/actions.csv',
@@ -659,6 +656,92 @@ test('the home page shows the record at a glance, built from the export (#134)',
     '/actions.parquet',
   ]) {
     assert.match(home, new RegExp(`href="${feed}"`), feed);
+  }
+});
+
+test('the home page no longer carries "How to check the record" or the iCal links; /faq/ does', () => {
+  const home = page('index.html');
+  assert.doesNotMatch(home, /trust-heading|class="hash-example"|Check a hash yourself/);
+  assert.doesNotMatch(home, /\.ics"/, 'no calendar link on the home page');
+  assert.match(home, /<a href="\/faq\/">How to check the record<\/a>/);
+  assert.doesNotMatch(
+    home,
+    /class="note-link"/,
+    'no decision on the home page has a noted jurisdiction',
+  );
+
+  const faq = page('faq/index.html');
+  for (const id of [
+    'check-the-record',
+    'check-a-hash',
+    'labels',
+    'coverage',
+    'calendar',
+    'follow',
+    'mistake',
+  ]) {
+    assert.match(faq, new RegExp(`<h2 id="${id}">`), id);
+  }
+  assert.match(faq, /<figure class="hash-example"><span class="glyph" aria-hidden="true">/);
+  assert.match(faq, /<code>4{64}<\/code>/, "the example hash is the latest decision's source");
+  assert.match(faq, /sha256sum downloaded-file/);
+  assert.match(
+    faq,
+    /<code>https:\/\/ncdcledger\.org\/radar\.ics<\/code>/,
+    'the address to subscribe with',
+  );
+  assert.match(faq, /one-time copy that won(’|')t update/);
+});
+
+test('every page links the FAQ from its header and footer', () => {
+  for (const { name, html } of pages.filter((p) => p.html.includes('<header>'))) {
+    assert.match(
+      html.slice(html.indexOf('<header>'), html.indexOf('</header>')),
+      /href="\/faq\/"/,
+      name,
+    );
+    assert.match(html.slice(html.indexOf('<footer')), /href="\/faq\/"/, name);
+  }
+});
+
+test('a source tucks its SHA-256 under "More details", still in the page (AC2)', () => {
+  const item = page('items/fixture-escaping-check/index.html');
+  const sources = item.slice(item.indexOf('<ol class="sources">'));
+  assert.equal(
+    (sources.match(/<details class="more-details"><summary>More details<\/summary>/g) ?? []).length,
+    2,
+    'one per source',
+  );
+  assert.match(
+    sources,
+    /<details class="more-details"><summary>More details<\/summary><dl><dt>SHA-256<\/dt><dd><code>0{64}<\/code><span class="glyph"/,
+  );
+  assert.doesNotMatch(item, /<details class="more-details" open/, 'closed by default');
+  const visible = sources.replace(/<details class="more-details">[\s\S]*?<\/details>/g, '');
+  assert.doesNotMatch(visible, /SHA-256<\/dt>/, 'no SHA-256 row outside the disclosure');
+  assert.match(visible, /<dt>Retrieved<\/dt>/, 'the retrieval time stays in view');
+});
+
+test('a decision on a jurisdiction with a note points to the note; others do not', () => {
+  const decided = page('jurisdictions/decided-county/index.html');
+  assert.match(
+    decided,
+    /<section aria-labelledby="note-heading" class="jurisdiction-note" id="note">/,
+  );
+  const decision = decided.slice(
+    decided.indexOf('id="decision-fixture-decided-moratorium-2026-09-02"'),
+  );
+  assert.match(
+    decision,
+    /^[^]*?<\/h3><p class="note-pointer"><strong>Also on the record:<\/strong> a note about Decided County, with its\s+sources\. <a href="#note">Read the note<\/a><\/p>/,
+    'right under the heading, before the terms',
+  );
+  for (const name of [
+    'jurisdictions/guilford/index.html',
+    'jurisdictions/fixture-city/index.html',
+    'items/fixture-guilford-boc-2026-11-05/index.html',
+  ]) {
+    assert.doesNotMatch(page(name), /class="note-pointer"/, name);
   }
 });
 
