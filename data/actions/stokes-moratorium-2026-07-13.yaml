@@ -13,7 +13,7 @@ action_type: moratorium
 outcome: failed
 decided_on: 2026-07-13
 votes: "2-3"
-sequence: 1
+sequence: 2
 label: confirmed_official
 document_ids:
   - 4509029d140b86c67a173e59e67cdc5b9850a3897a202c320ac76533e626af46
