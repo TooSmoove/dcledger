@@ -49,8 +49,18 @@ public sealed class YamlThumbnailReaderTests
         snapshot.LoadErrors.ShouldBeEmpty();
         var document = snapshot.Documents.ShouldHaveSingleItem().Record;
         document.Kind.ShouldBeNull();
+        document.Title.ShouldBeNull();
         document.Thumbnail.ShouldBeNull();
         snapshot.Thumbnails.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_title_is_read_as_written()
+    {
+        var snapshot = Load(l => l.Write($"documents/{DocumentId}.yaml", Record("title: \"Aug 17, 2026 special meeting minutes\"")));
+
+        snapshot.LoadErrors.ShouldBeEmpty();
+        snapshot.Documents.ShouldHaveSingleItem().Record.Title.ShouldBe("Aug 17, 2026 special meeting minutes");
     }
 
     [Fact]
@@ -70,13 +80,16 @@ public sealed class YamlThumbnailReaderTests
 
     [Theory]
     [InlineData("kind: packet")]
+    [InlineData("title: \"\"")]
+    [InlineData("title: \"" + "Aug 17, 2026 special meeting minutes, recessed and reconvened Aug 18, as approved" + "\"")]
+    [InlineData("title: |\n      Aug 17, 2026\n      special meeting minutes")]
     [InlineData("thumbnail: yes")]
     [InlineData("thumbnail:\n      sha256: " + PictureHash + "\n      width: 0\n      height: 311\n      reviewed: true")]
     [InlineData("thumbnail:\n      sha256: " + PictureHash + "\n      width: 240\n      height: 9999\n      reviewed: true")]
     [InlineData("thumbnail:\n      sha256: " + PictureHash + "\n      width: 240\n      height: 311\n      reviewed: yes")]
     [InlineData("thumbnail:\n      sha256: " + PictureHash + "\n      width: 240\n      height: 311")]
     [InlineData("thumbnail:\n      sha256: " + PictureHash + "\n      width: 240\n      height: 311\n      reviewed: true\n      reviewer: someone")]
-    public void A_malformed_kind_or_thumbnail_is_reported(string extra)
+    public void A_malformed_kind_title_or_thumbnail_is_reported(string extra)
     {
         var snapshot = Load(l => l.Write($"documents/{DocumentId}.yaml", Record(extra)));
 

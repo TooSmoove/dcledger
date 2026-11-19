@@ -138,7 +138,8 @@ public sealed class SiteDataExporter : IExporter
     /// Provenance for one item (SPEC AC2): URL, retrieval time and SHA-256 of each document, and how it was obtained
     /// (<c>fetched</c> or <c>manual</c>; added within schema version 1, issue #113). Then, also within schema version 1
     /// (issue #132), the document's <c>kind</c> and its first-page <c>thumbnail</c> (path, width and height), each null
-    /// when the record has none. A jurisdiction's note writes the same objects under <c>note_documents</c>.
+    /// when the record has none, and (Nov 19, 2026) the person-written <c>title</c>, null without one. A jurisdiction's note
+    /// writes the same objects under <c>note_documents</c>.
     /// </summary>
     private static void WriteDocuments(Utf8JsonWriter json, string name, IReadOnlyList<Document> documents)
     {
@@ -151,6 +152,7 @@ public sealed class SiteDataExporter : IExporter
             json.WriteString("sha256", document.Id.Value);
             json.WriteString("retrieval", document.Retrieval.ToToken());
             WriteStringOrNull(json, "kind", document.Kind?.ToToken());
+            WriteStringOrNull(json, "title", document.Title);
             WriteThumbnail(json, document);
             json.WriteEndObject();
         }

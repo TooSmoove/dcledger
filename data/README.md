@@ -34,6 +34,7 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
   `official` document of `kind` `minutes` or `legislation`; `data/thumbnails/<id>.webp` must exist with the
   `sha256` the record states, and every file there needs such a record (`THUMBNAIL_INVALID`). A picture nobody has
   marked `reviewed: true` fails (`THUMBNAIL_UNREVIEWED`). Pictures are WebP, at most 100 KB, 480 × 820 pixels.
+- A document's `title`, when given, is one line of at most 80 characters with something in it (`INVALID_VALUE`).
 - Files are UTF-8, at most 64 KB, one YAML mapping, no anchors or aliases. Quote values that start with a special character or look like numbers you want kept as text.
 
 ## Shapes
@@ -57,6 +58,7 @@ bytes: 123456
 source_type: official         # official | news
 retrieval: manual             # optional: only for a file a person saved (see below); left out means fetched
 kind: minutes                 # optional: minutes | legislation | agenda | agenda_packet | notice | news_release | news_article | other
+title: "Aug 17, 2026 special meeting minutes"  # optional: a short label of your own, at most 80 characters
 thumbnail:                    # optional: official minutes or legislation only (see "Showing a document's first page")
   sha256: <SHA-256 of data/thumbnails/<id>.webp>
   width: 240
@@ -289,7 +291,11 @@ work.
    officials acting in office are fine. If you find one, delete the picture and leave the record without
    `thumbnail`. If not, paste the block into the record, set `reviewed: true` and open the PR. Review it at full
    size: the site shows it at half size, but anyone can open the file.
-4. The gate checks the rest: the picture's hash matches the record, the kind may be shown, and nothing in
+4. **Give it a title.** Add `title` to the record: a short label of your own that says what the document is, such as
+   `"Aug 17, 2026 special meeting minutes"` or `"Legistar file 2026-452"`. The site captions the picture with it; without
+   one the caption is just "Minutes" or "Legislation". Date minutes by the meeting they record, not by a decision that
+   cites them (one set of minutes can back several decisions). You can add `title` to any document.
+5. The gate checks the rest: the picture's hash matches the record, the kind may be shown, and nothing in
    `thumbnails/` is unclaimed. Replacing a picture means a new file and a new `sha256`; no `sequence` changes, since
    the picture isn't part of an event or action.
 

@@ -6,6 +6,7 @@ bytes: 1085800
 source_type: official
 retrieval: manual
 kind: legislation
+title: "Data center moratorium ordinance"
 thumbnail:
   sha256: 08570a2848d0f5b1307258753184d6d698a839997506076e769a59b1fbabb80a
   width: 240

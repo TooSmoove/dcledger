@@ -58,7 +58,7 @@ Astro collects anonymous CLI usage telemetry by default. To opt out on your mach
   jurisdiction in `data/`. After rebuilding it, update its hash in `tools/license-policy.json`.
 - **First-page pictures** (`src/lib/thumbnails.js`, in `Sources.astro`): shown for a document whose `kind` is
   `minutes` or `legislation` and whose `thumbnail` is set; the files come from the export (`out/public/thumbnails/`).
-  How a picture is made and reviewed is in `data/README.md`.
+  The caption is the document's `title`, or else its kind. How a picture is made and reviewed is in `data/README.md`.
 - **The font** (`src/fonts/`): EB Garamond, one subset WOFF2 built by `tools/subset_font.py`, declared in
   `claret.css` and preloaded by `Base.astro`. `tests/font.test.mjs` holds it to one file, 60 KB, this origin only.
 

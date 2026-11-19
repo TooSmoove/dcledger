@@ -253,6 +253,7 @@ public sealed class YamlLedgerReader : ILedgerReader
         var sourceType = f.Choice("source_type", SourceTypes);
         var retrieval = f.OptionalChoice("retrieval", Retrievals, Retrieval.Fetched);
         var kind = f.OptionalChoice("kind", DocumentKinds);
+        var title = f.OptionalLine("title", Document.MaxTitleLength, "Keep it to a label such as \"Aug 17, 2026 special meeting minutes\"; the document holds the rest.");
         var thumbnail = ReadThumbnail(f);
 
         return id is null || url is null || retrievedAt is null || mediaType is null || bytes is null || sourceType is null
@@ -267,6 +268,7 @@ public sealed class YamlLedgerReader : ILedgerReader
                 SourceType = sourceType.Value,
                 Retrieval = retrieval,
                 Kind = kind,
+                Title = title,
                 Thumbnail = thumbnail,
             };
     }
