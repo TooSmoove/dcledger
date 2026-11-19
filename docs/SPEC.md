@@ -291,3 +291,12 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
 - **Nov 19, 2026 — Source links open in a new tab (AC2):** each source URL on item and jurisdiction pages opens in a
   new tab (`target="_blank"`, `rel="external noopener noreferrer"`), with a visible "↗" (aria-hidden) and the words
   "(opens in a new tab)" for screen readers, so a reader checking a document keeps their place on the site.
+- **Nov 19, 2026 — Document titles caption first-page pictures (AC2):** a document record may carry `title`, a short
+  label a person wrote (one line, at most 80 characters, `INVALID_VALUE` otherwise), such as "Aug 17, 2026 special
+  meeting minutes". `events.json` writes it on every document object, after `kind` (null without one; within schema
+  version 1, like `kind`); the CSV and Parquet downloads are unchanged. A first-page picture's caption is the title, or
+  else the kind ("Minutes", "Legislation"), and no longer the hash, which is under "More details" with the source.
+  Rejected: dating the caption from the citing meeting or decision, which mislabels a document several decisions cite
+  (Greensboro's Aug 17 special-meeting minutes back both the Aug 3 and Aug 18 decisions), and deriving it from the URL,
+  which for eSCRIBE and Legistar carries no file name.
+

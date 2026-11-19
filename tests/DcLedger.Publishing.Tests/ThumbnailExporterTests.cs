@@ -28,7 +28,7 @@ public sealed class ThumbnailExporterTests
     }
 
     [Fact]
-    public void Events_json_gives_the_document_s_kind_and_its_picture_s_path_and_size()
+    public void Events_json_gives_the_document_s_kind_title_and_its_picture_s_path_and_size()
     {
         var json = TestFiles.Text(TestFiles.Single(new SiteDataExporter().Export(ExportSamples.ModelWithThumbnail()), ExportPaths.SiteData));
         using var document = JsonDocument.Parse(json);
@@ -36,6 +36,7 @@ public sealed class ThumbnailExporterTests
         var source = document.RootElement.GetProperty("actions")[0].GetProperty("documents")[0];
         source.GetProperty("sha256").GetString().ShouldBe(DetailId);
         source.GetProperty("kind").GetString().ShouldBe("legislation");
+        source.GetProperty("title").GetString().ShouldBe("Item 2026-1600");
         var thumbnail = source.GetProperty("thumbnail");
         thumbnail.GetProperty("path").GetString().ShouldBe($"/thumbnails/{DetailId}.webp");
         thumbnail.GetProperty("width").GetInt32().ShouldBe(240);

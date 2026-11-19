@@ -24,9 +24,24 @@ test('a picture is shown at half its pixel size, with alt text naming the hash',
     width: 120,
     height: 156,
     alt: 'Page 1 of the archived copy with SHA-256 e3b0c44298fc…',
-    caption: 'Page 1',
+    caption: 'Minutes',
   });
   assert.notEqual(pageOne({ sha256: hash, kind: 'legislation', thumbnail }), null);
+});
+
+test("a caption is the document's title, or else its kind, and never the hash", () => {
+  const titled = {
+    sha256: hash,
+    kind: 'minutes',
+    thumbnail,
+    title: 'Aug 17, 2026 special meeting minutes',
+  };
+  assert.equal(pageOne(titled)?.caption, 'Aug 17, 2026 special meeting minutes');
+  assert.equal(
+    pageOne({ sha256: hash, kind: 'legislation', thumbnail, title: null })?.caption,
+    'Legislation',
+  );
+  assert.equal(pageOne({ sha256: hash, kind: 'minutes', thumbnail })?.caption, 'Minutes');
 });
 
 test('no picture for an agenda packet, any other kind, an unknown kind or no thumbnail, whatever the data says', () => {
@@ -62,7 +77,11 @@ test('the item page shows the picture of the exact copy whose hash its source en
     img,
     new RegExp(`alt="Page 1 of the archived copy with SHA-256 ${printed.slice(0, 12)}…"`),
   );
-  assert.match(entry, /<figcaption>Page 1<\/figcaption>/, 'the caption no longer repeats the hash');
+  assert.match(
+    entry,
+    /<figcaption>Item 2026-452 &amp; &lt;fixture&gt;<\/figcaption>/,
+    "the caption is the document's title, escaped",
+  );
 });
 
 test('the deployed picture is the fixture export’s file, byte for byte', async () => {

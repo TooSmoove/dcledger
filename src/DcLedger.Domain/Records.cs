@@ -71,6 +71,16 @@ public sealed record Document
     /// <summary>What the document is, as the reviewer read it (issue #132); null when the record doesn't say.</summary>
     public DocumentKind? Kind { get; init; }
 
+    /// <summary>
+    /// A short label a person wrote for the document, such as "Aug 17, 2026 special meeting minutes"; null when the record
+    /// has none. The site captions a first-page picture with it. Government file names aren't kept (eSCRIBE and Legistar
+    /// addresses carry none), and dating a document by a decision that cites it is wrong when several decisions do.
+    /// </summary>
+    public string? Title { get; init; }
+
+    /// <summary>The most characters a <see cref="Title"/> may hold; it is a label, not a description.</summary>
+    public const int MaxTitleLength = 80;
+
     /// <summary>A picture of the first page of these exact bytes, when one was rendered and reviewed (issue #132).</summary>
     public Thumbnail? Thumbnail { get; init; }
 }

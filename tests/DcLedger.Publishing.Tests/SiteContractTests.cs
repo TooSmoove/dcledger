@@ -18,13 +18,13 @@ public sealed class SiteContractTests
     /// <summary>
     /// A decision's terms (issue #115), each null when not stated. Listed by path because an event's <c>status</c> is
     /// never null.
-    /// A document's kind and first-page picture (issue #132) are null unless the record has them, on events and actions.
+    /// A document's kind, title and first-page picture (issue #132) are null unless the record has them, on events and actions.
     /// </summary>
     private static readonly HashSet<string> NullablePaths = new(
         new[] { "instrument_number", "threshold", "scope", "effective_on", "expires_on", "early_termination", "exemptions", "successor_id", "status" }
             .Select(key => $"$.actions[].{key}")
-            .Concat(new[] { "events", "actions" }.SelectMany(items => new[] { "kind", "thumbnail" }.Select(key => $"$.{items}[].documents[].{key}")))
-            .Concat(new[] { "$.jurisdictions[].note", "$.jurisdictions[].note_documents[].kind", "$.jurisdictions[].note_documents[].thumbnail" }),
+            .Concat(new[] { "events", "actions" }.SelectMany(items => new[] { "kind", "title", "thumbnail" }.Select(key => $"$.{items}[].documents[].{key}")))
+            .Concat(new[] { "$.jurisdictions[].note", "$.jurisdictions[].note_documents[].kind", "$.jurisdictions[].note_documents[].title", "$.jurisdictions[].note_documents[].thumbnail" }),
         StringComparer.Ordinal);
 
     /// <summary>

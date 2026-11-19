@@ -17,6 +17,7 @@
           "sha256": "4c3f0e1d2b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0",
           "retrieval": "fetched",
           "kind": null,
+          "title": null,
           "thumbnail": null
         }
       ]
@@ -86,6 +87,7 @@
           "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
           "retrieval": "fetched",
           "kind": null,
+          "title": null,
           "thumbnail": null
         }
       ]
@@ -113,6 +115,7 @@
           "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
           "retrieval": "fetched",
           "kind": "legislation",
+          "title": "Item 2026-452 & <fixture>",
           "thumbnail": {
             "path": "/thumbnails/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.webp",
             "width": 240,
@@ -141,6 +144,7 @@
           "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
           "retrieval": "fetched",
           "kind": null,
+          "title": null,
           "thumbnail": null
         },
         {
@@ -149,6 +153,7 @@
           "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
           "retrieval": "manual",
           "kind": null,
+          "title": null,
           "thumbnail": null
         }
       ]
@@ -176,6 +181,7 @@
           "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "retrieval": "fetched",
           "kind": null,
+          "title": null,
           "thumbnail": null
         }
       ]
@@ -200,6 +206,7 @@
           "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
           "retrieval": "fetched",
           "kind": null,
+          "title": null,
           "thumbnail": null
         }
       ],
@@ -231,6 +238,7 @@
           "sha256": "5555555555555555555555555555555555555555555555555555555555555555",
           "retrieval": "manual",
           "kind": null,
+          "title": null,
           "thumbnail": null
         }
       ],
@@ -262,6 +270,7 @@
           "sha256": "6666666666666666666666666666666666666666666666666666666666666666",
           "retrieval": "fetched",
           "kind": null,
+          "title": null,
           "thumbnail": null
         }
       ],
@@ -293,6 +302,7 @@
           "sha256": "7777777777777777777777777777777777777777777777777777777777777777",
           "retrieval": "fetched",
           "kind": null,
+          "title": null,
           "thumbnail": null
         }
       ],

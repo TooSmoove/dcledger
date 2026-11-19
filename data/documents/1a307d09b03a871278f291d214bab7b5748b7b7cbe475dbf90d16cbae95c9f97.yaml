@@ -5,6 +5,7 @@ media_type: "text/html"
 bytes: 101409
 source_type: official
 kind: legislation
+title: "Legistar file 26-0061"
 thumbnail:
   sha256: e60ea82bb461c825828419b17f9ead7462558b82e555cb3cd2e0b343067bb4a9
   width: 240
