@@ -264,3 +264,19 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - `events.json` jurisdictions gain `note` and `note_documents` after `coverage_tier` (schema version 1, additive;
     ADR-0004). The jurisdiction page shows the note under "Note on the record", with its sources, before the
     decisions. The CSV and Parquet downloads are unchanged.
+- **Nov 19, 2026 — Site revisions: sources, FAQ, notes, the home page, locators (AC2, AC12):**
+  - Each source's SHA-256 and glyph move under a native `<details>` "More details" disclosure (closed by default)
+    beside the source. It stays in the page's HTML, so AC2 still holds and the gate still checks it; the URL,
+    retrieval time and "How retrieved" stay in view. No script (AC12).
+  - New page `/faq/`, linked from every header and footer, takes the home page's "How to check the record" section
+    (the worked hash example and the commands) and explains the calendar feeds, including that opening a `.ics`
+    file imports a one-time copy while subscribing by its address keeps it updated.
+  - The home page drops "How to check the record" (it links `/faq/` in its place) and the two calendar links. The
+    feeds themselves, their addresses and the links on `/radar/` and jurisdiction pages are unchanged.
+  - A jurisdiction's note section gets the anchor `#note`. Each decision of a jurisdiction with a note points to it
+    ("Also on the record: a note about …"), on the jurisdiction page, on a meeting page and on the home page, so a
+    reader who follows a `#decision-` link lands below the note but still sees there is one.
+  - Locator rings: an area gets a ring only when it is under 30 frame units in both directions (was either), so
+    Vance County loses its ring. `tools/build_locators.py` gains `WITHIN` (place → ledger county it lies wholly in;
+    first: Henderson → Vance), written to `nc-boundaries.json` as an area's `within`; a ringed place with one is
+    drawn over that county, lightly shaded, and its accessible name says so.

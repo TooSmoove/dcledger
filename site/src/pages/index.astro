@@ -1,10 +1,10 @@
 ---
 // The home page (issue #134): what the ledger is, then the record at a glance, every part built from the export so
 // nothing on it is invented. Next up from the radar's window, decisions the record states are in effect, the latest
-// decisions, coverage with freshness, how to check the record, and the feeds. No script (AC12).
+// decisions, coverage with freshness, and the feeds. A decision whose jurisdiction has a note on the record links the
+// note too. How to check the record lives on /faq/. No script (AC12).
 import { getCollection } from 'astro:content';
 import Freshness from '../components/Freshness.astro';
-import Glyph from '../components/Glyph.astro';
 import Seats from '../components/Seats.astro';
 import WindowStrip from '../components/WindowStrip.astro';
 import Base from '../layouts/Base.astro';
@@ -20,6 +20,7 @@ import {
   inWindow,
   isWatched,
   labelText,
+  noteHref,
   outcomeText,
   statusText,
   voteText,
@@ -46,7 +47,8 @@ const windowEnd = windowDays(generated, []).at(-1)?.iso ?? '';
 const actions = await getCollection('actions');
 const effective = inEffect(actions, generated);
 const latest = byDecisionNewestFirst(actions).slice(0, 3);
-const example = latest[0]?.data.documents[0];
+// Jurisdictions with a note on the record (such as a court order): their decisions here point to it (#note).
+const noted = new Set(jurisdictions.filter((j) => j.data.note !== null).map((j) => j.id));
 const decisionHref = (a: (typeof actions)[number]) =>
   `/jurisdictions/${a.data.jurisdiction_id}/#decision-${a.id}`;
 ---
@@ -59,7 +61,7 @@ const decisionHref = (a: (typeof actions)[number]) =>
       <a class="btn" href="/radar/">
         Open the Hearing Radar
       </a>
-      <a href="/radar.ics">Subscribe (iCal)</a>
+      <a href="/faq/">How to check the record</a>
     </p>
   </Fragment>
 
@@ -115,6 +117,11 @@ const decisionHref = (a: (typeof actions)[number]) =>
               )}
             </span>
             {a.data.threshold && <span class="muted">Applies to: “{a.data.threshold}”</span>}
+            {noted.has(a.data.jurisdiction_id) && (
+              <a class="note-link" href={noteHref(a.data.jurisdiction_id)}>
+                See the note on the record
+              </a>
+            )}
           </li>
         ))}
       </ul>
@@ -137,6 +144,11 @@ const decisionHref = (a: (typeof actions)[number]) =>
               {voteText(a.data.votes, a.data.unanimous)}
               <Seats votes={a.data.votes} />
             </span>
+          )}
+          {noted.has(a.data.jurisdiction_id) && (
+            <a class="note-link" href={noteHref(a.data.jurisdiction_id)}>
+              See the note on the record
+            </a>
           )}
         </li>
       ))}
@@ -176,43 +188,9 @@ const decisionHref = (a: (typeof actions)[number]) =>
     })}
   </section>
 
-  <section aria-labelledby="trust-heading" class="home-section trust">
-    <h2 id="trust-heading">How to check the record</h2>
-    <ol class="trust-list">
-      <li>A person reviews every item before it is published.</li>
-      <li>Each item links its official source and says when we retrieved it, in Eastern time.</li>
-      <li>We keep a copy and print its SHA-256, so anyone can confirm it hasn't changed.</li>
-    </ol>
-    {example && (
-      <figure class="hash-example">
-        <Glyph sha256={example.sha256} />
-        <figcaption>
-          <code>{example.sha256}</code>
-          <span class="muted">
-            The pattern is drawn from the hash itself, so two copies with the same hash always look
-            alike.
-          </span>
-        </figcaption>
-      </figure>
-    )}
-    <details class="verify">
-      <summary>Check a hash yourself</summary>
-      <p>Download the source, run one of these, and compare the result with the hash we print.</p>
-      <pre><code>sha256sum downloaded-file
-certutil -hashfile downloaded-file SHA256</code></pre>
-    </details>
-    <p>
-      <a href="/methodology/">How items get in, what the labels mean, and corrections</a>
-    </p>
-  </section>
-
   <section aria-labelledby="data-heading" class="home-section">
     <h2 id="data-heading">Use the data</h2>
     <dl class="data-list">
-      <dt>
-        <a href="/radar.ics">Calendar (iCal)</a>
-      </dt>
-      <dd>Every upcoming meeting in your calendar app; cancellations update in place.</dd>
       <dt>
         <a href="/feed.xml">Feed (RSS)</a>
       </dt>

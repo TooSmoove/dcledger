@@ -1,7 +1,9 @@
 ---
 // Decisions such as a moratorium vote (issue #25, WS-AC8): what was decided, the recorded outcome and vote, how it is
 // sourced (SPEC AC6), and its sources (AC2). Outcome words come from a fixed table, never from the source's text. The
-// terms of an adopted decision (issue #115) follow, each only when its record states it.
+// terms of an adopted decision (issue #115) follow, each only when its record states it. When the jurisdiction has a
+// note on the record (such as a court order), each decision points to it first: a #decision- link lands below the
+// note, and on a phone the note is then out of sight.
 import type { CollectionEntry } from 'astro:content';
 import {
   actionTypeText,
@@ -19,9 +21,11 @@ interface Props {
   heading: string;
   /** Link each decision to its meeting's page; off on the meeting's own page. */
   linkMeetings: boolean;
+  /** The jurisdiction's note on the record, if it has one: where it is and whose it is. */
+  note?: { href: string; jurisdictionName: string } | null;
 }
 
-const { actions, heading, linkMeetings } = Astro.props;
+const { actions, heading, linkMeetings, note = null } = Astro.props;
 ---
 
 {actions.length > 0 && (
@@ -32,6 +36,12 @@ const { actions, heading, linkMeetings } = Astro.props;
         <h3>
           {actionTypeText(data.action_type)}: {outcomeText(data.outcome)}
         </h3>
+        {note && (
+          <p class="note-pointer">
+            <strong>Also on the record:</strong> a note about {note.jurisdictionName}, with its
+            sources. <a href={note.href}>Read the note</a>
+          </p>
+        )}
         <dl>
           <dt>Decided</dt>
           <dd>

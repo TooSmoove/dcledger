@@ -47,7 +47,29 @@ class GeometryTests(unittest.TestCase):
             bl.boundaries(state, [], [], {})
 
 
+    def test_a_place_within_a_county_names_it_and_only_a_place_can(self):
+        state = bl.Feature("37", "North Carolina", [[square(-84, 34, 2)]])
+        counties = [bl.Feature(geoid, geoid, [[square(-80, 35, 0.2)]]) for _, geoid in bl.JURISDICTIONS.values()]
+        content = bl.boundaries(state, counties, [], {})
+        for jurisdiction_id, county in bl.WITHIN.items():
+            self.assertEqual(content["areas"][jurisdiction_id]["within"], county)
+        self.assertTrue(all("within" not in a for i, a in content["areas"].items() if i not in bl.WITHIN))
+        original = dict(bl.WITHIN)
+        try:
+            bl.WITHIN["vance"] = "henderson"
+            with self.assertRaises(SystemExit):
+                bl.boundaries(state, counties, [], {})
+        finally:
+            bl.WITHIN.clear()
+            bl.WITHIN.update(original)
+
+
 class CoverageTests(unittest.TestCase):
+    def test_the_committed_boundaries_carry_every_within(self):
+        content = json.loads(BOUNDARIES.read_text(encoding="utf-8"))
+        within = {i: a["within"] for i, a in content["areas"].items() if "within" in a}
+        self.assertEqual(within, bl.WITHIN, "rebuild site/src/geo/nc-boundaries.json")
+
     def ledger_ids(self) -> set[str]:
         return {path.stem for path in (REPO / "data" / "jurisdictions").glob("*.yaml")}
 

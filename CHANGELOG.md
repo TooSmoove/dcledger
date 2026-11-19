@@ -32,10 +32,15 @@ has not posted the official record yet. Each gains them, as an update in the fee
 - **Imagery** (#132): each jurisdiction page draws a static locator map of where it is in North Carolina, from U.S.
   Census Bureau boundaries, with no script. Sources that are official minutes or legislation pages can show a
   reviewed picture of page 1 of the exact copy whose SHA-256 they print, at `/thumbnails/{sha256}.webp`; agenda
-  packets never do. Headings and body text are set in EB Garamond, one 37 KB font file served from this site.
+  packets never do. A ring marks only an area too small to see both ways (so a long, narrow county such as Vance has
+  none), and a ringed city is drawn inside its county, shaded lightly (Henderson in Vance County). Headings and body text are set in EB Garamond, one 37 KB font file served from this site.
 - **Home page** (`/`): the record at a glance, built from the export. Next up from the radar's window, decisions
-  the record states are in effect with their end dates, the latest decisions, coverage with freshness, how to check
-  a hash, and the feeds (#134).
+  the record states are in effect with their end dates, the latest decisions, coverage with freshness, and the feeds
+  (#134). "How to check the record" moved to the FAQ, and the home page no longer links the calendar feeds (they stay
+  on the radar, on jurisdiction pages and in the FAQ).
+- **FAQ** (`/faq/`): how to check the record and a hash, what the labels and coverage tiers mean, how to subscribe to
+  a calendar feed (and why opening the `.ics` file only imports a copy), other ways to follow new items, and how to
+  report a mistake. Linked from every header and footer.
 - **Report form** (`/report/`): report a mistake, ask a question or ask us to stop fetching, with an optional email
   address for a reply. Reports are private; a fix shows in the corrections log. Linked from every footer.
 - **Using the data** (`/data/`), with the stability promise and the data dictionary, and this changelog
@@ -46,7 +51,11 @@ has not posted the official record yet. Each gains them, as an update in the fee
   watched (#118).
 - **Jurisdiction notes:** a jurisdiction page can show one neutral "Note on the record", with its sources, for
   something that bears on its record without being one of its body's decisions, such as a court order on a
-  moratorium. `events.json` jurisdictions gain `note` and `note_documents`; the downloads are unchanged.
+  moratorium. `events.json` jurisdictions gain `note` and `note_documents`; the downloads are unchanged. Each decision
+  of a jurisdiction with a note, on its jurisdiction and meeting pages and on the home page, links to the note
+  (`/jurisdictions/{id}/#note`), so a reader who arrives at a `#decision-` link doesn't miss it.
+- **Sources** show the URL, the retrieval time and how the copy was retrieved; the SHA-256 and its pattern are under
+  a "More details" disclosure beside each source, still in the page.
 - **Decisions** (local actions) on meeting and jurisdiction pages, with outcome, vote and sourcing label, and, for an
   adopted decision, the terms its archived text states: threshold, scope, start and expiry dates, early termination,
   exemptions, a successor and a status.

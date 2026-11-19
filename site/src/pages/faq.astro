@@ -1,0 +1,135 @@
+---
+// Frequently asked questions: how to check the record (moved here from the home page), what the SHA-256 and its
+// pattern are, how to follow new items (including what the calendar feeds do and how to subscribe), and where the
+// methodology, the data and the report form are. Short answers that link to the page with the full rule, so nothing
+// here can drift from methodology.astro or data.astro. Static, no script (AC12).
+import { getCollection } from 'astro:content';
+import Glyph from '../components/Glyph.astro';
+import Base from '../layouts/Base.astro';
+import { SITE_URL } from '../lib/methodology.js';
+import { byDecisionNewestFirst, labelText } from '../lib/radar.js';
+
+// The worked hash example is a real one: the first source of the latest decision, as the home page used to show.
+const example = byDecisionNewestFirst(await getCollection('actions'))[0]?.data.documents[0];
+const calendarUrl = `${SITE_URL}/radar.ics`;
+---
+
+<Base title="FAQ">
+  <Fragment slot="masthead">
+    <h1>Frequently asked questions</h1>
+    <p class="lede">How to check what we publish, and how to follow it.</p>
+  </Fragment>
+
+  <section aria-labelledby="check-the-record" class="faq">
+    <h2 id="check-the-record">How can I check the record?</h2>
+    <ol class="trust-list">
+      <li>A person reviews every item before it is published.</li>
+      <li>Each item links its official source and says when we retrieved it, in Eastern time.</li>
+      <li>We keep a copy and print its SHA-256, so anyone can confirm it hasn't changed.</li>
+    </ol>
+    <p>
+      The SHA-256 is under <strong>More details</strong> beside each source on an item or
+      jurisdiction page.
+    </p>
+    {example && (
+      <figure class="hash-example">
+        <Glyph sha256={example.sha256} />
+        <figcaption>
+          <code>{example.sha256}</code>
+          <span class="muted">
+            The pattern is drawn from the hash itself, so two copies with the same hash always look
+            alike.
+          </span>
+        </figcaption>
+      </figure>
+    )}
+  </section>
+
+  <section aria-labelledby="check-a-hash" class="faq">
+    <h2 id="check-a-hash">What is a SHA-256, and how do I check one?</h2>
+    <p>
+      A SHA-256 is a 64-character fingerprint of a file's exact bytes. Change one byte and the
+      fingerprint changes completely. If the file you download from the source gives the same
+      SHA-256 we print, it is the same copy we used.
+    </p>
+    <p>Download the source, run one of these, and compare the result with the hash we print.</p>
+    <pre><code># Linux
+sha256sum downloaded-file
+# macOS
+shasum -a 256 downloaded-file
+# Windows
+certutil -hashfile downloaded-file SHA256</code></pre>
+    <p>
+      A different hash can mean the government changed or replaced the file after we retrieved it.
+      If you find one, please <a href="/report/">report it</a>.
+    </p>
+  </section>
+
+  <section aria-labelledby="labels" class="faq">
+    <h2 id="labels">
+      What do “{labelText('confirmed_official')}” and “{labelText('reported_news')}” mean?
+    </h2>
+    <p>
+      Confirmed items rest on at least one official record from the government's own site. Reported
+      items rest on a news report until we keep an official record that shows them.{' '}
+      <a href="/methodology/#labels">The full rule</a>.
+    </p>
+  </section>
+
+  <section aria-labelledby="coverage" class="faq">
+    <h2 id="coverage">Why don't some places show upcoming meetings?</h2>
+    <p>
+      Some jurisdictions are covered for decisions only: we record what they decided, but we don't
+      watch their agendas, so they have no upcoming meetings and no calendar.{' '}
+      <a href="/methodology/#coverage">What each level of coverage means</a>. If something isn't in
+      the ledger, that is not evidence it didn't happen.
+    </p>
+  </section>
+
+  <section aria-labelledby="calendar" class="faq">
+    <h2 id="calendar">Can I get upcoming meetings in my calendar?</h2>
+    <p>
+      Yes. The Hearing Radar is published as a calendar feed (iCal, a <code>.ics</code> address).
+      Subscribed to in a calendar app, it adds each upcoming meeting we list, and when a meeting is
+      moved or cancelled your calendar updates by itself. Each watched jurisdiction's page has its
+      own feed, too.
+    </p>
+    <p>Subscribe with this address:</p>
+    <pre><code>{calendarUrl}</code></pre>
+    <ul>
+      <li>
+        <strong>Google Calendar</strong> (on a computer): Other calendars, +, From URL, then paste
+        the address.
+      </li>
+      <li>
+        <strong>Apple Calendar</strong>: on a Mac, File, New Calendar Subscription; on an iPhone, in
+        Settings under Calendar accounts, Add Account, Other, Add Subscribed Calendar.
+      </li>
+      <li>
+        <strong>Outlook</strong>: Add calendar, Subscribe from web.
+      </li>
+    </ul>
+    <p class="muted">
+      Opening the address in a browser downloads the file instead. Importing that file adds a
+      one-time copy that won't update, so subscribe with the address. Calendar apps check for
+      changes on their own schedule, often every few hours.
+    </p>
+  </section>
+
+  <section aria-labelledby="follow" class="faq">
+    <h2 id="follow">Is there another way to follow new items?</h2>
+    <p>
+      The <a href="/feed.xml">RSS feed</a> has one entry for each new, changed or cancelled meeting.
+      For spreadsheets and analysis, the meetings and decisions are downloadable on the{' '}
+      <a href="/data/">data page</a>, licensed CC BY 4.0.
+    </p>
+  </section>
+
+  <section aria-labelledby="mistake" class="faq">
+    <h2 id="mistake">I found a mistake. What do I do?</h2>
+    <p>
+      Use the <a href="/report/">report form</a>. How reports are handled, and every fix we make, is
+      on the <a href="/methodology/#corrections">methodology page</a>.
+    </p>
+  </section>
+</Base>

@@ -2,7 +2,8 @@
 // One page per jurisdiction: its coverage tier in words (issue #115) and its decisions (issue #25). A watched
 // jurisdiction also shows freshness (SPEC AC10), its calendar feed and every one of its items, newest first; the
 // other tiers have no hearing watch, so they show none of those. A note about the record that isn't one of the
-// body's decisions, such as a court order on a moratorium, shows with its sources (AC2) before the decisions.
+// body's decisions, such as a court order on a moratorium, shows with its sources (AC2) before the decisions, and each
+// decision links back to it (#note), so a reader who arrives at a #decision- anchor sees there is one.
 import { getCollection, getEntry } from 'astro:content';
 import Decisions from '../../components/Decisions.astro';
 import EventTable from '../../components/EventTable.astro';
@@ -66,7 +67,7 @@ const decisions = byDecisionNewestFirst(
   )}
 
   {data.note !== null && (
-    <section aria-labelledby="note-heading" class="jurisdiction-note">
+    <section aria-labelledby="note-heading" class="jurisdiction-note" id="note">
       <h2 id="note-heading">Note on the record</h2>
       <p>{data.note}</p>
       <p class="muted">Not a decision of {data.name}. Stated in the sources below.</p>
@@ -75,5 +76,10 @@ const decisions = byDecisionNewestFirst(
     </section>
   )}
 
-  <Decisions actions={decisions} heading="Decisions, newest first" linkMeetings={true} />
+  <Decisions
+    actions={decisions}
+    heading="Decisions, newest first"
+    linkMeetings={true}
+    note={data.note !== null ? { href: '#note', jurisdictionName: data.name } : null}
+  />
 </Base>

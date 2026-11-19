@@ -2,7 +2,7 @@
 
 Static Astro site for the Hearing Radar. It reads only what `dcl export` writes (ADR-0001, ADR-0004): `../out/site-data/events.json` for its pages, and `../out/public/` (calendars and CSV), which the build copies into `dist/`. It never reads `data/` directly.
 
-Pages: `/radar` (items in the next 30 days, as of the export), `/map` (the same items, a table first and a map on demand), `/items/{id}` (full provenance), `/jurisdictions/{id}` (freshness, a locator map and every item), `/about`, `404`. `public/_headers` adds `X-Robots-Tag: noindex` on Cloudflare Pages (AC11), and long-lived caching for the hashed files in `/_astro/`.
+Pages: `/radar` (items in the next 30 days, as of the export), `/map` (the same items, a table first and a map on demand), `/items/{id}` (full provenance), `/jurisdictions/{id}` (freshness, a locator map and every item), `/faq`, `/about`, `404`. `public/_headers` adds `X-Robots-Tag: noindex` on Cloudflare Pages (AC11), and long-lived caching for the hashed files in `/_astro/`.
 
 Requires Node ≥ 22.23.4 (see `/.nvmrc`).
 
@@ -53,7 +53,8 @@ Astro collects anonymous CLI usage telemetry by default. To opt out on your mach
 
 - **Locator maps** (`src/components/Locator.astro`, `src/lib/locator.js`): a static SVG per jurisdiction from
   `src/geo/nc-boundaries.json`, which `tools/build_locators.py` builds from Census boundaries and which is committed.
-  A jurisdiction it lacks gets no locator; `tools/test_build_locators.py` fails until the file covers every
+  A ring marks an area too small to see both ways; a ringed city listed in `WITHIN` in the build tool is drawn over
+  its county, lightly shaded. A jurisdiction it lacks gets no locator; `tools/test_build_locators.py` fails until the file covers every
   jurisdiction in `data/`. After rebuilding it, update its hash in `tools/license-policy.json`.
 - **First-page pictures** (`src/lib/thumbnails.js`, in `Sources.astro`): shown for a document whose `kind` is
   `minutes` or `legislation` and whose `thumbnail` is set; the files come from the export (`out/public/thumbnails/`).

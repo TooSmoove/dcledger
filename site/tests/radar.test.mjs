@@ -16,6 +16,7 @@ import {
   inWindow,
   isWatched,
   labelText,
+  noteHref,
   outcomeText,
   retrievalText,
   seatList,
@@ -272,4 +273,9 @@ test('in effect: only when the record says so, and not past its stated end, soon
     list.map((x) => x.id),
     ['sooner', 'later', 'open'],
   );
+});
+
+test("a jurisdiction's note is linked at its section on the jurisdiction's page", () => {
+  assert.equal(noteHref('chatham'), '/jurisdictions/chatham/#note');
+  assert.equal(noteHref('winston-salem'), '/jurisdictions/winston-salem/#note');
 });

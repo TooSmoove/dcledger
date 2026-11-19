@@ -3,7 +3,8 @@
 // the bytes kept. A copy a person saved in a browser says so in words (issue #113); a fetched one says nothing more.
 // Shared by events and decisions so both show sources the same way. Official minutes and legislation pages may also
 // show a reviewed picture of the first page of the copy kept (issue #132), lazy-loaded at a fixed size so nothing
-// shifts when it arrives.
+// shifts when it arrives. The SHA-256 sits in a "More details" disclosure (a native <details>, so no script, AC12): it
+// is still in the page for AC2 and for anyone checking a copy, but it no longer crowds the URL and retrieval time.
 import { easternIso, easternText, retrievalText } from '../lib/radar.js';
 import { pageOne } from '../lib/thumbnails.js';
 import Glyph from './Glyph.astro';
@@ -59,12 +60,20 @@ const { documents } = Astro.props;
               <dd>{retrievalText(document.retrieval)}.</dd>
             </>
           )}
-          <dt>SHA-256</dt>
-          <dd>
-            <code>{document.sha256}</code>
-            <Glyph sha256={document.sha256} />
-          </dd>
         </dl>
+        <details class="more-details">
+          <summary>More details</summary>
+          <dl>
+            <dt>SHA-256</dt>
+            <dd>
+              <code>{document.sha256}</code>
+              <Glyph sha256={document.sha256} />
+            </dd>
+          </dl>
+          <p class="muted">
+            <a href="/faq/#check-a-hash">How to check a hash</a>
+          </p>
+        </details>
       </li>
     );
   })}

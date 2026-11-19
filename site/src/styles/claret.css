@@ -490,6 +490,44 @@ dd {
   font-family: var(--f-head);
   color: var(--brass);
 }
+/* A source's secondary details (the SHA-256 and its glyph), closed by default. */
+.more-details {
+  margin-top: 0.5rem;
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+.more-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--muted);
+}
+.more-details[open] summary {
+  margin-bottom: 0.5rem;
+}
+.more-details code {
+  overflow-wrap: anywhere;
+}
+.more-details p {
+  margin: 0.25rem 0 0;
+}
+
+/* A decision on a jurisdiction that has a note on the record points to it, so a reader who lands on the decision
+   (a #decision- link) doesn't miss it. */
+.note-pointer {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-inline-start: 4px solid var(--brass);
+  background: var(--flag-bg);
+  color: var(--flag);
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+.note-pointer a {
+  color: inherit;
+}
+.jurisdiction-note {
+  scroll-margin-top: 1rem;
+}
 
 /* ---------- vote seats: a half circle of seats, filled for aye, open for no ---------- */
 .seats {
@@ -658,6 +696,11 @@ dd {
 }
 .locator-area {
   fill: var(--day-item);
+}
+/* The county a small place lies in, behind the place: light enough that the place still reads as the subject. */
+.locator-context {
+  fill: var(--mark);
+  fill: color-mix(in srgb, var(--day-item) 35%, var(--surface));
 }
 .locator-state-line {
   fill: none;
@@ -891,6 +934,17 @@ dd {
   font-family: var(--f-head);
   font-size: 1.375rem;
 }
+.effect-list a.note-link,
+.latest-list a.note-link {
+  justify-self: start;
+  margin-top: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--flag-bg);
+  color: var(--flag);
+  font-family: var(--f-ui);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
 .next-list .cancelled .item {
   text-decoration: line-through;
 }
@@ -941,26 +995,27 @@ dd {
   font-family: var(--f-ui);
   font-size: 0.875rem;
 }
-.verify {
-  margin: 1rem 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--rule);
-  font-family: var(--f-ui);
-}
-.verify summary {
-  cursor: pointer;
-  font-weight: 600;
-}
-.verify pre {
-  margin: 0.5rem 0 0;
-  padding: 0.75rem;
-  background: var(--surface);
-  overflow-x: auto;
-}
 .data-list {
   font-size: 1rem;
 }
 .data-list dt {
   font-weight: 600;
   color: var(--ink);
+}
+
+/* ---------- FAQ: one section per question; "How to check the record" moved here from the home page ---------- */
+.faq {
+  padding-block: 0.5rem 1rem;
+  max-width: 44rem;
+  scroll-margin-top: 1rem;
+}
+.faq > h2 {
+  scroll-margin-top: 1rem;
+}
+.faq pre {
+  margin: 0.5rem 0 1rem;
+  padding: 0.75rem;
+  background: var(--surface);
+  overflow-x: auto;
+  font-size: 0.9375rem;
 }

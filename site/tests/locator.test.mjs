@@ -17,8 +17,27 @@ const sample = {
   counties: 'M1 1L2 2Z',
   source: { credit: 'U.S. Census Bureau, cartographic boundary files (2024)' },
   areas: {
-    county: { kind: 'county', d: 'M100 100L200 100L200 200Z', bounds: [100, 100, 200, 200] },
-    city: { kind: 'place', d: 'M500 50L510 50L510 58Z', bounds: [500, 50, 510, 58] },
+    county: {
+      kind: 'county',
+      d: 'M100 100L200 100L200 200Z',
+      bounds: [100, 100, 200, 200],
+      census_name: 'Sample',
+    },
+    city: {
+      kind: 'place',
+      d: 'M500 50L510 50L510 58Z',
+      bounds: [500, 50, 510, 58],
+      census_name: 'Sample City',
+      within: 'county',
+    },
+    town: { kind: 'place', d: 'M600 50L610 50L610 58Z', bounds: [600, 50, 610, 58] },
+    bigcity: {
+      kind: 'place',
+      d: 'M700 50L760 50L760 98Z',
+      bounds: [700, 50, 760, 98],
+      within: 'county',
+    },
+    narrow: { kind: 'county', d: 'M300 100L320 100L320 160Z', bounds: [300, 100, 320, 160] },
     empty: { kind: 'county', d: '', bounds: [0, 0, 0, 0] },
   },
 };
@@ -38,10 +57,52 @@ test('a locator names the jurisdiction, says what is drawn and credits the Censu
 });
 
 test('a city is named by its limits and ringed when it is too small to see at state scale', () => {
-  const locator = locatorFor(sample, 'city', 'Sample City');
-  assert.match(locator.label, /^Locator map: Sample City city limits highlighted/);
+  const locator = locatorFor(sample, 'town', 'Sample Town');
+  assert.match(
+    locator.label,
+    /^Locator map: Sample Town city limits highlighted within North Carolina/,
+  );
   assert.ok(10 < RING_BELOW);
+  assert.deepEqual(locator.ring, { cx: 605, cy: 54, r: 21 });
+  assert.equal(locator.context, null, 'no county named for it, so none drawn');
+});
+
+test('a ringed city inside a ledger county shades that county behind it and names it', () => {
+  const locator = locatorFor(sample, 'city', 'Sample City');
   assert.deepEqual(locator.ring, { cx: 505, cy: 54, r: 21 });
+  assert.equal(locator.context, sample.areas.county.d);
+  assert.equal(
+    locator.label,
+    'Locator map: Sample City city limits highlighted within Sample County, North Carolina, with county lines.',
+  );
+});
+
+test('a city big enough to see gets neither a ring nor its county', () => {
+  const locator = locatorFor(sample, 'bigcity', 'Big City');
+  assert.equal(locator.ring, null);
+  assert.equal(locator.context, null);
+});
+
+test('a long, narrow county is plain to see and gets no ring: a ring is for areas small both ways', () => {
+  const [x0, y0, x1, y1] = sample.areas.narrow.bounds;
+  assert.ok(x1 - x0 < RING_BELOW && y1 - y0 >= RING_BELOW);
+  assert.equal(locatorFor(sample, 'narrow', 'Narrow County').ring, null);
+});
+
+test('the real boundaries: Vance County has no ring; Henderson is ringed, with Vance County behind it', () => {
+  const vance = locatorFor(boundaries, 'vance', 'Vance County');
+  assert.equal(vance.ring, null);
+  assert.equal(vance.context, null);
+  const henderson = locatorFor(boundaries, 'henderson', 'Henderson');
+  assert.notEqual(henderson.ring, null);
+  assert.equal(henderson.context, boundaries.areas.vance.d);
+  assert.match(
+    henderson.label,
+    /Henderson city limits highlighted within Vance County, North Carolina/,
+  );
+  for (const id of ['greensboro', 'winston-salem']) {
+    assert.equal(locatorFor(boundaries, id, id).context, null, id);
+  }
 });
 
 test('no area, an empty area or an inherited key gives no locator', () => {
