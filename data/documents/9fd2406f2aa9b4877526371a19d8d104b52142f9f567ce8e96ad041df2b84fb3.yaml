@@ -5,3 +5,8 @@ media_type: "text/html"
 bytes: 107168
 source_type: official
 kind: legislation
+thumbnail:
+  sha256: 73ef40f5c591f224541a5bfaf298bb974af70aea128c97e11ed7d3f47819a448
+  width: 240
+  height: 310
+  reviewed: true

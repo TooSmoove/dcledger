@@ -8,3 +8,8 @@ bytes: 167041
 source_type: official
 retrieval: manual
 kind: minutes
+thumbnail:
+  sha256: e90a0fffba0b4b1e8a9c2f02410cbbece60a8c3da93f5d69facbf027fa058511
+  width: 240
+  height: 311
+  reviewed: true
