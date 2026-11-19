@@ -720,6 +720,68 @@ dd {
   color: var(--muted);
 }
 
+/* ---------- statewide map (issue #132, item 7): the home page's map of every covered jurisdiction ---------- */
+.statewide {
+  margin: 0 0 2.5rem;
+}
+.statewide > svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 52rem;
+  block-size: auto;
+}
+/* Watched jurisdictions are solid; decisions-only ones are hatched, so the tier doesn't rest on color (WCAG 1.4.1). */
+.statewide-solid {
+  fill: var(--day-item);
+}
+.statewide-hatched {
+  fill: url(#statewide-hatch);
+}
+.statewide-area {
+  stroke: var(--day-item);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+/* A city over its county: a paper-colored edge keeps it distinct when both share a fill. */
+.statewide-place {
+  stroke: var(--paper);
+  stroke-width: 1.4;
+}
+.statewide-hatch-ground {
+  fill: var(--surface);
+}
+.statewide-hatch-line {
+  stroke: var(--day-item);
+  stroke-width: 2;
+}
+.statewide figcaption {
+  margin-top: 0.75rem;
+  font-family: var(--f-ui);
+  font-size: 0.9375rem;
+}
+.statewide-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.statewide-legend li {
+  margin: 0.25rem 0;
+}
+.statewide-swatch {
+  inline-size: 1.25rem;
+  block-size: 0.875rem;
+  vertical-align: -0.1em;
+  margin-inline-end: 0.375rem;
+}
+.statewide-group {
+  font-weight: 600;
+}
+.statewide-credit {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
 /* ---------- report form ---------- */
 .report-form label {
   display: block;
@@ -947,6 +1009,23 @@ dd {
   font-family: var(--f-ui);
   font-size: 0.875rem;
   font-weight: 600;
+}
+/* A latest decision with a first-page picture: the page sits to the left, the text keeps its own column. */
+.latest-list li.has-page {
+  grid-template-columns: 4.5rem 1fr;
+  column-gap: 1rem;
+}
+.latest-list li.has-page > * {
+  grid-column: 2;
+}
+.latest-list li.has-page > .latest-page {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  align-self: start;
+  inline-size: 4.5rem;
+  block-size: auto;
+  border: 1px solid var(--rule);
+  background: #fff;
 }
 .next-list .cancelled .item {
   text-decoration: line-through;

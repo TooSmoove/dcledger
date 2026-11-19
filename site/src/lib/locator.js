@@ -62,3 +62,76 @@ export function locatorFor(boundaries, id, name) {
 function round(value) {
   return Math.round(value * 10) / 10;
 }
+
+/** The home page's legend groups, in order: the tier, its fill style, and what the legend calls it. */
+const STATEWIDE_GROUPS = /** @type {const} */ ([
+  { tier: 'watched', style: 'solid', text: 'Hearings and decisions' },
+  { tier: 'decisions', style: 'hatched', text: 'Decisions only' },
+  { tier: 'registered', style: 'hatched', text: 'Listed only' },
+]);
+
+/**
+ * The home page's statewide map (issue #132, item 7): North Carolina with every ledger jurisdiction the boundaries
+ * file has an area for, filled by how closely it is covered, so no one jurisdiction is singled out. Counties are drawn
+ * before places, so a city reads on top of its county. An area too small to see at state scale gets a ring, as on the
+ * jurisdiction pages. A jurisdiction with no area is left off the map and the legend, and returned in `missing`; the
+ * home page's Coverage section still lists it.
+ * @param {{ frame: { width: number, height: number }, state: string, counties: string, source: { credit: string },
+ *   areas: Record<string, { kind: string, d: string, bounds: number[] }> }} boundaries
+ * @param {readonly { id: string, name: string, tier: string }[]} jurisdictions in the order the legend lists them
+ */
+export function statewideFor(boundaries, jurisdictions) {
+  const { width, height } = boundaries.frame;
+  const drawn = [];
+  const missing = [];
+  for (const j of jurisdictions) {
+    const group = STATEWIDE_GROUPS.find((g) => g.tier === j.tier);
+    if (group === undefined) {
+      throw new Error(`Unknown coverage tier ${JSON.stringify(j.tier)} for ${j.id}.`);
+    }
+    const area = Object.hasOwn(boundaries.areas, j.id) ? boundaries.areas[j.id] : undefined;
+    if (area === undefined || area.d === '') {
+      missing.push(j.id);
+      continue;
+    }
+    drawn.push({ ...j, style: group.style, area });
+  }
+  const order = (/** @type {string} */ kind) => (kind === 'county' ? 0 : 1);
+  const areas = [...drawn]
+    .sort((a, b) => order(a.area.kind) - order(b.area.kind))
+    .map((j) => ({ id: j.id, kind: j.area.kind, style: j.style, d: j.area.d }));
+  const rings = drawn
+    .filter((j) => {
+      const [x0, y0, x1, y1] = j.area.bounds;
+      return x1 - x0 < RING_BELOW && y1 - y0 < RING_BELOW;
+    })
+    .map((j) => {
+      const [x0, y0, x1, y1] = j.area.bounds;
+      return {
+        id: j.id,
+        cx: round((x0 + x1) / 2),
+        cy: round((y0 + y1) / 2),
+        r: RING_RADIUS + round(Math.max(x1 - x0, y1 - y0) / 2),
+      };
+    });
+  const groups = STATEWIDE_GROUPS.map((g) => ({
+    tier: g.tier,
+    style: g.style,
+    text: g.text,
+    members: drawn.filter((j) => j.tier === g.tier).map((j) => ({ id: j.id, name: j.name })),
+  })).filter((g) => g.members.length > 0);
+  return {
+    viewBox: `${-PADDING} ${-PADDING} ${width + 2 * PADDING} ${height + 2 * PADDING}`,
+    state: boundaries.state,
+    counties: boundaries.counties,
+    areas,
+    rings,
+    groups,
+    missing,
+    label:
+      drawn.length === 0
+        ? 'Map of North Carolina with county lines.'
+        : `Map of North Carolina with county lines, shading the ${drawn.length} ${drawn.length === 1 ? 'place' : 'places'} this ledger covers. The legend lists ${drawn.length === 1 ? 'it' : 'them'}.`,
+    credit: `Boundaries: ${boundaries.source.credit}.`,
+  };
+}

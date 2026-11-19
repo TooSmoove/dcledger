@@ -52,7 +52,8 @@ test('every fixture document says how it was retrieved, and two were saved by ha
   const retrievals = [...events, ...actions].flatMap((item) =>
     item.documents.map((document) => document.retrieval),
   );
-  assert.equal(retrievals.length, 9);
+  // 10: the Nov 5 moratorium also cites the meeting's pictured legislation (home page thumbnails, #132 item 7).
+  assert.equal(retrievals.length, 10);
   assert.deepEqual([...new Set(retrievals)].sort(), ['fetched', 'manual']);
   assert.equal(retrievals.filter((retrieval) => retrieval === 'manual').length, 2);
 });

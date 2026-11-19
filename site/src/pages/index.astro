@@ -1,13 +1,15 @@
 ---
 // The home page (issue #134): what the ledger is, then the record at a glance, every part built from the export so
-// nothing on it is invented. Next up from the radar's window, decisions the record states are in effect, the latest
+// nothing on it is invented. A statewide map of every covered jurisdiction (Statewide.astro), then next up from the radar's window, decisions the record states are in effect, the latest
 // decisions, coverage with freshness, and the feeds. An empty window says how many jurisdictions are watched and
 // since when they were all checked, so "nothing scheduled" reads as a checked result; "What's new on the record"
 // lists the records most recently added or updated, whatever their kind. A decision whose jurisdiction has a note on the record links the
-// note too. How to check the record lives on /faq/. No script (AC12).
+// note too, and shows the first page of its first showable source when one has a reviewed picture. How to check the
+// record lives on /faq/. No script (AC12).
 import { getCollection } from 'astro:content';
 import Freshness from '../components/Freshness.astro';
 import Seats from '../components/Seats.astro';
+import Statewide from '../components/Statewide.astro';
 import WindowStrip from '../components/WindowStrip.astro';
 import Base from '../layouts/Base.astro';
 import {
@@ -31,6 +33,7 @@ import {
   windowDays,
 } from '../lib/radar.js';
 import { generatedUtc } from '../lib/site-data-file.js';
+import { pageOne } from '../lib/thumbnails.js';
 
 const generated = await generatedUtc();
 const jurisdictions = (await getCollection('jurisdictions')).sort((a, b) =>
@@ -86,7 +89,11 @@ const recent = recentlyUpdated({ events, actions, jurisdictions }, 5).map((r) =>
     detail: `Not a decision of ${nameOf(r.id)}.`,
   };
 });
-const latest = byDecisionNewestFirst(actions).slice(0, 3);
+// Each latest decision with the first page of its first showable source (minutes or legislation; never a packet), or
+// null: the same reviewed picture its jurisdiction page shows, at a smaller size.
+const latest = byDecisionNewestFirst(actions)
+  .slice(0, 3)
+  .map((a) => ({ a, page: a.data.documents.map(pageOne).find((p) => p !== null) ?? null }));
 // Jurisdictions with a note on the record (such as a court order): their decisions here point to it (#note).
 const noted = new Set(jurisdictions.filter((j) => j.data.note !== null).map((j) => j.id));
 ---
@@ -102,6 +109,11 @@ const noted = new Set(jurisdictions.filter((j) => j.data.note !== null).map((j) 
       <a href="/faq/">How to check the record</a>
     </p>
   </Fragment>
+
+  <section aria-labelledby="places-heading" class="home-section">
+    <h2 id="places-heading">Places covered</h2>
+    <Statewide />
+  </section>
 
   <section aria-labelledby="next-heading" class="home-section">
     <h2 id="next-heading">Next up</h2>
@@ -203,8 +215,19 @@ const noted = new Set(jurisdictions.filter((j) => j.data.note !== null).map((j) 
   <section aria-labelledby="latest-heading" class="home-section">
     <h2 id="latest-heading">Latest decisions</h2>
     <ol class="latest-list">
-      {latest.map((a) => (
-        <li>
+      {latest.map(({ a, page }) => (
+        <li class={page ? 'has-page' : undefined}>
+          {page && (
+            <img
+              class="latest-page"
+              src={page.src}
+              width={page.width}
+              height={page.height}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          )}
           <time datetime={a.data.decided_on}>{dateText(a.data.decided_on)}</time>
           <a class="item" href={decisionHref(a)}>
             {names.get(a.data.jurisdiction_id) ?? a.data.jurisdiction_id}:{' '}

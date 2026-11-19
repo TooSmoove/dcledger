@@ -2,10 +2,10 @@
 // accessible name and a visible credit, and no script. The fixture's guilford is a real ID, so it has an area in
 // src/geo/nc-boundaries.json; the fixture-only jurisdictions don't, and show no locator.
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { test } from 'node:test';
 import { hasScriptTag } from '../scripts/quality/static-checks.mjs';
-import { RING_BELOW, locatorFor } from '../src/lib/locator.js';
+import { RING_BELOW, locatorFor, statewideFor } from '../src/lib/locator.js';
 import { page, pages } from './helpers/dist.mjs';
 
 const boundaries = JSON.parse(
@@ -157,4 +157,94 @@ test('every jurisdiction page ships no script, with or without a locator (AC12)'
   for (const { name, html } of pages.filter((p) => p.name.startsWith('jurisdictions/'))) {
     assert.equal(hasScriptTag(html), false, name);
   }
+});
+
+test('the statewide map draws counties before places and groups the legend by coverage tier', () => {
+  const map = statewideFor(sample, [
+    { id: 'city', name: 'Sample City', tier: 'decisions' },
+    { id: 'county', name: 'Sample County', tier: 'watched' },
+    { id: 'narrow', name: 'Narrow County', tier: 'decisions' },
+  ]);
+  assert.deepEqual(
+    map.areas.map((a) => [a.id, a.style]),
+    [
+      ['county', 'solid'],
+      ['narrow', 'hatched'],
+      ['city', 'hatched'],
+    ],
+  );
+  assert.deepEqual(
+    map.groups.map((g) => [g.text, g.members.map((m) => m.name)]),
+    [
+      ['Hearings and decisions', ['Sample County']],
+      ['Decisions only', ['Sample City', 'Narrow County']],
+    ],
+  );
+  assert.deepEqual(map.rings, [{ id: 'city', cx: 505, cy: 54, r: 21 }], 'only the speck is ringed');
+  assert.equal(
+    map.label,
+    'Map of North Carolina with county lines, shading the 3 places this ledger covers. The legend lists them.',
+  );
+  assert.equal(map.credit, 'Boundaries: U.S. Census Bureau, cartographic boundary files (2024).');
+  assert.deepEqual(map.missing, []);
+});
+
+test('the statewide map leaves off a jurisdiction with no area and says so in missing', () => {
+  const map = statewideFor(sample, [
+    { id: 'missing', name: 'Missing', tier: 'watched' },
+    { id: 'empty', name: 'Empty', tier: 'watched' },
+    { id: 'constructor', name: 'Constructor', tier: 'watched' },
+  ]);
+  assert.deepEqual(map.areas, []);
+  assert.deepEqual(map.groups, []);
+  assert.deepEqual(map.missing, ['missing', 'empty', 'constructor']);
+  assert.equal(map.label, 'Map of North Carolina with county lines.');
+});
+
+test('the statewide map refuses a coverage tier it does not know', () => {
+  assert.throws(
+    () => statewideFor(sample, [{ id: 'county', name: 'Sample County', tier: 'rumored' }]),
+    /Unknown coverage tier "rumored"/,
+  );
+});
+
+test('the real boundaries cover all nine ledger jurisdictions, and only Henderson is ringed', async () => {
+  const ids = (await readdir(new URL('../../data/jurisdictions/', import.meta.url)))
+    .filter((f) => f.endsWith('.yaml'))
+    .map((f) => f.slice(0, -'.yaml'.length));
+  const map = statewideFor(
+    boundaries,
+    ids.map((id) => ({ id, name: id, tier: 'watched' })),
+  );
+  assert.deepEqual(map.missing, []);
+  assert.deepEqual(
+    map.rings.map((r) => r.id),
+    ['henderson'],
+  );
+});
+
+test('the home page draws the statewide map as an image with a legend that links each jurisdiction, and no script', () => {
+  const html = page('index.html');
+  const figure = html.match(/<figure class="statewide">([\s\S]*?)<\/figure>/);
+  assert.ok(figure, 'no statewide map on the home page');
+  assert.match(figure[1], /<svg [^>]*role="img"[^>]*aria-labelledby="statewide-title"/);
+  assert.match(
+    figure[1],
+    /<title id="statewide-title">Map of North Carolina with county lines, shading the 1 place this ledger covers\./,
+    "only the fixture's guilford has a real area",
+  );
+  assert.match(
+    figure[1],
+    /<path class="statewide-area statewide-solid statewide-county"[^>]*data-jurisdiction="guilford"/,
+  );
+  assert.match(
+    figure[1],
+    /Hearings and decisions:<\/span>\s*<a href="\/jurisdictions\/guilford\/">Guilford County<\/a>/,
+  );
+  assert.match(
+    figure[1],
+    /Boundaries: U\.S\. Census Bureau, cartographic boundary files \(\d{4}\)\./,
+  );
+  assert.doesNotMatch(figure[1], /A ring marks/, 'no ring is drawn, so none is explained');
+  assert.equal(hasScriptTag(html), false);
 });
