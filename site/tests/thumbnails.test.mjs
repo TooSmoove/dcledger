@@ -24,7 +24,7 @@ test('a picture is shown at half its pixel size, with alt text naming the hash',
     width: 120,
     height: 156,
     alt: 'Page 1 of the archived copy with SHA-256 e3b0c44298fc…',
-    caption: 'Page 1 of the copy with SHA-256 e3b0c442…',
+    caption: 'Page 1',
   });
   assert.notEqual(pageOne({ sha256: hash, kind: 'legislation', thumbnail }), null);
 });
@@ -62,10 +62,7 @@ test('the item page shows the picture of the exact copy whose hash its source en
     img,
     new RegExp(`alt="Page 1 of the archived copy with SHA-256 ${printed.slice(0, 12)}…"`),
   );
-  assert.match(
-    entry,
-    new RegExp(`<figcaption>Page 1 of the copy with SHA-256 ${printed.slice(0, 8)}…</figcaption>`),
-  );
+  assert.match(entry, /<figcaption>Page 1<\/figcaption>/, 'the caption no longer repeats the hash');
 });
 
 test('the deployed picture is the fixture export’s file, byte for byte', async () => {
