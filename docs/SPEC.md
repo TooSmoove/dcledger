@@ -280,3 +280,12 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
     Vance County loses its ring. `tools/build_locators.py` gains `WITHIN` (place → ledger county it lies wholly in;
     first: Henderson → Vance), written to `nc-boundaries.json` as an area's `within`; a ringed place with one is
     drawn over that county, lightly shaded, and its accessible name says so.
+- **Nov 19, 2026 — The home page when nothing is scheduled, and what's new (AC1, AC10):**
+  - When the 30-day window is empty, "Next up" says how many jurisdictions have their hearings watched and, when every
+    one is fresh, the earliest of their last checks ("Each was checked on or after …"). If any is stale or never
+    checked, it says so and links Coverage instead of claiming the check. The "All 0 items" link is dropped; with
+    items in the window the link stays.
+  - New home section "What's new on the record", after "Next up": the five meetings, decisions or jurisdiction notes
+    most recently added or updated, newest first. A record's time is the newest retrieval among its documents, the
+    rule the feed uses for `pubDate`; ties break by kind, then ID, so one export always gives the same list.
+

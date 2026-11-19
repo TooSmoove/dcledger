@@ -18,6 +18,7 @@ import {
   labelText,
   noteHref,
   outcomeText,
+  recentlyUpdated,
   retrievalText,
   seatList,
   staleAfterUtc,
@@ -25,6 +26,7 @@ import {
   termRows,
   votesText,
   voteText,
+  watchSummary,
   windowDays,
 } from '../src/lib/radar.js';
 
@@ -278,4 +280,50 @@ test('in effect: only when the record says so, and not past its stated end, soon
 test("a jurisdiction's note is linked at its section on the jurisdiction's page", () => {
   assert.equal(noteHref('chatham'), '/jurisdictions/chatham/#note');
   assert.equal(noteHref('winston-salem'), '/jurisdictions/winston-salem/#note');
+});
+
+test('an empty window says how many jurisdictions are watched and the earliest check, only when all are current', () => {
+  const fresh = (t) => ({ last_checked_utc: t, stale: false });
+  assert.deepEqual(watchSummary([fresh('2026-11-18T03:30:00Z'), fresh('2026-11-15T13:14:00Z')]), {
+    count: 2,
+    allCurrent: true,
+    checkedSinceUtc: '2026-11-15T13:14:00Z',
+  });
+  assert.deepEqual(
+    watchSummary([fresh('2026-11-18T03:30:00Z'), { last_checked_utc: null, stale: true }]),
+    {
+      count: 2,
+      allCurrent: false,
+      checkedSinceUtc: null,
+    },
+  );
+  assert.equal(
+    watchSummary([{ last_checked_utc: '2026-11-01T00:00:00Z', stale: true }]).allCurrent,
+    false,
+  );
+  assert.equal(watchSummary([]).allCurrent, false, 'nothing watched, nothing to claim');
+});
+
+test('what is new: newest retrieval first across meetings, decisions and notes, deterministic on ties', () => {
+  const docs = (...t) => t.map((retrieved_utc) => ({ retrieved_utc }));
+  const records = {
+    events: [
+      { id: 'e1', data: { documents: docs('2026-11-01T00:00:00Z', '2026-11-10T00:00:00Z') } },
+    ],
+    actions: [
+      { id: 'a2', data: { documents: docs('2026-11-12T00:00:00Z') } },
+      { id: 'a1', data: { documents: docs('2026-11-10T00:00:00Z') } },
+    ],
+    jurisdictions: [
+      { id: 'j1', data: { note: 'A note.', note_documents: docs('2026-11-17T00:00:00Z') } },
+      { id: 'j2', data: { note: null, note_documents: [] } },
+    ],
+  };
+  assert.deepEqual(recentlyUpdated(records, 10), [
+    { kind: 'note', id: 'j1', updatedUtc: '2026-11-17T00:00:00Z' },
+    { kind: 'action', id: 'a2', updatedUtc: '2026-11-12T00:00:00Z' },
+    { kind: 'action', id: 'a1', updatedUtc: '2026-11-10T00:00:00Z' },
+    { kind: 'event', id: 'e1', updatedUtc: '2026-11-10T00:00:00Z' },
+  ]);
+  assert.equal(recentlyUpdated(records, 2).length, 2);
 });
