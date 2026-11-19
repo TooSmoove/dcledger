@@ -33,6 +33,6 @@ export function pageOne(document) {
     width: Math.round(thumbnail.width / DENSITY),
     height: Math.round(thumbnail.height / DENSITY),
     alt: `Page 1 of the archived copy with SHA-256 ${sha256.slice(0, 12)}…`,
-    caption: `Page 1 of the copy with SHA-256 ${sha256.slice(0, 8)}…`,
+    caption: 'Page 1',
   };
 }
