@@ -5,6 +5,8 @@
 // show a reviewed picture of the first page of the copy kept (issue #132), lazy-loaded at a fixed size so nothing
 // shifts when it arrives. The SHA-256 sits in a "More details" disclosure (a native <details>, so no script, AC12): it
 // is still in the page for AC2 and for anyone checking a copy, but it no longer crowds the URL and retrieval time.
+// A source link opens in a new tab, so a reader checking a document doesn't lose their place on the site; it says so
+// with a visible arrow and, for screen readers, in words (WCAG 3.2.5 advisory, G201).
 import { easternIso, easternText, retrievalText } from '../lib/radar.js';
 import { pageOne } from '../lib/thumbnails.js';
 import Glyph from './Glyph.astro';
@@ -44,8 +46,12 @@ const { documents } = Astro.props;
         <dl>
           <dt>URL</dt>
           <dd>
-            <a href={document.url} rel="external noreferrer">
+            <a href={document.url} target="_blank" rel="external noopener noreferrer">
               {document.url}
+              <span class="new-tab" aria-hidden="true">
+                ↗
+              </span>
+              <span class="visually-hidden"> (opens in a new tab)</span>
             </a>
           </dd>
           <dt>Retrieved</dt>

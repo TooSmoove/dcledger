@@ -57,7 +57,8 @@ has not posted the official record yet. Each gains them, as an update in the fee
   of a jurisdiction with a note, on its jurisdiction and meeting pages and on the home page, links to the note
   (`/jurisdictions/{id}/#note`), so a reader who arrives at a `#decision-` link doesn't miss it.
 - **Sources** show the URL, the retrieval time and how the copy was retrieved; the SHA-256 and its pattern are under
-  a "More details" disclosure beside each source, still in the page.
+  a "More details" disclosure beside each source, still in the page. A source link opens in a new tab, marked with
+  "↗" and, for screen readers, "(opens in a new tab)".
 - **Decisions** (local actions) on meeting and jurisdiction pages, with outcome, vote and sourcing label, and, for an
   adopted decision, the terms its archived text states: threshold, scope, start and expiry dates, early termination,
   exemptions, a successor and a status.

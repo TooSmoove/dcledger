@@ -288,4 +288,6 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   - New home section "What's new on the record", after "Next up": the five meetings, decisions or jurisdiction notes
     most recently added or updated, newest first. A record's time is the newest retrieval among its documents, the
     rule the feed uses for `pubDate`; ties break by kind, then ID, so one export always gives the same list.
-
+- **Nov 19, 2026 — Source links open in a new tab (AC2):** each source URL on item and jurisdiction pages opens in a
+  new tab (`target="_blank"`, `rel="external noopener noreferrer"`), with a visible "↗" (aria-hidden) and the words
+  "(opens in a new tab)" for screen readers, so a reader checking a document keeps their place on the site.
