@@ -300,3 +300,9 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   (Greensboro's Aug 17 special-meeting minutes back both the Aug 3 and Aug 18 decisions), and deriving it from the URL,
   which for eSCRIBE and Legistar carries no file name.
 
+- **Nov 19, 2026 — The map page when there is nothing to map (AC12, WS-AC7; follow-up to #95):** `/map/` offers
+  the map only when at least one item in the 30-day window has a recorded site (`mapState` in `site/src/lib/radar.js`).
+  With nothing scheduled, it says so through the window's last day and links "Latest decisions" on the home page;
+  with items but no sites, it keeps the count and says the map appears once an item has a site. Either way there is
+  no "Show map" button and no attribution line, since no basemap loads. The table stays, so WS-AC7 still holds.
+  Recent decisions on the map stay in #95 (after v0.1.0).

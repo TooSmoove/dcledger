@@ -1,12 +1,22 @@
 ---
 // The map page (issue #22, SPEC WS-AC7): the radar's items as a table first, which works with JavaScript off, and a
 // "Show map" button that loads MapLibre and pmtiles on demand. Markers mark proposed project sites; the table's Site
-// column is their text equivalent. The only page with a script (SPEC AC12).
+// column is their text equivalent. The only page with a script (SPEC AC12). The map is offered only when at least
+// one item has a site (mapState); otherwise the page says why there's nothing to map and points to the recorded
+// decisions, so a reader never opens an empty map.
 import { getCollection } from 'astro:content';
 import EventTable from '../components/EventTable.astro';
 import Base from '../layouts/Base.astro';
 import { basemapAssets } from '../lib/basemap.js';
-import { WINDOW_DAYS, byStart, easternText, inWindow } from '../lib/radar.js';
+import {
+  WINDOW_DAYS,
+  byStart,
+  dateText,
+  easternText,
+  inWindow,
+  mapState,
+  windowDays,
+} from '../lib/radar.js';
 import { generatedUtc } from '../lib/site-data-file.js';
 
 const generated = await generatedUtc();
@@ -17,18 +27,31 @@ const events = byStart(
   (await getCollection('events')).filter((event) => inWindow(event.data, generated)),
 );
 const located = events.filter((event) => event.data.location !== null).length;
+const state = mapState(events.length, located);
+const windowEnd = windowDays(generated, []).at(-1)?.iso ?? '';
 const summary = `${located} of ${events.length} ${events.length === 1 ? 'item has' : 'items have'} a recorded site; the table lists them all.`;
 const hasBasemap = basemapAssets(import.meta.env.PUBLIC_BASEMAP_URL) !== null;
 ---
 
 <Base title="Map">
   <h1>Map</h1>
-  <p>
-    Proposed project sites for the items on the <a href="/radar/">Hearing Radar</a> (the next{' '}
-    {WINDOW_DAYS} days, as of <time datetime={generated}>{easternText(generated)}</time>). {summary}
-  </p>
+  {state === 'empty' ? (
+    <p>
+      Nothing is scheduled through <time datetime={windowEnd}>{dateText(windowEnd)}</time> on the{' '}
+      <a href="/radar/">Hearing Radar</a> (as of{' '}
+      <time datetime={generated}>{easternText(generated)}</time>), so there are no proposed sites to
+      map. Recorded votes are under <a href="/#latest-heading">Latest decisions</a> on the home
+      page.
+    </p>
+  ) : (
+    <p>
+      Proposed project sites for the items on the <a href="/radar/">Hearing Radar</a> (the next{' '}
+      {WINDOW_DAYS} days, as of <time datetime={generated}>{easternText(generated)}</time>).{' '}
+      {summary}
+    </p>
+  )}
 
-  {hasBasemap ? (
+  {state === 'sited' && hasBasemap && (
     <section class="map-panel" aria-label="Map">
       <button type="button" id="show-map" data-style="/map-style.json">
         Show map
@@ -40,9 +63,11 @@ const hasBasemap = basemapAssets(import.meta.env.PUBLIC_BASEMAP_URL) !== null;
         (ODbL), tiles by <a href="https://protomaps.com">Protomaps</a>.
       </p>
     </section>
-  ) : (
+  )}
+  {state === 'sited' && !hasBasemap && (
     <p class="muted">The map isn't available in this build; the table lists every item.</p>
   )}
+  {state === 'unsited' && <p class="muted">The map appears once an item has a recorded site.</p>}
 
   <EventTable
     caption="Upcoming items, soonest first"
