@@ -62,26 +62,28 @@ test('no picture for an agenda packet, any other kind, an unknown kind or no thu
 test('the item page shows the picture of the exact copy whose hash its source entry prints', () => {
   const html = page('items/fixture-guilford-boc-2026-11-05/index.html');
   const entries = [...html.matchAll(/<li class="has-page">([\s\S]*?)<\/li>/g)].map((m) => m[1]);
-  assert.equal(entries.length, 1, 'one source entry with a picture');
-  const [entry] = entries;
-  const img = entry.match(/<img ([^>]*)>/)[1];
-  const src = img.match(/src="([^"]+)"/)[1];
-  const printed = entry.match(/<code>([0-9a-f]{64})<\/code>/)[1];
-  assert.equal(src, `/thumbnails/${printed}.webp`);
-  assert.ok(existsSync(join(dist, src)), `${src} is in dist`);
-  assert.match(img, /width="120"/);
-  assert.match(img, /height="156"/);
-  assert.match(img, /loading="lazy"/);
-  assert.match(img, /decoding="async"/);
-  assert.match(
-    img,
-    new RegExp(`alt="Page 1 of the archived copy with SHA-256 ${printed.slice(0, 12)}…"`),
-  );
-  assert.match(
-    entry,
-    /<figcaption>Item 2026-452 &amp; &lt;fixture&gt;<\/figcaption>/,
-    "the caption is the document's title, escaped",
-  );
+  // Two: the meeting's own source, and the Nov 5 decision listed on the same page, which cites the same legislation.
+  assert.equal(entries.length, 2, 'two source entries with a picture');
+  for (const entry of entries) {
+    const img = entry.match(/<img ([^>]*)>/)[1];
+    const src = img.match(/src="([^"]+)"/)[1];
+    const printed = entry.match(/<code>([0-9a-f]{64})<\/code>/)[1];
+    assert.equal(src, `/thumbnails/${printed}.webp`);
+    assert.ok(existsSync(join(dist, src)), `${src} is in dist`);
+    assert.match(img, /width="120"/);
+    assert.match(img, /height="156"/);
+    assert.match(img, /loading="lazy"/);
+    assert.match(img, /decoding="async"/);
+    assert.match(
+      img,
+      new RegExp(`alt="Page 1 of the archived copy with SHA-256 ${printed.slice(0, 12)}…"`),
+    );
+    assert.match(
+      entry,
+      /<figcaption>Item 2026-452 &amp; &lt;fixture&gt;<\/figcaption>/,
+      "the caption is the document's title, escaped",
+    );
+  }
 });
 
 test('the deployed picture is the fixture export’s file, byte for byte', async () => {
@@ -108,4 +110,22 @@ test('only sources of minutes or legislation carry a picture, on every page', ()
 test('a source without a picture renders as before', () => {
   const html = page('items/fixture-escaping-check/index.html');
   assert.doesNotMatch(html, /class="page-one"/);
+});
+
+test('a latest decision on the home page shows the first page of its pictured source, unlabelled because its link says what it is', () => {
+  const html = page('index.html');
+  const section = html.match(/<section aria-labelledby="latest-heading"[\s\S]*?<\/section>/)[0];
+  const pictured = [...section.matchAll(/<li class="has-page">([\s\S]*?)<\/li>/g)].map((m) => m[1]);
+  assert.equal(pictured.length, 1, 'only the decision citing legislation with a picture');
+  const img = pictured[0].match(/<img ([^>]*)>/)[1];
+  assert.match(img, new RegExp(`src="/thumbnails/${hash}\\.webp"`));
+  assert.match(img, /alt=""/);
+  assert.match(img, /width="120"/);
+  assert.match(img, /height="156"/);
+  assert.match(img, /loading="lazy"/);
+  assert.match(
+    pictured[0],
+    /href="\/jurisdictions\/guilford\/#decision-fixture-guilford-moratorium-2026-11-05"/,
+  );
+  assert.equal(section.match(/<li[ >]/g).length, 3, 'the other decisions render as before');
 });

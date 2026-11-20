@@ -640,7 +640,7 @@ test('the home page shows the record at a glance, built from the export (#134)',
   assert.match(effect, /Ends <time datetime="2028-05-05">Fri, May 5, 2028<\/time>/);
   assert.match(effect, /&lt;script&gt;/, 'the threshold is escaped');
   const latest = between('latest', 'coverage');
-  assert.equal((latest.match(/<li>/g) ?? []).length, 3, 'three latest decisions');
+  assert.equal((latest.match(/<li[ >]/g) ?? []).length, 3, 'three latest decisions');
   assert.match(latest, /8 in favor, 1 against<span class="seats"/);
   const coverage = between('coverage', 'data');
   assert.match(

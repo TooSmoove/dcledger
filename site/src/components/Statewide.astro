@@ -1,0 +1,50 @@
+---
+// The home page's statewide map (issue #132, item 7): North Carolina, its county lines, and every jurisdiction the
+// ledger covers in one color, full where hearings are watched and a lighter tint where only decisions are recorded
+// (statewideFor). The legend under it names each jurisdiction by tier and links its page, so nothing rests on the
+// map's color alone. Static SVG from Census boundaries (public domain): no script and no request (AC12, SPEC §E).
+import { getCollection } from 'astro:content';
+import boundaries from '../geo/nc-boundaries.json';
+import { statewideFor } from '../lib/locator.js';
+
+const jurisdictions = (await getCollection('jurisdictions'))
+  .map((j) => ({ id: j.id, name: j.data.name, tier: j.data.coverage_tier }))
+  .sort((a, b) => a.name.localeCompare(b.name, 'en'));
+const map = statewideFor(boundaries, jurisdictions);
+---
+
+<figure class="statewide">
+  <svg viewBox={map.viewBox} role="img" aria-labelledby="statewide-title" focusable="false">
+    <title id="statewide-title">{map.label}</title>
+    <path class="locator-state" d={map.state} />
+    <path class="locator-counties" d={map.counties} />
+    {map.areas.map((area) => (
+      <path
+        class={`statewide-area statewide-${area.fill}`}
+        d={area.d}
+        fill-rule="evenodd"
+        data-jurisdiction={area.id}
+      />
+    ))}
+    <path class="locator-state-line" d={map.state} />
+  </svg>
+  <figcaption>
+    <ul class="statewide-legend">
+      {map.groups.map((group) => (
+        <li>
+          <svg class="statewide-swatch" viewBox="0 0 20 14" aria-hidden="true" focusable="false">
+            <rect class={`statewide-${group.fill}`} width="20" height="14" rx="2" />
+          </svg>
+          <span class="statewide-group">{group.text}:</span>{' '}
+          {group.members.map((m, i) => (
+            <>
+              <a href={`/jurisdictions/${m.id}/`}>{m.name}</a>
+              {i < group.members.length - 1 ? ', ' : ''}
+            </>
+          ))}
+        </li>
+      ))}
+    </ul>
+    <p class="statewide-credit">{map.credit}</p>
+  </figcaption>
+</figure>
