@@ -1,6 +1,6 @@
 ---
-// Where a jurisdiction is (issue #132, item 3): North Carolina, its county lines, and this jurisdiction filled, with a
-// ring around one too small to see at state scale and, for such a place, its county shaded lightly behind it. Static SVG built from Census boundaries (public domain), so no
+// Where a jurisdiction is (issue #132, item 3): North Carolina, its county lines, and this jurisdiction filled and, for a
+// place too small to see at state scale, its county shaded lightly behind it. Static SVG built from Census boundaries (public domain), so no
 // script and no request (AC12, SPEC §E). The SVG is an image with an accessible name; the credit is visible text.
 import boundaries from '../geo/nc-boundaries.json';
 import { locatorFor } from '../lib/locator.js';
@@ -24,9 +24,6 @@ const titleId = `locator-${id}`;
       <path class="locator-counties" d={locator.counties} />
       <path class="locator-area" d={locator.area} fill-rule="evenodd" />
       <path class="locator-state-line" d={locator.state} />
-      {locator.ring && (
-        <circle class="locator-ring" cx={locator.ring.cx} cy={locator.ring.cy} r={locator.ring.r} />
-      )}
     </svg>
     <figcaption>{locator.credit}</figcaption>
   </figure>

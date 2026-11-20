@@ -208,6 +208,19 @@
           "kind": null,
           "title": null,
           "thumbnail": null
+        },
+        {
+          "url": "https://guilford.legistar.com/",
+          "retrieved_utc": "2026-10-25T21:17:05Z",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "retrieval": "fetched",
+          "kind": "legislation",
+          "title": "Item 2026-452 & <fixture>",
+          "thumbnail": {
+            "path": "/thumbnails/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855.webp",
+            "width": 240,
+            "height": 311
+          }
         }
       ],
       "instrument_number": "2026-11",
