@@ -309,7 +309,7 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
 - **Nov 19, 2026 — Home page imagery: a statewide map and first-page pictures (issue #132, item 7; AC12, §E):**
   - Under the headline, "Places covered" draws North Carolina with its county lines and every ledger jurisdiction
     the boundaries file has an area for (`statewideFor` in `site/src/lib/locator.js`, `Statewide.astro`), in one
-    color: full where hearings are watched, a 45% tint of it where only decisions are recorded or the jurisdiction is
+    color: full where hearings are watched, a 50% tint of it (3.1:1 against the map ground in both schemes, WCAG 1.4.11) where only decisions are recorded or the jurisdiction is
     listed only. The legend under it names each jurisdiction by tier in text and links its page, so the tier never
     rests on color alone (WCAG 1.4.1). Counties draw first; a place with the same fill as a covered county containing
     it is left to that county (Greensboro in Guilford), and one with a different fill draws on top (Winston-Salem in

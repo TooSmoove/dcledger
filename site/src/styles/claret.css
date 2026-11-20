@@ -731,7 +731,7 @@ dd {
   fill: var(--day-item);
 }
 .statewide-tint {
-  fill: color-mix(in srgb, var(--day-item) 45%, var(--surface));
+  fill: color-mix(in srgb, var(--day-item) 50%, var(--surface));
 }
 .statewide-area {
   stroke: var(--surface);
