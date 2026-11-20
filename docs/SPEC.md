@@ -308,14 +308,18 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   Recent decisions on the map stay in #95 (after v0.1.0).
 - **Nov 19, 2026 — Home page imagery: a statewide map and first-page pictures (issue #132, item 7; AC12, §E):**
   - Under the headline, "Places covered" draws North Carolina with its county lines and every ledger jurisdiction
-    the boundaries file has an area for (`statewideFor` in `site/src/lib/locator.js`, `Statewide.astro`). Watched
-    jurisdictions are solid; decisions-only and listed ones are hatched, so the tier never rests on color alone
-    (WCAG 1.4.1). Counties draw before places, a place gets a paper-colored edge over its county, and an area too
-    small to see gets a ring, as on the jurisdiction locators. The SVG is `role="img"` with a short name; the
-    legend under it names each jurisdiction by tier and links its page. Same public-domain Census boundaries, no
-    basemap data, no script, no request. Rejected: an auto-rotating photo carousel (needs a script, which AC12
-    forbids off the map, and a pause control for WCAG 2.2.2), and a single building photo (singles out one
-    jurisdiction; no licensed photos yet).
+    the boundaries file has an area for (`statewideFor` in `site/src/lib/locator.js`, `Statewide.astro`), in one
+    color: full where hearings are watched, a 45% tint of it where only decisions are recorded or the jurisdiction is
+    listed only. The legend under it names each jurisdiction by tier in text and links its page, so the tier never
+    rests on color alone (WCAG 1.4.1). Counties draw first; a place with the same fill as a covered county containing
+    it is left to that county (Greensboro in Guilford), and one with a different fill draws on top (Winston-Salem in
+    Forsyth, Henderson in Vance). The SVG is `role="img"` with a short name. Same public-domain Census boundaries, no
+    basemap data, no script, no request. Rejected: hatching plus paper-colored city edges (read as patchwork), an
+    auto-rotating photo carousel (needs a script, which AC12 forbids off the map, and a pause control for WCAG 2.2.2),
+    and a single building photo (singles out one jurisdiction; no licensed photos yet).
+  - Locator rings are removed on every map, the jurisdiction locators included (`RING_BELOW` becomes `SMALL_BELOW`,
+    used only to decide when a small place's county is shaded behind it). Henderson's page still shows Vance County
+    lightly behind it, and the home legend names it.
   - Each of the three "Latest decisions" shows the first page of its first showable source (minutes or legislation,
     through `pageOne`, so never a packet), the same reviewed picture its jurisdiction page shows, at 120 × 156,
     lazy-loaded. `alt=""` because the decision's link beside it already says what it is. A decision without one

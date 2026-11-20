@@ -708,11 +708,6 @@ dd {
   stroke-width: 1.2;
   stroke-linejoin: round;
 }
-.locator-ring {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 2;
-}
 .locator figcaption {
   margin-top: 0.5rem;
   font-family: var(--f-ui);
@@ -730,29 +725,18 @@ dd {
   max-inline-size: 52rem;
   block-size: auto;
 }
-/* Watched jurisdictions are solid; decisions-only ones are hatched, so the tier doesn't rest on color (WCAG 1.4.1). */
-.statewide-solid {
+/* One color: full where hearings are watched, a lighter tint where only decisions are recorded. A hairline in the
+   page color keeps neighboring covered counties apart without breaking the shape into outlines. */
+.statewide-full {
   fill: var(--day-item);
 }
-.statewide-hatched {
-  fill: url(#statewide-hatch);
+.statewide-tint {
+  fill: color-mix(in srgb, var(--day-item) 45%, var(--surface));
 }
 .statewide-area {
-  stroke: var(--day-item);
-  stroke-width: 1;
+  stroke: var(--surface);
+  stroke-width: 0.8;
   stroke-linejoin: round;
-}
-/* A city over its county: a paper-colored edge keeps it distinct when both share a fill. */
-.statewide-place {
-  stroke: var(--paper);
-  stroke-width: 1.4;
-}
-.statewide-hatch-ground {
-  fill: var(--surface);
-}
-.statewide-hatch-line {
-  stroke: var(--day-item);
-  stroke-width: 2;
 }
 .statewide figcaption {
   margin-top: 0.75rem;

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { test } from 'node:test';
 import { hasScriptTag } from '../scripts/quality/static-checks.mjs';
-import { RING_BELOW, locatorFor, statewideFor } from '../src/lib/locator.js';
+import { SMALL_BELOW, locatorFor, statewideFor } from '../src/lib/locator.js';
 import { page, pages } from './helpers/dist.mjs';
 
 const boundaries = JSON.parse(
@@ -53,23 +53,21 @@ test('a locator names the jurisdiction, says what is drawn and credits the Censu
     'Boundaries: U.S. Census Bureau, cartographic boundary files (2024).',
   );
   assert.equal(locator.viewBox, '-6 -6 1012 392');
-  assert.equal(locator.ring, null);
+  assert.equal('ring' in locator, false, 'no locator draws a ring');
 });
 
-test('a city is named by its limits and ringed when it is too small to see at state scale', () => {
+test('a city is named by its limits; a small one with no county named gets none drawn', () => {
   const locator = locatorFor(sample, 'town', 'Sample Town');
   assert.match(
     locator.label,
     /^Locator map: Sample Town city limits highlighted within North Carolina/,
   );
-  assert.ok(10 < RING_BELOW);
-  assert.deepEqual(locator.ring, { cx: 605, cy: 54, r: 21 });
+  assert.ok(10 < SMALL_BELOW);
   assert.equal(locator.context, null, 'no county named for it, so none drawn');
 });
 
-test('a ringed city inside a ledger county shades that county behind it and names it', () => {
+test('a small city inside a ledger county shades that county behind it and names it', () => {
   const locator = locatorFor(sample, 'city', 'Sample City');
-  assert.deepEqual(locator.ring, { cx: 505, cy: 54, r: 21 });
   assert.equal(locator.context, sample.areas.county.d);
   assert.equal(
     locator.label,
@@ -77,24 +75,15 @@ test('a ringed city inside a ledger county shades that county behind it and name
   );
 });
 
-test('a city big enough to see gets neither a ring nor its county', () => {
+test('a city big enough to see does not get its county drawn', () => {
   const locator = locatorFor(sample, 'bigcity', 'Big City');
-  assert.equal(locator.ring, null);
   assert.equal(locator.context, null);
 });
 
-test('a long, narrow county is plain to see and gets no ring: a ring is for areas small both ways', () => {
-  const [x0, y0, x1, y1] = sample.areas.narrow.bounds;
-  assert.ok(x1 - x0 < RING_BELOW && y1 - y0 >= RING_BELOW);
-  assert.equal(locatorFor(sample, 'narrow', 'Narrow County').ring, null);
-});
-
-test('the real boundaries: Vance County has no ring; Henderson is ringed, with Vance County behind it', () => {
+test('the real boundaries: Henderson is drawn with Vance County behind it; Vance is drawn alone', () => {
   const vance = locatorFor(boundaries, 'vance', 'Vance County');
-  assert.equal(vance.ring, null);
   assert.equal(vance.context, null);
   const henderson = locatorFor(boundaries, 'henderson', 'Henderson');
-  assert.notEqual(henderson.ring, null);
   assert.equal(henderson.context, boundaries.areas.vance.d);
   assert.match(
     henderson.label,
@@ -159,34 +148,71 @@ test('every jurisdiction page ships no script, with or without a locator (AC12)'
   }
 });
 
-test('the statewide map draws counties before places and groups the legend by coverage tier', () => {
+test('the statewide map uses one color, full for watched and tint otherwise, counties before places', () => {
   const map = statewideFor(sample, [
     { id: 'city', name: 'Sample City', tier: 'decisions' },
     { id: 'county', name: 'Sample County', tier: 'watched' },
     { id: 'narrow', name: 'Narrow County', tier: 'decisions' },
+    { id: 'town', name: 'Sample Town', tier: 'watched' },
   ]);
   assert.deepEqual(
-    map.areas.map((a) => [a.id, a.style]),
+    map.areas.map((a) => [a.id, a.fill]),
     [
-      ['county', 'solid'],
-      ['narrow', 'hatched'],
-      ['city', 'hatched'],
+      ['county', 'full'],
+      ['narrow', 'tint'],
+      ['city', 'tint'],
+      ['town', 'full'],
     ],
   );
   assert.deepEqual(
-    map.groups.map((g) => [g.text, g.members.map((m) => m.name)]),
+    map.groups.map((g) => [g.text, g.fill, g.members.map((m) => m.name)]),
     [
-      ['Hearings and decisions', ['Sample County']],
-      ['Decisions only', ['Sample City', 'Narrow County']],
+      ['Hearings and decisions', 'full', ['Sample County', 'Sample Town']],
+      ['Decisions only', 'tint', ['Sample City', 'Narrow County']],
     ],
   );
-  assert.deepEqual(map.rings, [{ id: 'city', cx: 505, cy: 54, r: 21 }], 'only the speck is ringed');
+  assert.equal('rings' in map, false, 'the statewide map draws no rings');
   assert.equal(
     map.label,
-    'Map of North Carolina with county lines, shading the 3 places this ledger covers. The legend lists them.',
+    'Map of North Carolina with county lines, shading the 4 places this ledger covers. The legend lists them.',
   );
   assert.equal(map.credit, 'Boundaries: U.S. Census Bureau, cartographic boundary files (2024).');
   assert.deepEqual(map.missing, []);
+});
+
+test('a place with the same fill as a covered county around it is left to the county; a different one draws on top', () => {
+  const inner = {
+    ...sample,
+    areas: {
+      ...sample.areas,
+      inside: { kind: 'place', d: 'M120 120L130 120L130 130Z', bounds: [120, 120, 130, 130] },
+    },
+  };
+  const same = statewideFor(inner, [
+    { id: 'county', name: 'Sample County', tier: 'watched' },
+    { id: 'inside', name: 'Inside', tier: 'watched' },
+  ]);
+  assert.deepEqual(
+    same.areas.map((a) => a.id),
+    ['county'],
+  );
+  assert.deepEqual(
+    same.groups[0].members.map((m) => m.id),
+    ['county', 'inside'],
+    'still in the legend',
+  );
+  assert.match(same.label, /shading the 2 places/);
+  const different = statewideFor(inner, [
+    { id: 'county', name: 'Sample County', tier: 'decisions' },
+    { id: 'inside', name: 'Inside', tier: 'watched' },
+  ]);
+  assert.deepEqual(
+    different.areas.map((a) => [a.id, a.fill]),
+    [
+      ['county', 'tint'],
+      ['inside', 'full'],
+    ],
+  );
 });
 
 test('the statewide map leaves off a jurisdiction with no area and says so in missing', () => {
@@ -208,19 +234,24 @@ test('the statewide map refuses a coverage tier it does not know', () => {
   );
 });
 
-test('the real boundaries cover all nine ledger jurisdictions, and only Henderson is ringed', async () => {
+test('the real boundaries cover all nine ledger jurisdictions; Greensboro is left to Guilford, the other cities draw', async () => {
+  const tiers = {
+    davidson: 'decisions',
+    forsyth: 'decisions',
+    henderson: 'decisions',
+  };
   const ids = (await readdir(new URL('../../data/jurisdictions/', import.meta.url)))
     .filter((f) => f.endsWith('.yaml'))
     .map((f) => f.slice(0, -'.yaml'.length));
   const map = statewideFor(
     boundaries,
-    ids.map((id) => ({ id, name: id, tier: 'watched' })),
+    ids.map((id) => ({ id, name: id, tier: tiers[id] ?? 'watched' })),
   );
   assert.deepEqual(map.missing, []);
-  assert.deepEqual(
-    map.rings.map((r) => r.id),
-    ['henderson'],
-  );
+  const drawn = map.areas.map((a) => a.id);
+  assert.equal(drawn.includes('greensboro'), false);
+  assert.ok(drawn.includes('winston-salem') && drawn.includes('henderson'));
+  assert.match(map.label, /shading the 9 places/);
 });
 
 test('the home page draws the statewide map as an image with a legend that links each jurisdiction, and no script', () => {
@@ -235,7 +266,7 @@ test('the home page draws the statewide map as an image with a legend that links
   );
   assert.match(
     figure[1],
-    /<path class="statewide-area statewide-solid statewide-county"[^>]*data-jurisdiction="guilford"/,
+    /<path class="statewide-area statewide-full"[^>]*data-jurisdiction="guilford"/,
   );
   assert.match(
     figure[1],
@@ -243,8 +274,14 @@ test('the home page draws the statewide map as an image with a legend that links
   );
   assert.match(
     figure[1],
-    /Boundaries: U\.S\. Census Bureau, cartographic boundary files \(\d{4}\)\./,
+    /<p class="statewide-credit">Boundaries: U\.S\. Census Bureau, cartographic boundary files \(\d{4}\)\.<\/p>/,
   );
-  assert.doesNotMatch(figure[1], /A ring marks/, 'no ring is drawn, so none is explained');
+  assert.doesNotMatch(figure[1], /<circle|<pattern|locator-ring/, 'no rings and no hatching');
   assert.equal(hasScriptTag(html), false);
+});
+
+test('no page draws a locator ring', () => {
+  for (const { name, html } of pages) {
+    assert.doesNotMatch(html, /locator-ring/, name);
+  }
 });
