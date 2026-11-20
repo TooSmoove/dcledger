@@ -338,3 +338,21 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   case it built (`data-map-state`: `empty`, `unsited` or `sited`), and `tools/check_map_page.py` (tested in
   `tools/test_check_map_page.py`) requires `sited` exactly when a table row has a site, and the button exactly when
   `sited`. A build that loses the button while items have sites still fails.
+- **Nov 20, 2026 — Known dates ahead of agendas (ADR-0010, generalizes #124; AC1, AC3, AC5, AC8, AC12, §D, §E):**
+  - A known date is a date the reviewed record states: an action's `expires_on`, or its new optional `next_on`, the
+    date an archived document gives for the body's next step on the matter (continued to, hearing scheduled for).
+    Never computed and never taken from a meeting schedule. `next_on` is allowed on any outcome and must be after
+    `decided_on` (`INVALID_VALUE`). It is a published field (raises `sequence`) and is exported as the last column of
+    `actions.csv` and `actions.parquet` and as a key of `events.json` actions (schema version 1, additive).
+  - Each known date is `upcoming`, `ended` (superseded or repealed), `recorded` or `passed_unrecorded` at D, the
+    Eastern date of the export's `generated_utc`. The expiry date is the last day in force.
+  - New public paths: `/ahead/` (no script), `/ahead.ics` and `/ahead/{jurisdiction}.ics` for `watched` and
+    `decisions` jurisdictions. All-day events; UID from kind and action ID, so a corrected date updates in place.
+    `/expiries/` and `expiries.ics` from #124 are never published.
+  - The feed gains reminder items 30 and 7 days before each known date, and one item the day after a date that passes
+    with nothing recorded (GUID scheme `known:{kind}:{action id}/{date}/{30|7|passed}`).
+  - When the radar's window is empty, the home page names the soonest upcoming known date.
+  - `dcl remind` and a `remind` workflow (every 6 h, `issues: write` only) open a review issue 14 days before each
+    known date and comment on it the day after if nothing was recorded. These are reviewer reminders in the existing
+    queue, not reader notifications: email, accounts and push stay out of scope (§D), and the domain still sends no
+    mail (§H).
