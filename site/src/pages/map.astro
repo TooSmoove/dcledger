@@ -34,7 +34,7 @@ const hasBasemap = basemapAssets(import.meta.env.PUBLIC_BASEMAP_URL) !== null;
 ---
 
 <Base title="Map">
-  <h1>Map</h1>
+  <h1 data-map-state={state}>Map</h1>
   {state === 'empty' ? (
     <p>
       Nothing is scheduled through <time datetime={windowEnd}>{dateText(windowEnd)}</time> on the{' '}

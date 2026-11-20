@@ -379,6 +379,11 @@ test('the map page lists the radar items in a table that works without JavaScrip
   assert.match(map, /<td>36\.1495° N, 79\.8711° W<\/td>/);
   assert.match(map, /<td>Not recorded<\/td>/);
   assert.match(map, /1 of 2 items have a recorded site/);
+  assert.match(
+    map,
+    /<h1 data-map-state="sited">Map<\/h1>/,
+    'publish reads this (tools/check_map_page.py)',
+  );
 });
 
 test('only rows with a location carry coordinates for markers', () => {

@@ -332,3 +332,9 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
     through `pageOne`, so never a packet), the same reviewed picture its jurisdiction page shows, at 120 × 156,
     lazy-loaded. `alt=""` because the decision's link beside it already says what it is. A decision without one
     renders as before.
+- **Nov 19, 2026 — Publish checks the map page by its state, not for a button (AC12, WS-AC7; fixes the publish
+  failures after #156):** publish required `id="show-map"` on every build, so once `/map/` stopped offering a map
+  with nothing to map, every build failed its final check and nothing deployed. `/map/`'s heading now states the
+  case it built (`data-map-state`: `empty`, `unsited` or `sited`), and `tools/check_map_page.py` (tested in
+  `tools/test_check_map_page.py`) requires `sited` exactly when a table row has a site, and the button exactly when
+  `sited`. A build that loses the button while items have sites still fails.
