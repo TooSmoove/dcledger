@@ -16,6 +16,7 @@ import {
   inWindow,
   isWatched,
   labelText,
+  mapState,
   noteHref,
   outcomeText,
   recentlyUpdated,
@@ -326,4 +327,14 @@ test('what is new: newest retrieval first across meetings, decisions and notes, 
     { kind: 'event', id: 'e1', updatedUtc: '2026-11-10T00:00:00Z' },
   ]);
   assert.equal(recentlyUpdated(records, 2).length, 2);
+});
+
+test('mapState offers a map only when at least one item has a site (#95 follow-up)', () => {
+  assert.equal(mapState(0, 0), 'empty');
+  assert.equal(mapState(3, 0), 'unsited');
+  assert.equal(mapState(3, 1), 'sited');
+  assert.equal(mapState(2, 2), 'sited');
+  assert.throws(() => mapState(1, 2), /located <= total/);
+  assert.throws(() => mapState(-1, 0), /located <= total/);
+  assert.throws(() => mapState(1.5, 0), /located <= total/);
 });

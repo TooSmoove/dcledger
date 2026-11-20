@@ -62,6 +62,24 @@ export function inWindow(event, generatedUtc) {
 }
 
 /**
+ * What the map page can show for the radar's window: `empty` when nothing is scheduled, `unsited` when items are
+ * scheduled but none has a recorded site, `sited` when at least one marker can be drawn. The page offers the map
+ * only for `sited`, so a reader never opens a map with nothing on it.
+ * @param {number} total items in the window
+ * @param {number} located items in the window with a location
+ * @returns {'empty' | 'unsited' | 'sited'}
+ */
+export function mapState(total, located) {
+  if (!Number.isInteger(total) || !Number.isInteger(located) || located < 0 || located > total) {
+    throw new Error(`Expected 0 <= located <= total, got located=${located}, total=${total}.`);
+  }
+  if (total === 0) {
+    return 'empty';
+  }
+  return located === 0 ? 'unsited' : 'sited';
+}
+
+/**
  * Entries sorted by start time, then ID, so ties are stable. Works on collection entries (`entry.data`) and on raw
  * events alike.
  * @template {{ id: string, data?: { starts_utc: string }, starts_utc?: string }} T
