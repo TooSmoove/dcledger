@@ -306,3 +306,11 @@ Closed with evidence in `docs/spikes/2026-10-25-week1.md`: S1, S2/S3, S4, S6, S7
   with items but no sites, it keeps the count and says the map appears once an item has a site. Either way there is
   no "Show map" button and no attribution line, since no basemap loads. The table stays, so WS-AC7 still holds.
   Recent decisions on the map stay in #95 (after v0.1.0).
+- **Nov 19, 2026 — Dark mode: an espresso body under the wine band (AC12, WCAG 2.2 AA):** in dark mode only the
+  masthead band stays wine (`--band` `#3d0f1f`, also the `theme-color`); the page, cards, rules, calendar cells and
+  hash-glyph ground move from plum to warm brown-black (`--paper` `#14100c`, `--surface` and `--day` `#1f1914`,
+  `--day-weekend` `#191410`, `--rule` `#3b3029`, `--g0` `#2a221b`), and muted text and vote seats lose their pink
+  cast (`--muted` `#c8b8a8`, `--seat-ink` `#e6d3bf`). Text, brass, links and focus colors are unchanged. Measured:
+  body text 15.4:1 on the page and 14.1:1 on cards, muted text at least 9.0:1, brass 9.2:1; axe passes in both schemes.
+  Considered: warm charcoal, graphite, forest ink, dim slate (the band barely separates from the page, 1.04:1) and
+  midnight navy (clashes with the wine).
