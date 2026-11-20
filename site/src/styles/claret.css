@@ -78,12 +78,14 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  /* Espresso body under the wine band: the band, brass and text keep their colors; the page, cards, rules and
+     calendar cells are warm brown-black rather than plum, so the band is the one wine surface (Nov 19, 2026). */
   :root {
-    --paper: #170a0e;
-    --surface: #24111a;
+    --paper: #14100c;
+    --surface: #1f1914;
     --ink: #f1e6d8;
-    --muted: #c8b3ab;
-    --rule: #4a2b35;
+    --muted: #c8b8a8;
+    --rule: #3b3029;
     --link: #f1e6d8;
     --link-line: #d4b062;
     --band: #3d0f1f;
@@ -95,11 +97,11 @@
     --mark-ink: #f1e6d8;
     --flag: #f3d58a;
     --flag-bg: #3a2a08;
-    --seat-ink: #e6c9d1;
-    --day: #24111a;
-    --day-weekend: #1d0d14;
+    --seat-ink: #e6d3bf;
+    --day: #1f1914;
+    --day-weekend: #191410;
     --day-item: #d4b062;
-    --g0: #2e1822;
+    --g0: #2a221b;
     --g1: #d4b062;
     --g2: #f1e6d8;
     --g3: #8a3350;
