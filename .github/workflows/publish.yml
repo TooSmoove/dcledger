@@ -128,7 +128,8 @@ jobs:
             echo "::error title=publish::a page other than /map ships a script tag (AC12)"
             exit 1
           fi
-          grep -q 'id="show-map"' map/index.html || { echo "::error title=publish::/map has no map button"; exit 1; }
+          # The map button only when an item has a site; otherwise the page says why there's nothing to map (#95).
+          python3 -I "$GITHUB_WORKSPACE/tools/check_map_page.py" map/index.html
           grep -q "datetime=\"$GENERATED\"" radar/index.html \
             || { echo "::error title=publish::/radar doesn't show this export's time"; exit 1; }
       - name: Check the basemap host (AC13)
