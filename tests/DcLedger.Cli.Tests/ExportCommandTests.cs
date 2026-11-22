@@ -9,6 +9,9 @@ public sealed class ExportCommandTests : IDisposable
     [
         "public/actions.csv",
         "public/actions.parquet",
+        "public/ahead.ics",
+        "public/ahead/fixture-city.ics",
+        "public/ahead/fixture-county.ics",
         "public/events.csv",
         "public/events.parquet",
         "public/feed.xml",

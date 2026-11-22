@@ -1,0 +1,26 @@
+﻿BEGIN:VCALENDAR
+PRODID:-//dc-ledger//Coming up on the record//EN
+VERSION:2.0
+X-PUBLISHED-TTL:PT6H
+X-WR-CALNAME:dc-ledger Coming up on the record: Fixture City
+BEGIN:VEVENT
+DESCRIPTION:Fixture City: Rezoning continued to a later meeting\, decided T
+ uesday\, October 20\, 2026.\nDate set for the next step: Tuesday\, Novembe
+ r 17\, 2026.\nDate passed. Nothing recorded for it yet.\nConfirmed (offici
+ al record)\nSource: https://fixture-city.example.org/council/2026-11-03-ag
+ enda.pdf (retrieved 2026-10-30T10:05:00-04:00\, SHA-256 89627e98c053f9b608
+ 15c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269). Saved by a person in a br
+ owser (the source does not allow automated downloads).\nDecision: https://
+ ncdcledger.org/jurisdictions/fixture-city/\nComing up on the record: https
+ ://ncdcledger.org/ahead/#fixture-city-rezoning-2026-10-20-next\nOnly dates
+  stated in an archived document are listed. A body can act on a matter bef
+ ore or after these dates.
+DTEND;VALUE=DATE:20261118
+DTSTAMP:20261030T140500Z
+DTSTART;VALUE=DATE:20261117
+SEQUENCE:0
+SUMMARY:Date set for the next step: Fixture City\, rezoning
+UID:50229ee5f9667d0f1050a72d01930afa952ccbd2f7a569d327076c37835c4aac@dcledg
+ er
+END:VEVENT
+END:VCALENDAR
