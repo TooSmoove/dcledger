@@ -3,8 +3,11 @@
 // sourced (SPEC AC6), and its sources (AC2). Outcome words come from a fixed table, never from the source's text. The
 // terms of an adopted decision (issue #115) follow, each only when its record states it. When the jurisdiction has a
 // note on the record (such as a court order), each decision points to it first: a #decision- link lands below the
-// note, and on a phone the note is then out of sight.
+// note, and on a phone the note is then out of sight. A date the record states for the next step shows as a row, and
+// any of the decision's known dates that has passed with nothing recorded is flagged (ADR-0010), linking its /ahead/
+// row.
 import type { CollectionEntry } from 'astro:content';
+import { PASSED_UNRECORDED_TEXT, kindText } from '../lib/ahead.js';
 import {
   actionTypeText,
   dateText,
@@ -23,9 +26,19 @@ interface Props {
   linkMeetings: boolean;
   /** The jurisdiction's note on the record, if it has one: where it is and whose it is. */
   note?: { href: string; jurisdictionName: string } | null;
+  /** Known dates (site/src/lib/ahead.js) of these decisions; only those passed with nothing recorded are flagged. */
+  knownDates?: {
+    kind: 'expiry' | 'next';
+    date: string;
+    state: string;
+    anchor: string;
+    action: { id: string };
+  }[];
 }
 
-const { actions, heading, linkMeetings, note = null } = Astro.props;
+const { actions, heading, linkMeetings, note = null, knownDates = [] } = Astro.props;
+const passed = (actionId: string) =>
+  knownDates.filter((k) => k.action.id === actionId && k.state === 'passed_unrecorded');
 ---
 
 {actions.length > 0 && (
@@ -42,6 +55,12 @@ const { actions, heading, linkMeetings, note = null } = Astro.props;
             sources. <a href={note.href}>Read the note</a>
           </p>
         )}
+        {passed(id).map((k) => (
+          <p class="flag">
+            {kindText(k.kind)}, <time datetime={k.date}>{dateText(k.date)}</time>:{' '}
+            {PASSED_UNRECORDED_TEXT} <a href={`/ahead/#${k.anchor}`}>Coming up on the record</a>
+          </p>
+        ))}
         <dl>
           <dt>Decided</dt>
           <dd>
@@ -70,6 +89,14 @@ const { actions, heading, linkMeetings, note = null } = Astro.props;
               <dd>{row.date ? <time datetime={row.date}>{row.text}</time> : row.text}</dd>
             </>
           ))}
+          {data.next_on !== null && (
+            <>
+              <dt>Date set for the next step</dt>
+              <dd>
+                <time datetime={data.next_on}>{dateText(data.next_on)}</time>
+              </dd>
+            </>
+          )}
           {data.successor_id !== null && (
             <>
               <dt>Replaced or extended by</dt>

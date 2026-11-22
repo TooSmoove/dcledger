@@ -12,6 +12,7 @@ import Seats from '../components/Seats.astro';
 import Statewide from '../components/Statewide.astro';
 import WindowStrip from '../components/WindowStrip.astro';
 import Base from '../layouts/Base.astro';
+import { knownDateName, knownDates, soonestUpcoming } from '../lib/ahead.js';
 import {
   WINDOW_DAYS,
   actionTypeText,
@@ -53,6 +54,8 @@ const next = upcoming.slice(0, 3);
 const windowEnd = windowDays(generated, []).at(-1)?.iso ?? '';
 const actions = await getCollection('actions');
 const effective = inEffect(actions, generated);
+// The soonest date the record already states (ADR-0010 Decision 7), named only when the radar's window is empty.
+const soonest = soonestUpcoming(knownDates(actions, await getCollection('events'), generated));
 const decisionHref = (a: (typeof actions)[number]) =>
   `/jurisdictions/${a.data.jurisdiction_id}/#decision-${a.id}`;
 const watch = watchSummary(watched.map((j) => j.data));
@@ -118,7 +121,7 @@ const noted = new Set(jurisdictions.filter((j) => j.data.note !== null).map((j) 
   <section aria-labelledby="next-heading" class="home-section">
     <h2 id="next-heading">Next up</h2>
     <WindowStrip generatedUtc={generated} events={upcoming} />
-    {next.length === 0 ? (
+    {next.length === 0 && (
       <p class="statement">
         Nothing scheduled through <time datetime={windowEnd}>{dateText(windowEnd)}</time> in the{' '}
         {watch.count} jurisdiction{watch.count === 1 ? '' : 's'} whose hearings we watch.{' '}
@@ -133,7 +136,22 @@ const noted = new Set(jurisdictions.filter((j) => j.data.note !== null).map((j) 
           </span>
         )}
       </p>
-    ) : (
+    )}
+    {next.length === 0 && soonest !== null && (
+      <p class="known-ahead">
+        The record states a date ahead:{' '}
+        <a href={`/ahead/#${soonest.anchor}`}>
+          {knownDateName(
+            soonest.kind,
+            soonest.action.data.action_type,
+            names.get(soonest.action.data.jurisdiction_id) ?? soonest.action.data.jurisdiction_id,
+          )}
+          , <time datetime={soonest.date}>{dateText(soonest.date)}</time>
+        </a>
+        . <a href="/ahead/">All dates coming up</a>
+      </p>
+    )}
+    {next.length > 0 && (
       <ol class="next-list">
         {next.map(({ id, data }) => (
           <li class={data.status === 'cancelled' ? 'cancelled' : undefined}>

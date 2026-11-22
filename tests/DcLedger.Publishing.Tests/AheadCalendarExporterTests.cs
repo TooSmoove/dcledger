@@ -55,6 +55,7 @@ public sealed class AheadCalendarExporterTests
 
         files.Select(f => f.Path).ShouldBe([ExportPaths.Ahead, ExportPaths.JurisdictionAhead(ExportSamples.City.Id), ExportPaths.JurisdictionAhead(ExportSamples.County.Id)]);
         files.ShouldAllBe(file => TestFiles.Text(file).Contains("END:VCALENDAR", StringComparison.Ordinal));
+        files.ShouldAllBe(file => TestFiles.Text(file).Contains(PinnedTimeZone.Block, StringComparison.Ordinal), "a calendar needs one component");
     }
 
     [Fact]

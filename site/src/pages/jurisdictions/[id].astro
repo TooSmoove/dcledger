@@ -11,7 +11,9 @@ import Freshness from '../../components/Freshness.astro';
 import Locator from '../../components/Locator.astro';
 import Sources from '../../components/Sources.astro';
 import Base from '../../layouts/Base.astro';
+import { knownDates } from '../../lib/ahead.js';
 import { byDecisionNewestFirst, byStart, coverageText, isWatched } from '../../lib/radar.js';
+import { generatedUtc } from '../../lib/site-data-file.js';
 
 export async function getStaticPaths() {
   return (await getCollection('jurisdictions')).map((j) => ({ params: { id: j.id } }));
@@ -30,6 +32,11 @@ const events = byStart(
 const decisions = byDecisionNewestFirst(
   (await getCollection('actions')).filter((action) => action.data.jurisdiction_id === id),
 );
+// Its known dates (ADR-0010): worked out from all events, since a meeting that day records a next step.
+const known = knownDates(decisions, await getCollection('events'), await generatedUtc());
+const hasUpcoming = known.some((k) => k.state === 'upcoming');
+// Watched and decisions-only jurisdictions each have a known-date calendar (ADR-0010 Decision 4).
+const hasAheadCalendar = data.coverage_tier === 'watched' || data.coverage_tier === 'decisions';
 ---
 
 <Base title={data.name}>
@@ -50,6 +57,18 @@ const decisions = byDecisionNewestFirst(
           Subscribe: <a href={`/radar/${id}.ics`}>calendar (iCal) for {data.name}</a>
         </p>
       </>
+    )}
+    {hasAheadCalendar && (
+      <p class="feeds">
+        Dates on the record:{' '}
+        <a href={`/ahead/${id}.ics`}>calendar (iCal) of dates ahead for {data.name}</a>
+        {hasUpcoming && (
+          <>
+            {' '}
+            · <a href="/ahead/">Coming up on the record</a>
+          </>
+        )}
+      </p>
     )}
   </Fragment>
 
@@ -81,5 +100,6 @@ const decisions = byDecisionNewestFirst(
     heading="Decisions, newest first"
     linkMeetings={true}
     note={data.note !== null ? { href: '#note', jurisdictionName: data.name } : null}
+    knownDates={known}
   />
 </Base>

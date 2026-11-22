@@ -247,9 +247,13 @@ test('published page addresses and files never disappear or move (docs/stability
     'methodology/index.html',
     'items/fixture-guilford-boc-2026-11-05/index.html',
     'jurisdictions/guilford/index.html',
+    'ahead/index.html', // ADR-0010
   ];
   const frozenFiles = [
     'radar.ics',
+    'ahead.ics', // ADR-0010
+    'ahead/guilford.ics',
+    'ahead/decided-county.ics',
     'radar/guilford.ics',
     'feed.xml',
     'events.csv',
@@ -508,10 +512,16 @@ test('freshness, the calendar and the meeting table are for watched jurisdiction
   for (const id of ['decided-county', 'registered-county']) {
     const html = page(`jurisdictions/${id}/index.html`);
     assert.doesNotMatch(html, /Last checked|Never checked|Stale:/, `${id}: no freshness`);
-    assert.doesNotMatch(html, /\.ics"/, `${id}: no calendar link`);
+    assert.doesNotMatch(html, /href="\/radar\/[^"]*\.ics"/, `${id}: no radar calendar link`);
     assert.doesNotMatch(html, /<table/, `${id}: no meeting table`);
   }
   assert.match(page('jurisdictions/guilford/index.html'), /<table/);
+  // Decisions-only jurisdictions get their first calendar from ADR-0010: dates the record states.
+  assert.match(
+    page('jurisdictions/decided-county/index.html'),
+    /href="\/ahead\/decided-county\.ics"/,
+  );
+  assert.doesNotMatch(page('jurisdictions/registered-county/index.html'), /\.ics"/);
 
   const [watchedList, otherList] = radar.split('Other jurisdictions');
   assert.ok(otherList, 'the radar lists the jurisdictions that are not watched');
@@ -879,4 +889,75 @@ test("the disclosure is the owner's wording, not the placeholder (#117)", () => 
     /OWNER-WORDING-REQUIRED/,
     'Write "Who publishes this" in site/src/owner/disclosure.md (templates: docs/wording-bank.md).',
   );
+});
+
+// ADR-0010 (issue #124). The fixture's D is Sun, Oct 25, 2026: the city's Nov 17 next step is in the radar's window,
+// Guilford's May 5, 2028 and decided-county's Mar 2, 2027 expiries are later, and decided-county's Oct 1 next step has
+// passed with nothing on its record that day.
+test('/ahead/ lists the known dates by section, with anchors, flags, sources and no script', () => {
+  const ahead = page('ahead/index.html');
+  assert.match(ahead, /<h1>Coming up on the record<\/h1>/);
+  assert.match(ahead, /Only dates stated in an archived document are listed\./);
+  assert.match(ahead, /href="\/ahead\.ics"/);
+  const section = (id) => {
+    const start = ahead.indexOf(`id="${id}-heading"`);
+    assert.ok(start > 0, id);
+    const end = ahead.indexOf('<section', start);
+    return ahead.slice(start, end === -1 ? undefined : end);
+  };
+  assert.match(section('next'), /id="fixture-city-text-amendment-2026-10-20-next"/);
+  assert.match(section('next'), /Date set for the next step/);
+  const later = section('later');
+  assert.ok(
+    later.indexOf('fixture-decided-moratorium-2026-09-02-expiry') <
+      later.indexOf('fixture-guilford-moratorium-2026-11-05-expiry'),
+    'soonest first',
+  );
+  assert.match(later, /&lt;script&gt;/, 'a threshold is escaped');
+  const passed = section('passed');
+  assert.match(passed, /id="fixture-decided-moratorium-2026-09-02-next"/);
+  assert.match(passed, /<p class="flag">Date passed\. Nothing recorded for it yet\.<\/p>/);
+  assert.doesNotMatch(ahead, /id="recorded-heading"/, 'no recorded dates in the fixture');
+  assert.match(ahead, /SHA-256/, 'rows carry their sources');
+  assert.ok(!hasScriptTag(ahead));
+  assert.doesNotMatch(ahead, /deadline/i);
+});
+
+test('the header links /ahead/ on every page, and the radar points to it', () => {
+  for (const { name, html } of pages.filter((p) => p.html.includes('<header>'))) {
+    assert.match(
+      html.slice(html.indexOf('<header>'), html.indexOf('</header>')),
+      /<a href="\/ahead\/">Coming up<\/a>/,
+      name,
+    );
+  }
+  assert.match(radar, /href="\/ahead\/">Coming up on the record<\/a>/);
+});
+
+test('a decision card shows its next-step date and flags a date passed with nothing recorded', () => {
+  const decided = page('jurisdictions/decided-county/index.html');
+  assert.match(
+    decided,
+    /<dt>Date set for the next step<\/dt>\s*<dd>\s*<time datetime="2026-10-01">/,
+  );
+  assert.match(
+    decided,
+    /<p class="flag">Date set for the next step, <time datetime="2026-10-01">Thu, Oct 1, 2026<\/time>: Date passed\. Nothing recorded for it yet\.\s*<a href="\/ahead\/#fixture-decided-moratorium-2026-09-02-next">/,
+  );
+  assert.doesNotMatch(page('jurisdictions/guilford/index.html'), /class="flag">[^<]*Date passed/);
+});
+
+test('a jurisdiction with an upcoming known date links /ahead/; FAQ and methodology explain dates ahead', () => {
+  assert.match(page('jurisdictions/guilford/index.html'), /href="\/ahead\/guilford\.ics"/);
+  assert.match(
+    page('jurisdictions/guilford/index.html'),
+    /<a href="\/ahead\/">Coming up on the record<\/a>/,
+  );
+  assert.match(page('faq/index.html'), /<h2 id="dates-ahead">/);
+  assert.match(page('faq/index.html'), /<code>https:\/\/ncdcledger\.org\/ahead\.ics<\/code>/);
+  assert.match(page('methodology/index.html'), /<h2 id="dates-ahead">Dates ahead<\/h2>/);
+});
+
+test('the home page names no known date while the radar window has items', () => {
+  assert.doesNotMatch(page('index.html'), /class="known-ahead"/);
 });

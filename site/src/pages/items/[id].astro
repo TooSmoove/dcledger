@@ -6,6 +6,7 @@ import { getCollection, getEntry } from 'astro:content';
 import Decisions from '../../components/Decisions.astro';
 import Sources from '../../components/Sources.astro';
 import Base from '../../layouts/Base.astro';
+import { knownDates } from '../../lib/ahead.js';
 import {
   byDecisionNewestFirst,
   easternIso,
@@ -14,6 +15,7 @@ import {
   noteHref,
   statusText,
 } from '../../lib/radar.js';
+import { generatedUtc } from '../../lib/site-data-file.js';
 
 export async function getStaticPaths() {
   return (await getCollection('events')).map((event) => ({ params: { id: event.id } }));
@@ -30,6 +32,12 @@ const jurisdictionName = jurisdiction?.data.name ?? data.jurisdiction_id;
 const cancelled = data.status === 'cancelled';
 const decisions = byDecisionNewestFirst(
   (await getCollection('actions')).filter((action) => action.data.event_id === id),
+);
+// Known dates of these decisions (ADR-0010), worked out against the whole record so a later meeting can record one.
+const known = knownDates(
+  await getCollection('actions'),
+  await getCollection('events'),
+  await generatedUtc(),
 );
 ---
 
@@ -81,6 +89,7 @@ const decisions = byDecisionNewestFirst(
     note={
       jurisdiction?.data.note ? { href: noteHref(data.jurisdiction_id), jurisdictionName } : null
     }
+    knownDates={known}
   />
 
   <h2>Sources</h2>
