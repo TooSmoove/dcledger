@@ -57,6 +57,16 @@ added to `document_ids`. Links are absolute: `--site-url` (default `https://ncdc
 `action:{id}/{sequence}`, linked to its meeting page (or its jurisdiction's page without one), with the outcome, the
 vote line as the site shows it, the label and every source; "Decision updated: " once `sequence` is above 0. Written with `XmlWriter`, UTF-8 without BOM, LF.
 
+**Known-date feed items (ADR-0010):** for each known date that isn't ended, a reminder 30 and 7 days ahead, GUID
+`known:{kind}:{action id}/{date}/{30|7}`, dated 00:00 Eastern on `date - lead` and present once that day is on or
+before D, unless that instant is before the decision's own `pubDate` (whose item already announced the date); and,
+while the date has passed with nothing recorded, one item with GUID `known:{kind}:{action id}/{date}/passed`, dated
+00:00 Eastern the day after. Titles: "{name}, {date in words} (in 30 days)" and "Date passed, nothing recorded yet:
+{name}", with the calendars' fixed names; the link is the date's `/ahead/` row, and the description is the calendar
+description as HTML. Because the GUID carries the date, a rescheduled date gets fresh reminders and the old date's
+items leave the feed. These items depend on D as well as the ledger, so the feed can change on a day the ledger
+doesn't; `pubDate` never depends on when publish ran.
+
 **Same input, same bytes:** every file depends only on the ledger, the ingest status and `--site-url`. JSON and the feed
 are LF, calendars and CSV are CRLF, all UTF-8; Parquet is byte-identical across runs of the same DuckDB version; nothing depends on the machine's culture or time zone. Tests check this under several cultures.
 

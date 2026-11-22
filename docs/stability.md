@@ -18,7 +18,7 @@ the site and issue references like "(#116)" are left out there (site/src/lib/pub
 - **Calendar and feed identity:** each event's calendar UID (a hash of jurisdiction, platform and platform meeting
   ID), each known date's calendar UID (a hash of `known`, the kind and the decision ID, so a corrected date updates in
   place) and each feed GUID (`{UID}/{sequence}` for an event revision, `action:{id}/{sequence}` for a decision
-  revision).
+  revision, and `known:{kind}:{decision id}/{date}/{30|7|passed}` for a known-date reminder or passed-date item).
 - **File paths:** `/radar.ics`, `/radar/{jurisdiction id}.ics`, `/ahead.ics`, `/ahead/{jurisdiction id}.ics`, `/feed.xml`, `/events.csv`, `/events.parquet`,
   `/actions.csv` and `/actions.parquet`.
 - **Columns:** the name, order, type and meaning of every column in the CSV and Parquet files (the

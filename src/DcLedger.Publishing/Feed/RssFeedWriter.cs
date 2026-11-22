@@ -10,9 +10,11 @@ namespace DcLedger.Publishing.Feed;
 /// The RSS 2.0 feed (SPEC AC5). Export keeps no history, so each event contributes one item for its current revision:
 /// the GUID is the calendar UID plus <c>sequence</c>, which every published change raises (<c>SEQUENCE_NOT_RAISED</c>).
 /// A change therefore arrives in readers as a new item, and an unchanged event keeps its GUID. A cancellation is such a
-/// change (SPEC AC4). Each recorded decision does the same with its own <c>sequence</c> (issue #90). Items are newest
-/// first. Written with <see cref="XmlWriter"/> rather than a syndication library so the bytes depend only on
-/// the ledger: every date comes from it, including <c>lastBuildDate</c>.
+/// change (SPEC AC4). Each recorded decision does the same with its own <c>sequence</c> (issue #90). Each known date
+/// that isn't ended adds reminders 30 and 7 days ahead and, while it has passed with nothing recorded, one item the day
+/// after (ADR-0010 Decision 5); those depend on D as well as the ledger. Items are newest first. Written with
+/// <see cref="XmlWriter"/> rather than a syndication library so the bytes depend only on the ledger (and D): every date
+/// comes from them, including <c>lastBuildDate</c>.
 /// </summary>
 internal static class RssFeedWriter
 {
@@ -22,15 +24,18 @@ internal static class RssFeedWriter
 
     private const string Description =
         "Reviewed North Carolina local-government meetings about data centers, each linked to its official source. "
-        + "A new item appears for each new meeting and each published change, including cancellations.";
+        + "A new item appears for each new meeting and each published change, including cancellations, "
+        + "and 30 and 7 days before each date the record states.";
 
     // Minutes; publish runs every 6 hours (#23), like the calendars' refresh interval.
     private const string Ttl = "360";
 
-    public static byte[] Write(Uri siteUrl, IEnumerable<ExportEvent> events, IEnumerable<ExportAction> actions)
+    /// <summary>The feed, with the known-date items for <paramref name="knownDates"/> at <paramref name="today"/> (D).</summary>
+    public static byte[] Write(Uri siteUrl, IEnumerable<ExportEvent> events, IEnumerable<ExportAction> actions, IEnumerable<ExportKnownDate> knownDates, DateOnly today)
     {
         var items = events.Select(item => FromEvent(siteUrl, item))
             .Concat(actions.Select(item => FromAction(siteUrl, item)))
+            .Concat(knownDates.SelectMany(item => FromKnownDate(siteUrl, item, today)))
             .OrderByDescending(item => item.Published)
             .ThenBy(item => item.Guid, StringComparer.Ordinal)
             .ToList();
@@ -132,6 +137,49 @@ internal static class RssFeedWriter
             Guid: $"action:{action.Id}/{action.Sequence.ToString(CultureInfo.InvariantCulture)}",
             Published: item.Documents.Max(document => document.RetrievedAtUtc),
             Description: html.ToString());
+    }
+
+    /// <summary>
+    /// A known date's items (ADR-0010 Decision 5), none for an ended one. A reminder <c>lead</c> days ahead, dated 00:00
+    /// Eastern on <c>date - lead</c>, once that day has come, unless it falls before the decision's own item; and, while
+    /// the date has passed with nothing recorded, one item dated 00:00 Eastern the day after. The GUID carries the date,
+    /// so a rescheduled date gets fresh reminders and the old date's items leave the feed.
+    /// </summary>
+    private static IEnumerable<FeedItem> FromKnownDate(Uri siteUrl, ExportKnownDate item, DateOnly today)
+    {
+        if (item.State == KnownDateState.Ended)
+        {
+            yield break;
+        }
+
+        var date = item.Date;
+        var name = RecordText.KnownDateName(date.Kind, item.Action.Action.ActionType, item.Action.Jurisdiction.Name);
+        var guid = $"known:{date.Kind.ToToken()}:{date.ActionId}/{IsoTime.Date(date.Date)}";
+        var link = KnownDateDescription.AheadUrl(siteUrl, date);
+        var description = KnownDateDescription.Html(siteUrl, item);
+        var published = item.Action.Documents.Max(document => document.RetrievedAtUtc);
+        foreach (var lead in KnownDateRules.ReminderLeadDays)
+        {
+            if (KnownDateRules.ReminderIsDue(date, lead, today, published))
+            {
+                yield return new FeedItem(
+                    Title: $"{name}, {RecordText.LongDate(date.Date)} (in {lead.ToString(CultureInfo.InvariantCulture)} days)",
+                    Link: link,
+                    Guid: $"{guid}/{lead.ToString(CultureInfo.InvariantCulture)}",
+                    Published: KnownDateRules.EasternMidnight(date.Date.AddDays(-lead)),
+                    Description: description);
+            }
+        }
+
+        if (item.State == KnownDateState.PassedUnrecorded)
+        {
+            yield return new FeedItem(
+                Title: $"Date passed, nothing recorded yet: {name}",
+                Link: link,
+                Guid: $"{guid}/passed",
+                Published: KnownDateRules.EasternMidnight(date.Date.AddDays(1)),
+                Description: description);
+        }
     }
 
     /// <summary>
