@@ -20,7 +20,7 @@ namespace DcLedger.Publishing.Tests;
 public sealed class PublicContractTests
 {
     /// <summary>
-    /// Every path published at v0.1.0, spelled out rather than taken from <see cref="ExportPaths"/>, so renaming a
+    /// Every path published at v0.1.0, and each added since (ADR-0010's calendars), spelled out rather than taken from <see cref="ExportPaths"/>, so renaming a
     /// constant fails here. The sample ledger has two watched jurisdictions, so two per-jurisdiction calendars.
     /// </summary>
     private static readonly string[] FrozenPaths =
@@ -34,6 +34,9 @@ public sealed class PublicContractTests
         "public/events.parquet",
         "public/actions.csv",
         "public/actions.parquet",
+        "public/ahead.ics", // ADR-0010
+        "public/ahead/fixture-city.ics",
+        "public/ahead/fixture-county.ics",
     ];
 
     private static readonly string[] DocumentColumns = ["document_urls", "document_retrieved_utc", "document_sha256", "document_retrieval"];
@@ -100,7 +103,7 @@ public sealed class PublicContractTests
     }
 
     private static IExporter[] Exporters() =>
-        [new SiteDataExporter(), new RadarCalendarExporter(), new FeedExporter(new Uri("https://ncdcledger.org")), new TabularExporter()];
+        [new SiteDataExporter(), new RadarCalendarExporter(), new AheadCalendarExporter(new Uri("https://ncdcledger.org")), new FeedExporter(new Uri("https://ncdcledger.org")), new TabularExporter()];
 
     private static string Dictionary() => File.ReadAllText(TestFiles.RepositoryPath("docs", "data-dictionary.md"));
 

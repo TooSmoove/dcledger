@@ -22,7 +22,7 @@ internal static class ExportCommand
 
     /// <summary>Every exporter, in the order they run. Their files are written in path order.</summary>
     private static IExporter[] Exporters(Uri siteUrl) =>
-        [new SiteDataExporter(), new CorrectionsExporter(), new RadarCalendarExporter(), new FeedExporter(siteUrl), new TabularExporter(), new ThumbnailExporter()];
+        [new SiteDataExporter(), new CorrectionsExporter(), new RadarCalendarExporter(), new AheadCalendarExporter(siteUrl), new FeedExporter(siteUrl), new TabularExporter(), new ThumbnailExporter()];
 
     internal static Command Create(TextWriter output, TextWriter error)
     {

@@ -1,0 +1,19 @@
+{
+  "comment": "ADR-0010 Decision 3: the state of a known date at D. Read by KnownDateRulesTests (.NET) and site/tests/ahead.test.mjs, so the page and the exports can't disagree. status and successor_id are the action's; something_on_date says whether the jurisdiction has an event on the date or an action decided on it.",
+  "cases": [
+    { "name": "expiry today is upcoming", "kind": "expiry", "date": "2027-02-14", "today": "2027-02-14", "status": "in_effect", "successor_id": null, "something_on_date": false, "state": "upcoming" },
+    { "name": "expiry ahead is upcoming", "kind": "expiry", "date": "2027-02-14", "today": "2026-11-21", "status": "in_effect", "successor_id": null, "something_on_date": false, "state": "upcoming" },
+    { "name": "a superseded expiry still ahead stays upcoming (ADR order)", "kind": "expiry", "date": "2027-02-14", "today": "2027-01-20", "status": "superseded", "successor_id": "greensboro-moratorium-2027-01-20", "something_on_date": false, "state": "upcoming" },
+    { "name": "a superseded expiry that has passed is ended", "kind": "expiry", "date": "2027-02-14", "today": "2027-02-15", "status": "superseded", "successor_id": "greensboro-moratorium-2027-01-20", "something_on_date": false, "state": "ended" },
+    { "name": "a repealed expiry that has passed is ended", "kind": "expiry", "date": "2027-02-14", "today": "2027-03-01", "status": "repealed", "successor_id": null, "something_on_date": false, "state": "ended" },
+    { "name": "an expired expiry is recorded", "kind": "expiry", "date": "2027-02-14", "today": "2027-02-15", "status": "expired", "successor_id": null, "something_on_date": false, "state": "recorded" },
+    { "name": "an expiry with a successor is recorded", "kind": "expiry", "date": "2027-02-14", "today": "2027-02-15", "status": "in_effect", "successor_id": "greensboro-moratorium-2027-02-14", "something_on_date": false, "state": "recorded" },
+    { "name": "an expiry still marked in effect the day after is passed with nothing recorded", "kind": "expiry", "date": "2027-02-14", "today": "2027-02-15", "status": "in_effect", "successor_id": null, "something_on_date": false, "state": "passed_unrecorded" },
+    { "name": "an expiry with no status the day after is passed with nothing recorded", "kind": "expiry", "date": "2027-02-14", "today": "2027-02-15", "status": null, "successor_id": null, "something_on_date": false, "state": "passed_unrecorded" },
+    { "name": "a meeting on an expiry date doesn't record it", "kind": "expiry", "date": "2027-02-14", "today": "2027-02-15", "status": "in_effect", "successor_id": null, "something_on_date": true, "state": "passed_unrecorded" },
+    { "name": "next step today is upcoming", "kind": "next", "date": "2026-10-26", "today": "2026-10-26", "status": null, "successor_id": null, "something_on_date": false, "state": "upcoming" },
+    { "name": "next step with something on the record that day is recorded", "kind": "next", "date": "2026-10-26", "today": "2026-11-21", "status": null, "successor_id": null, "something_on_date": true, "state": "recorded" },
+    { "name": "next step with nothing on the record that day is passed with nothing recorded", "kind": "next", "date": "2026-10-26", "today": "2026-10-27", "status": null, "successor_id": null, "something_on_date": false, "state": "passed_unrecorded" },
+    { "name": "a next step is never ended, even on a superseded action", "kind": "next", "date": "2026-10-26", "today": "2026-10-27", "status": "superseded", "successor_id": "fixture-moratorium-2026-10-26", "something_on_date": false, "state": "passed_unrecorded" }
+  ]
+}

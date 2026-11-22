@@ -94,4 +94,22 @@ public static class EnumTokens
         ActionStatus.Repealed => "repealed",
         _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown action status."),
     };
+
+    /// <summary>Returns <c>expiry</c> or <c>next</c>: used in calendar UIDs, feed GUIDs and <c>/ahead/</c> anchors (ADR-0010).</summary>
+    public static string ToToken(this KnownDateKind kind) => kind switch
+    {
+        KnownDateKind.Expiry => "expiry",
+        KnownDateKind.Next => "next",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown known-date kind."),
+    };
+
+    /// <summary>Returns <c>upcoming</c>, <c>ended</c>, <c>recorded</c> or <c>passed_unrecorded</c> (ADR-0010).</summary>
+    public static string ToToken(this KnownDateState state) => state switch
+    {
+        KnownDateState.Upcoming => "upcoming",
+        KnownDateState.Ended => "ended",
+        KnownDateState.Recorded => "recorded",
+        KnownDateState.PassedUnrecorded => "passed_unrecorded",
+        _ => throw new ArgumentOutOfRangeException(nameof(state), state, "Unknown known-date state."),
+    };
 }

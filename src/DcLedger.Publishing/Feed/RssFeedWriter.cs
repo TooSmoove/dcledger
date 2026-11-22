@@ -114,17 +114,17 @@ internal static class RssFeedWriter
     private static FeedItem FromAction(Uri siteUrl, ExportAction item)
     {
         var action = item.Action;
-        var what = $"{ActionTypeText(action.ActionType)} {OutcomeText(action.Outcome)}";
+        var what = $"{RecordText.ActionTypeText(action.ActionType)} {RecordText.OutcomeText(action.Outcome)}";
         var html = new StringBuilder();
         html.Append(CultureInfo.InvariantCulture,
-            $"<p>{Html(item.Jurisdiction.Name)}: {what}, decided {action.DecidedOn.ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture)}.</p>");
+            $"<p>{RecordText.Html(item.Jurisdiction.Name)}: {what}, decided {action.DecidedOn.ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture)}.</p>");
         if (VoteText(action.Votes, action.Unanimous) is { } vote)
         {
             html.Append(CultureInfo.InvariantCulture, $"<p>Vote: {vote}</p>");
         }
 
         AppendTerms(html, action.Terms);
-        html.Append(CultureInfo.InvariantCulture, $"<p>{LabelText(action.Label)}</p>");
+        html.Append(CultureInfo.InvariantCulture, $"<p>{RecordText.LabelText(action.Label)}</p>");
         AppendSources(html, item.Documents);
         return new FeedItem(
             Title: $"{(action.Sequence > 0 ? "Decision updated: " : "Decision: ")}{what} ({item.Jurisdiction.Name})",
@@ -142,7 +142,7 @@ internal static class RssFeedWriter
     {
         foreach (var (label, value) in TermLines(terms))
         {
-            html.Append(CultureInfo.InvariantCulture, $"<p>{label}: {Html(value)}</p>");
+            html.Append(CultureInfo.InvariantCulture, $"<p>{label}: {RecordText.Html(value)}</p>");
         }
     }
 
@@ -150,7 +150,7 @@ internal static class RssFeedWriter
     {
         if (terms.Status is { } status)
         {
-            yield return ("Status", StatusText(status));
+            yield return ("Status", RecordText.StatusText(status));
         }
 
         if (terms.InstrumentNumber is { } number)
@@ -160,48 +160,34 @@ internal static class RssFeedWriter
 
         if (terms.Threshold is { } threshold)
         {
-            yield return ("Threshold", Quoted(threshold));
+            yield return ("Threshold", RecordText.Quoted(threshold));
         }
 
         if (terms.Scope is { } scope)
         {
-            yield return ("Covers", Quoted(scope));
+            yield return ("Covers", RecordText.Quoted(scope));
         }
 
         if (terms.EffectiveOn is { } effectiveOn)
         {
-            yield return ("Effective", LongDate(effectiveOn));
+            yield return ("Effective", RecordText.LongDate(effectiveOn));
         }
 
         if (terms.ExpiresOn is { } expiresOn)
         {
-            yield return ("Expires", LongDate(expiresOn));
+            yield return ("Expires", RecordText.LongDate(expiresOn));
         }
 
         if (terms.EarlyTermination is { } early)
         {
-            yield return ("Ends earlier", Quoted(early));
+            yield return ("Ends earlier", RecordText.Quoted(early));
         }
 
         if (terms.Exemptions is { } exemptions)
         {
-            yield return ("Exemptions", Quoted(exemptions));
+            yield return ("Exemptions", RecordText.Quoted(exemptions));
         }
     }
-
-    private static string Quoted(string text) => $"\u201C{text}\u201D";
-
-    private static string LongDate(DateOnly date) => date.ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture);
-
-    /// <summary>The site's wording for a decision's status (site/src/lib/radar.js).</summary>
-    private static string StatusText(ActionStatus status) => status switch
-    {
-        ActionStatus.InEffect => "In effect",
-        ActionStatus.Expired => "Expired",
-        ActionStatus.Superseded => "Replaced or extended by a later decision",
-        ActionStatus.Repealed => "Repealed",
-        _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown action status."),
-    };
 
     /// <summary>What the revision is, as a title prefix: nothing for a meeting's first version.</summary>
     private static string Change(LedgerEvent ledgerEvent) =>
@@ -215,7 +201,7 @@ internal static class RssFeedWriter
         var ledgerEvent = item.Event;
         var start = EasternTime.ToEastern(ledgerEvent.StartsAt).ToString("dddd, MMMM d, yyyy, h:mm tt", CultureInfo.InvariantCulture);
         var html = new StringBuilder();
-        html.Append(CultureInfo.InvariantCulture, $"<p>{Html(item.Jurisdiction.Name)}, {Html(ledgerEvent.Body)}: {start} Eastern.</p>");
+        html.Append(CultureInfo.InvariantCulture, $"<p>{RecordText.Html(item.Jurisdiction.Name)}, {RecordText.Html(ledgerEvent.Body)}: {start} Eastern.</p>");
         if (ledgerEvent.Status == EventStatus.Cancelled)
         {
             html.Append("<p><strong>Cancelled.</strong></p>");
@@ -223,10 +209,10 @@ internal static class RssFeedWriter
 
         if (ledgerEvent.CaseNumber is { } caseNumber)
         {
-            html.Append(CultureInfo.InvariantCulture, $"<p>Case: {Html(caseNumber)}</p>");
+            html.Append(CultureInfo.InvariantCulture, $"<p>Case: {RecordText.Html(caseNumber)}</p>");
         }
 
-        html.Append(CultureInfo.InvariantCulture, $"<p>{LabelText(ledgerEvent.Label)}</p>");
+        html.Append(CultureInfo.InvariantCulture, $"<p>{RecordText.LabelText(ledgerEvent.Label)}</p>");
         AppendSources(html, item.Documents);
         return html.ToString();
     }
@@ -240,34 +226,13 @@ internal static class RssFeedWriter
         html.Append("<ul>");
         foreach (var document in documents)
         {
-            var url = Html(document.Url.AbsoluteUri);
+            var url = RecordText.Html(document.Url.AbsoluteUri);
             html.Append(CultureInfo.InvariantCulture,
-                $"<li><a href=\"{url}\">{url}</a> (retrieved {IsoTime.Eastern(document.RetrievedAtUtc)}, SHA-256 {document.Id.Value}){Html(RetrievalNote.After(document))}</li>");
+                $"<li><a href=\"{url}\">{url}</a> (retrieved {IsoTime.Eastern(document.RetrievedAtUtc)}, SHA-256 {document.Id.Value}){RecordText.Html(RetrievalNote.After(document))}</li>");
         }
 
         html.Append("</ul>");
     }
-
-    /// <summary>The site's wording for action types (site/src/lib/radar.js), capitalized to start a title.</summary>
-    private static string ActionTypeText(ActionType actionType) => actionType switch
-    {
-        ActionType.Moratorium => "Moratorium",
-        ActionType.Rezoning => "Rezoning",
-        ActionType.TextAmendment => "Ordinance text amendment",
-        ActionType.Resolution => "Resolution",
-        _ => throw new ArgumentOutOfRangeException(nameof(actionType), actionType, "Unknown action type."),
-    };
-
-    /// <summary>The site's wording for outcomes, lowercase to follow the action type.</summary>
-    private static string OutcomeText(ActionOutcome outcome) => outcome switch
-    {
-        ActionOutcome.Adopted => "adopted",
-        ActionOutcome.AdoptedAmended => "adopted with amendments",
-        ActionOutcome.Failed => "failed",
-        ActionOutcome.Continued => "continued to a later meeting",
-        ActionOutcome.Tabled => "tabled",
-        _ => throw new ArgumentOutOfRangeException(nameof(outcome), outcome, "Unknown outcome."),
-    };
 
     /// <summary>The site's vote line (voteText in site/src/lib/radar.js), or null when nothing is known.</summary>
     private static string? VoteText(string? votes, bool unanimous)
@@ -281,20 +246,6 @@ internal static class RssFeedWriter
 
         return unanimous ? (tally is null ? "Unanimous (tally not yet recorded)" : $"{tally} (unanimous)") : tally;
     }
-
-    private static string LabelText(EvidenceLabel label) => label switch
-    {
-        EvidenceLabel.ReportedNews => "Reported (news)",
-        EvidenceLabel.ConfirmedOfficial => "Confirmed (official record)",
-        _ => throw new ArgumentOutOfRangeException(nameof(label), label, "Unknown label."),
-    };
-
-    /// <summary>The four characters HTML text and attributes need escaped; the XML writer then escapes the markup itself.</summary>
-    private static string Html(string text) => text
-        .Replace("&", "&amp;", StringComparison.Ordinal)
-        .Replace("<", "&lt;", StringComparison.Ordinal)
-        .Replace(">", "&gt;", StringComparison.Ordinal)
-        .Replace("\"", "&quot;", StringComparison.Ordinal);
 
     /// <summary>RFC 822 dates, as RSS 2.0 requires, always in UTC.</summary>
     private static string Rfc822(DateTimeOffset instant) =>

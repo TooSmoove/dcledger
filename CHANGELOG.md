@@ -78,5 +78,9 @@ has not posted the official record yet. Each gains them, as an update in the fee
     `actions.parquet` (#115).
   - `next_on` as the last column of `actions.csv` and `actions.parquet`: the date an archived document gives for a
     body's next step on the matter, such as the meeting a vote was continued to. Never computed (#124).
+- **Known-date calendars** (#124): `/ahead.ics` and `/ahead/{jurisdiction}.ics` for each watched or
+  decisions-only jurisdiction. One all-day entry per date the record states: a decision's expiry date, or the date a
+  document gives for its next step. A corrected date updates the same entry; a superseded or repealed expiry is
+  cancelled once its date passes. No alarms: set your own in your calendar app.
 - **Stability promise** for IDs, page addresses, UIDs, feed GUIDs, file paths, columns and vocabularies, held by
   tests (#116).
