@@ -4,12 +4,15 @@
 # shows the same 4-2 with one absent.
 # Recorded like Greensboro's Aug 3 vote to start the moratorium process: the motion to proceed toward a moratorium
 # passed. The moratorium itself failed on Oct 26 (davidson-moratorium-2026-10-26).
+# next_on is "the October 26th agenda" in the same sentence of the same minutes (ADR-0010 backfill); sequence 1 for it.
 id: davidson-moratorium-2026-09-28
 jurisdiction_id: davidson
 action_type: moratorium
 outcome: adopted
 decided_on: 2026-09-28
 votes: "4-2"
+sequence: 1
 label: confirmed_official
 document_ids:
   - 7f5f1c10d433b70e2726bdfea22469a173dc718485e880955b68f57f43b49455
+next_on: 2026-10-26

@@ -369,6 +369,20 @@ public sealed class YamlLedgerReaderTests
     }
 
     [Fact]
+    public void Action_reads_its_next_step_date()
+    {
+        var action = Load("actions/fixture-moratorium-2026-11-05.yaml", ValidAction + "\nnext_on: 2026-12-03").Actions.ShouldHaveSingleItem().Record;
+
+        action.NextOn.ShouldBe(new DateOnly(2026, 12, 3));
+    }
+
+    [Fact]
+    public void Action_without_next_on_has_none()
+    {
+        Load("actions/fixture-moratorium-2026-11-05.yaml", ValidAction).Actions.ShouldHaveSingleItem().Record.NextOn.ShouldBeNull();
+    }
+
+    [Fact]
     public void Action_reads_its_successor_and_status()
     {
         var yaml = ValidAction + "\nsuccessor_id: fixture-moratorium-2027-05-04\nstatus: superseded";
@@ -416,6 +430,8 @@ public sealed class YamlLedgerReaderTests
     [InlineData("successor_id: Fixture_Moratorium", "successor_id isn't a slug")]
     [InlineData("status: active", "unknown status")]
     [InlineData("status: In_Effect", "tokens are lowercase")]
+    [InlineData("next_on: 12/03/2026", "next_on isn't an ISO date")]
+    [InlineData("next_on: 2026-12-03T19:00:00-05:00", "next_on is a date, not a time")]
     public void Malformed_term_values_are_rejected(string line, string because)
     {
         RuleFor("actions/fixture-moratorium-2026-11-05.yaml", ValidAction + "\n" + line).ShouldBe(ValidationRule.InvalidValue, because);

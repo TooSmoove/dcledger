@@ -100,8 +100,9 @@ on text columns (`unanimous` and `sequence` aren't text). The Parquet file store
 | `exemptions` | text | `VARCHAR` | not stated | What is exempt, copied as written. | |
 | `successor_id` | text | `VARCHAR` | not replaced or extended | The `id` of the decision that replaced or extended it: same jurisdiction, decided the same day or later. | `greensboro-moratorium-2027-02-02` |
 | `status` | text | `VARCHAR` | not recorded | `in_effect`, `expired`, `superseded` (then `successor_id` is set) or `repealed`, set by a reviewer from an archived document. Nothing changes it automatically: check the dates. | `in_effect` |
+| `next_on` | text, `YYYY-MM-DD` | `DATE` | no document states one | The date an archived document gives for the body's next step on the same matter, such as the meeting a vote was continued to (Eastern). Copied from the document, never computed; on any outcome, always after `decided_on`. | `2026-10-26` |
 
-The last nine columns are a decision's terms (issue #115). They are filled only for an adopted decision
+The nine columns from `instrument_number` to `status` are a decision's terms (issue #115). They are filled only for an adopted decision
 (`adopted` or `adopted_amended`), and only as an archived document states them: text terms are copied as written,
 never summarized, on one line of at most 500 characters. A term taken from a news report stays under the decision's
 `reported_news` label until the official text is archived.
@@ -135,3 +136,5 @@ notice described under [Stability](stability.md).
   `threshold`, `scope`, `effective_on`, `expires_on`, `early_termination`, `exemptions`, `successor_id` and
   `status`. `actions.parquet` gained the same columns after `documents`, with `effective_on` and `expires_on` as
   `DATE`. No existing column moved.
+- **Nov 21, 2026 (issue #124):** `next_on` added as the last column of `actions.csv` and `actions.parquet` (a `DATE`
+  in Parquet), and as the last key of each `events.json` action, null when not stated. No existing column moved.

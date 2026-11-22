@@ -232,9 +232,27 @@ public sealed class SiteDataExporterTests
 
         var action = document.RootElement.GetProperty("actions")[0];
         var keys = action.EnumerateObject().Select(p => p.Name).ToList();
-        keys[^TermKeys.Length..].ShouldBe(TermKeys);
-        keys[^(TermKeys.Length + 1)].ShouldBe("documents");
+        keys[^(TermKeys.Length + 1)..^1].ShouldBe(TermKeys);
+        keys[^(TermKeys.Length + 2)].ShouldBe("documents");
         TermKeys.ShouldAllBe(key => action.GetProperty(key).ValueKind == JsonValueKind.Null);
+    }
+
+    [Fact]
+    public void Next_on_follows_status_and_is_null_when_not_stated()
+    {
+        using var document = JsonDocument.Parse(EventsJson());
+
+        var action = document.RootElement.GetProperty("actions")[0];
+        action.EnumerateObject().Last().Name.ShouldBe("next_on");
+        action.GetProperty("next_on").ValueKind.ShouldBe(JsonValueKind.Null);
+    }
+
+    [Fact]
+    public void An_action_with_next_on_writes_it_as_a_plain_date()
+    {
+        using var document = JsonDocument.Parse(TestFiles.Text(new SiteDataExporter().Export(ExportSamples.ModelWithNextOn())[0]));
+
+        document.RootElement.GetProperty("actions")[0].GetProperty("next_on").GetString().ShouldBe("2026-12-03");
     }
 
     [Fact]

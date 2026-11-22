@@ -135,6 +135,16 @@ internal static class ExportSamples
         return model with { Actions = [.. model.Actions.Select(item => item with { Action = item.Action with { Terms = FullTerms } })] };
     }
 
+    /// <summary>The date the Nov 5 decision's document gives for the next step (ADR-0010); not on the default sample.</summary>
+    public static readonly DateOnly NextOn = new(2026, 12, 3);
+
+    /// <summary>The model with <see cref="NextOn"/> on the Nov 5 decision.</summary>
+    public static ExportModel ModelWithNextOn()
+    {
+        var model = Model();
+        return model with { Actions = [.. model.Actions.Select(item => item with { Action = item.Action with { NextOn = NextOn } })] };
+    }
+
     /// <summary>A correction to the Nov 5 decision's vote, with a linked issue (issue #117).</summary>
     public static readonly Correction VoteCorrection = new()
     {

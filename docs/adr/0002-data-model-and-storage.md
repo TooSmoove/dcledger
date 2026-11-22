@@ -11,3 +11,5 @@
 **Consequences:** YAML is parsed into static types with unknown keys rejected (which is how forbidden fields are caught) and a 64 KB cap per file. Event times are stored as ISO 8601 with offset and validated against America/New_York. DuckDB exists only to produce Parquet and CSV; there is no SQL access layer or migrations framework.
 
 **Amendment (Nov 15, 2026, issue #117):** `corrections/` joins the record folders: one file per corrections log entry (`id`, `reported_on`, `corrected_on`, optional `record_ids` and `issue`, `summary`). One file per entry, not one log file, so a published entry can't be removed without failing `SLUG_CHANGED`, the same rule that keeps record IDs permanent. This is the log shown on `/methodology/`, not the deferred `correction` record type: it isn't in the public downloads (SPEC §D).
+
+**Amendment (Nov 21, 2026, ADR-0010):** actions gain an optional `next_on`, the date an archived document in `document_ids` gives for the body's next step on the matter. Allowed on any outcome, after `decided_on`, and a published field (raises `sequence`).

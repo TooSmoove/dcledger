@@ -56,6 +56,7 @@ public static class ActionRevisions
         Revisions.Note(changed, "label", was.Label != now.Label);
         Revisions.Note(changed, "document_ids", !was.DocumentIds.SequenceEqual(now.DocumentIds));
         NoteTerms(changed, was.Terms, now.Terms);
+        Revisions.Note(changed, "next_on", was.NextOn != now.NextOn); // a rescheduled date moves calendar entries (ADR-0010)
         return changed;
     }
 

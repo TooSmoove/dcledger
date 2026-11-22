@@ -94,6 +94,8 @@ const actions = defineCollection({
     exemptions: z.string().nullable().default(null),
     successor_id: z.string().nullable().default(null),
     status: z.enum(['in_effect', 'expired', 'superseded', 'repealed']).nullable().default(null),
+    // The date an archived document gives for the body's next step on the matter (ADR-0010); never computed.
+    next_on: z.iso.date().nullable().default(null),
   }),
 });
 

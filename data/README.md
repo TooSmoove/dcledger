@@ -18,9 +18,10 @@ dotnet run --project src/DcLedger.Cli -- validate --data data
 - Only the keys shown below. Names of private people and original source titles are **never** stored (`FORBIDDEN_FIELD`).
 - IDs are lowercase letters, digits and single hyphens, match the file name (`ID_MISMATCH`), and are **permanent** once merged (`SLUG_CHANGED`). To retire a meeting, set `status: cancelled`.
 - A published event that changes (`body`, `title`, `case_number`, `starts_at`, `status`, `label`, `document_ids` or `location`) raises `sequence` by at least 1, and `sequence` never goes down (`SEQUENCE_NOT_RAISED`). `jurisdiction_id`, `platform` and `platform_meeting_id` never change once published, because the calendar UID is built from them (`UID_CHANGED`). CI compares against the base branch with `--previous-data`.
-- Actions follow the same rule: a published action that changes (`event_id`, `action_type`, `outcome`, `decided_on`, `votes`, `unanimous`, `label`, `document_ids` or any of its terms) raises its `sequence` (optional, default 0), and `jurisdiction_id` never changes (`JURISDICTION_CHANGED`). The feed gives each revision of a decision its own item.
+- Actions follow the same rule: a published action that changes (`event_id`, `action_type`, `outcome`, `decided_on`, `votes`, `unanimous`, `label`, `document_ids`, any of its terms or `next_on`) raises its `sequence` (optional, default 0), and `jurisdiction_id` never changes (`JURISDICTION_CHANGED`). The feed gives each revision of a decision its own item.
 - Every jurisdiction has a `coverage_tier` (`REQUIRED_FIELD`). Only a `watched` one has events, and a `registered` one has no actions either (`TIER_MISMATCH`).
 - A decision's terms (see "Recording a decision's terms") appear only on an `adopted` or `adopted_amended` action; `expires_on` is not before `effective_on`; `status: superseded` needs `successor_id`, which names another action in the same jurisdiction decided the same day or later (`TERMS_INVALID`; a missing one is `FK_MISSING`). Text terms are one line of at most 500 characters (`INVALID_VALUE`).
+- `next_on` (see "Recording the date of the next step") is a date after `decided_on`, on any outcome (`INVALID_VALUE`).
 - An event's `platform` is its jurisdiction's (`PLATFORM_MISMATCH`). `last_manual_check_utc` appears only on a `manual` jurisdiction (`INVALID_VALUE`); export shows one dated after the export as stale and warns.
 - Every event and action lists at least one document, and every listed document exists (`DOC_MISSING`); its jurisdiction exists (`FK_MISSING`).
 - An action's `event_id`, when given, names an event in the same jurisdiction on the same Eastern date as `decided_on` (`FK_MISSING`, `EVENT_MISMATCH`). `action_type` and `outcome` take only the tokens below, and `votes` is ayes-noes like `"9-0"` (`INVALID_VALUE`).
@@ -105,6 +106,8 @@ early_termination: "..."      # as written
 exemptions: "..."             # as written
 successor_id: fixture-county-moratorium-2026-07-13   # the action that replaced or extended it
 status: in_effect             # in_effect | expired | superseded | repealed
+# Next step (optional, any outcome), only as an archived document states it:
+next_on: 2026-02-05           # the date given for the body's next step on the matter
 ```
 
 ## Coverage tiers
@@ -196,6 +199,19 @@ ordinance to state most of them, so they come from the adopted text without inte
   force; `expired` once its end has passed with no extension; `repealed` when the body ended it early;
   `superseded` with `successor_id` when a later action replaced or extended it (record that action first).
 - **Say where each term came from** in a comment at the top of the file, and raise `sequence` by 1.
+
+## Recording the date of the next step
+
+When a document in `document_ids` names the date the body takes the matter up again, record it as `next_on`
+(ADR-0010): a continuance "to the November 5 meeting", or a vote that "scheduled a public hearing ... on the October
+26th agenda". It becomes a known date on `/ahead/`, in `ahead.ics` and in the feed.
+
+- **Only a date the document states.** Never count days, never take it from a regular meeting schedule, and never
+  from a news report's "expected" wording. A date from a news report keeps the action `reported_news`, as for terms.
+  "Continued for further consideration" with no date means no `next_on`.
+- **Any outcome**, unlike the terms: continued, tabled, adopted or failed. It must be after `decided_on`.
+- **Rescheduled?** Change the date and raise `sequence` by 1, so calendars move the entry instead of adding one.
+- **Say where it came from** in a comment at the top of the file, quoting the words that give the date.
 
 ## Entering a manual jurisdiction
 

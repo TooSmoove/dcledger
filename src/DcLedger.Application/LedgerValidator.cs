@@ -76,6 +76,7 @@ public static class LedgerValidator
             CheckActionEvent(errors, file, action, events);
             CheckActionTier(errors, file, action, jurisdictions);
             DecisionTermsRules.Check(errors, file, action, actions);
+            NextOnRules.Check(errors, file, action);
         }
 
         var correctable = jurisdictions.Keys.Concat(events.Keys).Concat(actions.Keys).ToHashSet(StringComparer.Ordinal);
