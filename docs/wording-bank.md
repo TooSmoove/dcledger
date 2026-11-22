@@ -137,3 +137,24 @@ subject. Then set the report's status. With no email address, the fix in the cor
 > Thanks for writing. The ledger records only [scope, for example "meetings, hearings and decisions on data center
 > land use by local governments in its covered jurisdictions"], so this isn't something it will record. [Optional:
 > where else to look.]
+
+## Known dates (ADR-0010)
+
+Fixed words for dates the record states, on `/ahead/`, in `ahead.ics` and in the feed. Owner-approved drafts (Nov 21,
+2026); change them here, in `RecordText` (Publishing), in `site/src/lib/ahead.js` and in
+`tests/fixtures/known-dates/cases.json` in the same pull request, since tests on both sides pin them to that file.
+
+- **Names** (calendar `SUMMARY`, feed titles, the home line): "[Type] expiry date: [Jurisdiction]", for example
+  "Moratorium expiry date: Greensboro"; "Date set for the next step: [Jurisdiction], [type]", for example "Date set for
+  the next step: Davidson County, moratorium".
+- **Passed with nothing recorded:** "Date passed. Nothing recorded for it yet." It must not suggest that a moratorium
+  lapsed or was renewed, or that a meeting did or didn't happen.
+- **Coverage line:** "Only dates stated in an archived document are listed. A body can act on a matter before or
+  after these dates."
+- **Feed titles:** "[Name], [date in words] (in 30 days)" or "(in 7 days)"; "Date passed, nothing recorded yet: [Name]".
+- **Home line** (only when the radar's window is empty): "The record states a date ahead: [Name], [date]. All dates
+  coming up."
+- **Header link:** "Coming up". **Page title:** "Coming up on the record". **Calendar name:** "dc-ledger Coming up on
+  the record", plus ": [Jurisdiction]" for a jurisdiction's calendar.
+- **Never** "deadline" for a date the record doesn't call one, and nothing about what a body will do.
+

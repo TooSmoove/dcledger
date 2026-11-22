@@ -116,6 +116,22 @@ certutil -hashfile downloaded-file SHA256</code></pre>
     </p>
   </section>
 
+  <section aria-labelledby="dates-ahead" class="faq">
+    <h2 id="dates-ahead">Can I see dates before an agenda posts?</h2>
+    <p>
+      Yes, when the record already states them. <a href="/ahead/">Coming up on the record</a> lists
+      the date a decision ends, such as a moratorium's expiry date, and the date a document gives
+      for a matter's next step, such as the meeting a vote was continued to. Only dates stated in an
+      archived document are listed: nothing is worked out from a number of days, a meeting schedule
+      or a news report. A body can act on a matter before or after these dates.
+    </p>
+    <p>
+      They are a calendar too: <code>{`${SITE_URL}/ahead.ics`}</code>, and one for each covered
+      place on its page. The <a href="/feed.xml">feed</a> adds a reminder 30 days and 7 days before
+      each date, and an entry the day after a date that passes with nothing recorded for it yet.
+    </p>
+  </section>
+
   <section aria-labelledby="follow" class="faq">
     <h2 id="follow">Is there another way to follow new items?</h2>
     <p>

@@ -13,8 +13,9 @@ the site and issue references like "(#116)" are left out there (site/src/lib/pub
 
 - **Record IDs:** event, decision (local action) and jurisdiction IDs, and document IDs (the SHA-256 of the bytes).
 - **Page addresses:** `/radar/`, `/map/`, `/about/`, `/methodology/`, `/items/{event id}/`,
-  `/jurisdictions/{jurisdiction id}/`, the `#decision-{decision id}` anchor on a jurisdiction page, and the
-  `#correction-{correction id}` anchor on the methodology page.
+  `/jurisdictions/{jurisdiction id}/`, `/ahead/`, the `#decision-{decision id}` anchor on a jurisdiction page, the
+  `#{decision id}-expiry` and `#{decision id}-next` anchors on `/ahead/`, and the `#correction-{correction id}` anchor
+  on the methodology page.
 - **Calendar and feed identity:** each event's calendar UID (a hash of jurisdiction, platform and platform meeting
   ID), each known date's calendar UID (a hash of `known`, the kind and the decision ID, so a corrected date updates in
   place) and each feed GUID (`{UID}/{sequence}` for an event revision, `action:{id}/{sequence}` for a decision

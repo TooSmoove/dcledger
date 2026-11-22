@@ -82,6 +82,12 @@ has not posted the official record yet. Each gains them, as an update in the fee
   decisions-only jurisdiction. One all-day entry per date the record states: a decision's expiry date, or the date a
   document gives for its next step. A corrected date updates the same entry; a superseded or repealed expiry is
   cancelled once its date passes. No alarms: set your own in your calendar app.
+- **Coming up on the record** (#124): `/ahead/` lists every date the record already states about what comes next, a
+  decision's expiry date or the date a document gives for a matter's next step, in four parts: the next 30 days,
+  later, dates passed with nothing recorded yet, and dates whose outcome is recorded (for 90 days). Linked from the
+  header, the radar, the FAQ, the methodology page and each place with a date ahead. When nothing is scheduled in the
+  radar's window, the home page names the soonest date. A decision card flags a date that passed with nothing
+  recorded for it yet, and shows the date set for its next step.
 - **Feed reminders** (#124): the feed gains an item 30 days and 7 days before each date the record states, and
   one the day after a date that passes with nothing recorded for it yet. Recording what happened doesn't recall an
   item already sent; the decision's own update reports it.

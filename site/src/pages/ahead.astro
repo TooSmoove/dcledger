@@ -1,0 +1,143 @@
+---
+// Coming up on the record (ADR-0010 Decision 6, issue #124): every date the reviewed record states about what comes
+// next, a decision's expiry date or the date a document gives for the body's next step, with its state at the export's
+// Eastern date. Never computed, never taken from a meeting schedule. Sections: the radar's window, later, dates passed
+// with nothing recorded, and dates whose outcome is on the record (kept 90 days). Ended expiries (superseded or
+// repealed once their date passed) are left out. Each row has an anchor, `#{decision id}-{kind}`, which the calendars
+// and the feed link. No script (AC12).
+import { getCollection } from 'astro:content';
+import Sources from '../components/Sources.astro';
+import Base from '../layouts/Base.astro';
+import {
+  COVERAGE_TEXT,
+  PASSED_UNRECORDED_TEXT,
+  aheadSections,
+  kindText,
+  knownDates,
+} from '../lib/ahead.js';
+import {
+  WINDOW_DAYS,
+  actionTypeText,
+  dateText,
+  easternIso,
+  easternText,
+  inWindow,
+  labelText,
+  outcomeText,
+} from '../lib/radar.js';
+import { generatedUtc } from '../lib/site-data-file.js';
+
+const generated = await generatedUtc();
+const names = new Map((await getCollection('jurisdictions')).map((j) => [j.id, j.data.name]));
+const events = await getCollection('events');
+const dates = knownDates(await getCollection('actions'), events, generated);
+const sections = aheadSections(dates, generated);
+// A meeting on the radar on the same Eastern date in the same jurisdiction: the row links it.
+const radarMeeting = (jurisdictionId: string, date: string) =>
+  events.find(
+    (e) =>
+      e.data.jurisdiction_id === jurisdictionId &&
+      easternIso(e.data.starts_utc).slice(0, 10) === date &&
+      inWindow(e.data, generated),
+  ) ?? null;
+const groups = [
+  {
+    id: 'next',
+    heading: `Next ${WINDOW_DAYS} days`,
+    intro: `Through ${dateText(sections.windowEnd)}, soonest first.`,
+    rows: sections.next,
+  },
+  { id: 'later', heading: 'Later', intro: 'Soonest first.', rows: sections.later },
+  {
+    id: 'passed',
+    heading: 'Date passed, nothing recorded',
+    intro: 'Newest first. The record doesn’t yet show what happened on these dates.',
+    rows: sections.passed,
+  },
+  {
+    id: 'recorded',
+    heading: 'Date passed, recorded',
+    intro:
+      'Newest first, for 90 days after the date. The decision’s page shows what the record says.',
+    rows: sections.recorded,
+  },
+];
+---
+
+<Base title="Coming up on the record">
+  <Fragment slot="masthead">
+    <h1>Coming up on the record</h1>
+    <p class="lede">
+      Dates the reviewed record already states: when a decision ends, and when a matter comes back,
+      as of <time datetime={generated}>{easternText(generated)}</time>.
+    </p>
+    <p class="coverage-line">{COVERAGE_TEXT}</p>
+    <p class="feeds">
+      Subscribe: <a href="/ahead.ics">calendar (iCal)</a> · <a href="/feed.xml">feed (RSS)</a>, with
+      reminders 30 and 7 days before each date · meetings with agendas are on the{' '}
+      <a href="/radar/">Hearing Radar</a>
+    </p>
+  </Fragment>
+
+  {dates.length === 0 && <p class="statement">No dates ahead are stated on the record.</p>}
+
+  {groups.map(
+    (group) =>
+      group.rows.length > 0 && (
+        <section aria-labelledby={`${group.id}-heading`} class="decisions known-dates">
+          <h2 id={`${group.id}-heading`}>{group.heading}</h2>
+          <p class="muted">{group.intro}</p>
+          {group.rows.map((k) => {
+            const { id, data } = k.action;
+            const name = names.get(data.jurisdiction_id) ?? data.jurisdiction_id;
+            const meeting = radarMeeting(data.jurisdiction_id, k.date);
+            return (
+              <article id={k.anchor}>
+                <h3>
+                  <time datetime={k.date}>{dateText(k.date)}</time>: {kindText(k.kind)}
+                </h3>
+                {k.state === 'passed_unrecorded' && <p class="flag">{PASSED_UNRECORDED_TEXT}</p>}
+                <dl>
+                  <dt>Where</dt>
+                  <dd>
+                    <a href={`/jurisdictions/${data.jurisdiction_id}/`}>{name}</a>
+                  </dd>
+                  <dt>Decision</dt>
+                  <dd>
+                    <a href={`/jurisdictions/${data.jurisdiction_id}/#decision-${id}`}>
+                      {actionTypeText(data.action_type)}: {outcomeText(data.outcome)}
+                    </a>
+                    , <time datetime={data.decided_on}>{dateText(data.decided_on)}</time>
+                  </dd>
+                  {data.threshold !== null && (
+                    <>
+                      <dt>Threshold</dt>
+                      <dd>“{data.threshold}”</dd>
+                    </>
+                  )}
+                  {data.scope !== null && (
+                    <>
+                      <dt>Covers</dt>
+                      <dd>“{data.scope}”</dd>
+                    </>
+                  )}
+                  {meeting !== null && (
+                    <>
+                      <dt>On the radar</dt>
+                      <dd>
+                        <a href={`/items/${meeting.id}/`}>{meeting.data.title}</a>
+                      </dd>
+                    </>
+                  )}
+                  <dt>Sourcing</dt>
+                  <dd>{labelText(data.label)}</dd>
+                </dl>
+                <h4>Sources</h4>
+                <Sources documents={data.documents} />
+              </article>
+            );
+          })}
+        </section>
+      ),
+  )}
+</Base>

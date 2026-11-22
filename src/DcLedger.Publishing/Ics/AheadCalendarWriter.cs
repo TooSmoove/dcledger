@@ -37,7 +37,10 @@ internal static class AheadCalendarWriter
 
         var text = new CalendarSerializer().SerializeToString(calendar)
             ?? throw new InvalidOperationException("Ical.Net serialized the calendar to nothing.");
-        return Encoding.UTF8.GetBytes(text);
+
+        // A calendar needs at least one component (RFC 5545 §3.6). With no dates yet, the pinned VTIMEZONE is that
+        // component, as in an empty radar calendar; with dates it is left out, since all-day dates need no zone.
+        return Encoding.UTF8.GetBytes(calendar.Events.Count == 0 ? PinnedTimeZone.InsertInto(text) : text);
     }
 
     private static CalendarEvent ToVEvent(Uri siteUrl, ExportKnownDate item)
