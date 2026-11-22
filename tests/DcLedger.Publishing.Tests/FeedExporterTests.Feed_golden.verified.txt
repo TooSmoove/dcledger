@@ -3,7 +3,7 @@
   <channel>
     <title>NC Data Center Ledger: Hearing Radar</title>
     <link>https://ncdcledger.org/radar/</link>
-    <description>Reviewed North Carolina local-government meetings about data centers, each linked to its official source. A new item appears for each new meeting and each published change, including cancellations.</description>
+    <description>Reviewed North Carolina local-government meetings about data centers, each linked to its official source. A new item appears for each new meeting and each published change, including cancellations, and 30 and 7 days before each date the record states.</description>
     <language>en-us</language>
     <lastBuildDate>Fri, 06 Nov 2026 13:00:00 +0000</lastBuildDate>
     <ttl>360</ttl>

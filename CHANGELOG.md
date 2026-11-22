@@ -82,5 +82,8 @@ has not posted the official record yet. Each gains them, as an update in the fee
   decisions-only jurisdiction. One all-day entry per date the record states: a decision's expiry date, or the date a
   document gives for its next step. A corrected date updates the same entry; a superseded or repealed expiry is
   cancelled once its date passes. No alarms: set your own in your calendar app.
+- **Feed reminders** (#124): the feed gains an item 30 days and 7 days before each date the record states, and
+  one the day after a date that passes with nothing recorded for it yet. Recording what happened doesn't recall an
+  item already sent; the decision's own update reports it.
 - **Stability promise** for IDs, page addresses, UIDs, feed GUIDs, file paths, columns and vocabularies, held by
   tests (#116).
