@@ -16,9 +16,10 @@ the site and issue references like "(#116)" are left out there (site/src/lib/pub
   `/jurisdictions/{jurisdiction id}/`, the `#decision-{decision id}` anchor on a jurisdiction page, and the
   `#correction-{correction id}` anchor on the methodology page.
 - **Calendar and feed identity:** each event's calendar UID (a hash of jurisdiction, platform and platform meeting
-  ID) and each feed GUID (`{UID}/{sequence}` for an event revision, `action:{id}/{sequence}` for a decision
+  ID), each known date's calendar UID (a hash of `known`, the kind and the decision ID, so a corrected date updates in
+  place) and each feed GUID (`{UID}/{sequence}` for an event revision, `action:{id}/{sequence}` for a decision
   revision).
-- **File paths:** `/radar.ics`, `/radar/{jurisdiction id}.ics`, `/feed.xml`, `/events.csv`, `/events.parquet`,
+- **File paths:** `/radar.ics`, `/radar/{jurisdiction id}.ics`, `/ahead.ics`, `/ahead/{jurisdiction id}.ics`, `/feed.xml`, `/events.csv`, `/events.parquet`,
   `/actions.csv` and `/actions.parquet`.
 - **Columns:** the name, order, type and meaning of every column in the CSV and Parquet files (the
   [data dictionary](data-dictionary.md)), and the keys and types of `events.json` within its `schema_version`.

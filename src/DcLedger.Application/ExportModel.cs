@@ -29,6 +29,28 @@ public sealed record ExportModel
     /// gate has already checked that each may be shown, was reviewed and matches its record's hash.
     /// </summary>
     public IReadOnlyList<ThumbnailFile> Thumbnails { get; init; } = [];
+
+    /// <summary>
+    /// Every known date the record states (ADR-0010), with its state at D, the Eastern date of
+    /// <see cref="GeneratedUtc"/>; ordered by date, then kind, then action ID.
+    /// </summary>
+    public IReadOnlyList<ExportKnownDate> KnownDates { get; init; } = [];
+
+    /// <summary>D: the Eastern calendar date of <see cref="GeneratedUtc"/>, against which known dates are placed.</summary>
+    public DateOnly Today => KnownDateRules.EasternDate(GeneratedUtc);
+}
+
+/// <summary>A known date with its state at D and the action that states it, resolved (ADR-0010).</summary>
+public sealed record ExportKnownDate
+{
+    /// <summary>The date.</summary>
+    public required KnownDate Date { get; init; }
+
+    /// <summary>Where it stands at D.</summary>
+    public required KnownDateState State { get; init; }
+
+    /// <summary>The action that states it, with its jurisdiction and documents.</summary>
+    public required ExportAction Action { get; init; }
 }
 
 /// <summary>A jurisdiction with its freshness (SPEC AC10).</summary>

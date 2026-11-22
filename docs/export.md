@@ -17,6 +17,8 @@ With `--out out` from the repository root, the site build finds its data at `out
 | `site-data/corrections.json` | The corrections log for `/methodology/` (issue #117): `schema_version` 1, `opened_on`, and every entry from `data/corrections/` oldest first, each with `id`, `reported_on`, `corrected_on`, `record_ids`, `summary` and `report` (the form report's number, shown as `R-<n>`, or null). Written even when the log is empty. Site data only: not served, not downloadable, and not part of "Stability" below. Mirrored by `site/src/lib/corrections.js`. |
 | `public/radar.ics` | Every event in one calendar (SPEC AC3). |
 | `public/radar/{jurisdiction}.ics` | One calendar per watched jurisdiction, even before it has events. A jurisdiction that isn't watched (issue #115) gets none. |
+| `public/ahead.ics` | Every known date in one calendar (ADR-0010): each action's `expires_on` and `next_on`, as all-day events. |
+| `public/ahead/{jurisdiction}.ics` | One known-date calendar per `watched` or `decisions` jurisdiction, even before it has a known date. A `registered` one gets none. |
 | `public/feed.xml` | RSS 2.0 (SPEC AC5): one item per event revision and per decision revision, newest first (see below). |
 | `public/events.csv` | One row per event, with `location_lat` and `location_lon` (empty when not recorded); documents as space-separated lists in the record's order, ending with `document_retrieval` (`fetched` or `manual` for each). UTF-8 with BOM and a formula guard on text cells (SPEC AC7). Every column: `docs/data-dictionary.md`. |
 | `public/events.parquet` | The CSV's rows with native types: `starts_utc` a UTC timestamp, `sequence` an integer, coordinates doubles, and `documents` one list of `{url, retrieved_utc, sha256, retrieval}` in the record's order. Written by DuckDB `COPY` (snappy); values unguarded. |
@@ -31,6 +33,16 @@ cancelled meeting gets `STATUS:CANCELLED` and "Cancelled: " in front of its titl
 time of the event's documents, so an unchanged event keeps the same bytes on every publish. The description lists each
 source with its retrieval time (Eastern) and SHA-256 (SPEC AC2). A source a person saved in a browser (`retrieval: manual`)
 is followed by "Saved by a person in a browser (the source does not allow automated downloads)."; a fetched one by nothing (issue #113).
+
+**Known-date calendars (ADR-0010):** one all-day `VEVENT` per known date (`DTSTART;VALUE=DATE`, `DTEND` the next day),
+so no VTIMEZONE. The UID is `sha256("known\n{kind}\n{action id}")@dcledger`, `kind` being `expiry` or `next`; the date
+is left out, so a corrected or rescheduled date updates the same entry. `SEQUENCE` is the action's. An expiry whose
+date has passed while its action is `superseded` or `repealed` is `STATUS:CANCELLED`. `SUMMARY` is a fixed name
+("Moratorium expiry date: Greensboro", "Date set for the next step: Davidson County, moratorium"); `DESCRIPTION` holds
+the decision, the date, the flag "Date passed. Nothing recorded for it yet." when that applies, the stated status,
+threshold and scope, the label, every source with its retrieval time and SHA-256, links to the decision and to its
+`/ahead/` row, and the coverage line. No `VALARM`. Every date and state is worked out from the ledger and D, the
+Eastern date of the status's `generated_utc`, so one ledger and one D give the same bytes.
 
 **Feed:** export keeps no history, so each event is one item for its current revision. The GUID is the calendar UID
 plus `/` and `sequence` (`isPermaLink="false"`); every published change raises `sequence` (`SEQUENCE_NOT_RAISED`), so

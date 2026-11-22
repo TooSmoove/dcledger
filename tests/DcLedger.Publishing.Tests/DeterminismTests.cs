@@ -37,9 +37,10 @@ public sealed class DeterminismTests
 
     private static List<ExportFile> Export()
     {
-        var model = ExportSamples.ModelWithCorrections();
-        IExporter[] exporters = [new SiteDataExporter(), new CorrectionsExporter(), new RadarCalendarExporter(), new FeedExporter(new Uri("https://ncdcledger.org")), new TabularExporter()];
-        return [.. exporters.SelectMany(exporter => exporter.Export(model))];
+        var site = new Uri("https://ncdcledger.org");
+        IExporter[] exporters = [new SiteDataExporter(), new CorrectionsExporter(), new RadarCalendarExporter(), new AheadCalendarExporter(site), new FeedExporter(site), new TabularExporter()];
+        ExportModel[] models = [ExportSamples.ModelWithCorrections(), ExportSamples.ModelWithKnownDates()];
+        return [.. models.SelectMany(model => exporters.SelectMany(exporter => exporter.Export(model)))];
     }
 
     private static List<string> Snapshot(List<ExportFile> files) =>

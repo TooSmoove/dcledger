@@ -1,0 +1,102 @@
+﻿BEGIN:VCALENDAR
+PRODID:-//dc-ledger//Coming up on the record//EN
+VERSION:2.0
+X-PUBLISHED-TTL:PT6H
+X-WR-CALNAME:dc-ledger Coming up on the record
+BEGIN:VEVENT
+DESCRIPTION:Fixture County: Ordinance text amendment continued to a later m
+ eeting\, decided Thursday\, October 1\, 2026.\nDate set for the next step:
+  Thursday\, October 15\, 2026.\nConfirmed (official record)\nSource: https
+ ://fixture-county.example.org/agendas/1599.pdf (retrieved 2026-10-10T08:00
+ :00-04:00\, SHA-256 6ed4fc9a22e94cfaa7a43db736257d21fcaf5b9e06320184d00df2
+ f1e576520c)\nDecision: https://ncdcledger.org/jurisdictions/fixture-county
+ /\nComing up on the record: https://ncdcledger.org/ahead/#fixture-county-t
+ ext-amendment-2026-10-01-next\nOnly dates stated in an archived document a
+ re listed. A body can act on a matter before or after these dates.
+DTEND;VALUE=DATE:20261016
+DTSTAMP:20261010T120000Z
+DTSTART;VALUE=DATE:20261015
+SEQUENCE:0
+SUMMARY:Date set for the next step: Fixture County\, ordinance text amendme
+ nt
+UID:70fcef51edb7d9e017cab7c5a31f1d894f5a0be853f2bf266bedce600487c909@dcledg
+ er
+END:VEVENT
+BEGIN:VEVENT
+DESCRIPTION:Fixture County: Moratorium adopted\, decided Monday\, May 4\, 2
+ 026.\nExpiry date: Wednesday\, November 4\, 2026.\nStatus: Replaced or ext
+ ended by a later decision\nConfirmed (official record)\nSource: https://fi
+ xture-county.example.org/agendas/1599.pdf (retrieved 2026-10-10T08:00:00-0
+ 4:00\, SHA-256 6ed4fc9a22e94cfaa7a43db736257d21fcaf5b9e06320184d00df2f1e57
+ 6520c)\nDecision: https://ncdcledger.org/jurisdictions/fixture-county/\nCo
+ ming up on the record: https://ncdcledger.org/ahead/#fixture-county-morato
+ rium-2026-05-04-expiry\nOnly dates stated in an archived document are list
+ ed. A body can act on a matter before or after these dates.
+DTEND;VALUE=DATE:20261105
+DTSTAMP:20261010T120000Z
+DTSTART;VALUE=DATE:20261104
+SEQUENCE:2
+STATUS:CANCELLED
+SUMMARY:Moratorium expiry date: Fixture County
+UID:ba8de15218384504580ad1dbbb038623d3853e1db97c782a1d492ad4f798f19d@dcledg
+ er
+END:VEVENT
+BEGIN:VEVENT
+DESCRIPTION:Fixture City: Rezoning continued to a later meeting\, decided T
+ uesday\, October 20\, 2026.\nDate set for the next step: Tuesday\, Novembe
+ r 17\, 2026.\nDate passed. Nothing recorded for it yet.\nConfirmed (offici
+ al record)\nSource: https://fixture-city.example.org/council/2026-11-03-ag
+ enda.pdf (retrieved 2026-10-30T10:05:00-04:00\, SHA-256 89627e98c053f9b608
+ 15c746e25fc80b1eef04549d4b6eb3b5b59fa44f2cb269). Saved by a person in a br
+ owser (the source does not allow automated downloads).\nDecision: https://
+ ncdcledger.org/jurisdictions/fixture-city/\nComing up on the record: https
+ ://ncdcledger.org/ahead/#fixture-city-rezoning-2026-10-20-next\nOnly dates
+  stated in an archived document are listed. A body can act on a matter bef
+ ore or after these dates.
+DTEND;VALUE=DATE:20261118
+DTSTAMP:20261030T140500Z
+DTSTART;VALUE=DATE:20261117
+SEQUENCE:0
+SUMMARY:Date set for the next step: Fixture City\, rezoning
+UID:50229ee5f9667d0f1050a72d01930afa952ccbd2f7a569d327076c37835c4aac@dcledg
+ er
+END:VEVENT
+BEGIN:VEVENT
+DESCRIPTION:Fixture County: Moratorium adopted with amendments\, decided Th
+ ursday\, November 5\, 2026.\nDate set for the next step: Thursday\, Decemb
+ er 3\, 2026.\nStatus: In effect\nThreshold: “electrical power demand exc
+ eeding 10 megawatts”\nConfirmed (official record)\nSource: https://fixtu
+ re-county.example.org/meetings/1600/actions/7 (retrieved 2026-11-06T08:00:
+ 00-05:00\, SHA-256 de7880f9f6f1a7ad5eb2807c6960856ee17f04ea2d117706fb1425c
+ d9c1cacb4)\nDecision: https://ncdcledger.org/items/fixture-county-boc-2026
+ -11-05/\nComing up on the record: https://ncdcledger.org/ahead/#fixture-co
+ unty-moratorium-2026-11-05-next\nOnly dates stated in an archived document
+  are listed. A body can act on a matter before or after these dates.
+DTEND;VALUE=DATE:20261204
+DTSTAMP:20261106T130000Z
+DTSTART;VALUE=DATE:20261203
+SEQUENCE:0
+SUMMARY:Date set for the next step: Fixture County\, moratorium
+UID:80277232ecc287a8db434c042b6821ccd9aba08df543912a0f58b18d15a8619a@dcledg
+ er
+END:VEVENT
+BEGIN:VEVENT
+DESCRIPTION:Fixture County: Moratorium adopted with amendments\, decided Th
+ ursday\, November 5\, 2026.\nExpiry date: Friday\, January 8\, 2027.\nStat
+ us: In effect\nThreshold: “electrical power demand exceeding 10 megawatt
+ s”\nConfirmed (official record)\nSource: https://fixture-county.example.
+ org/meetings/1600/actions/7 (retrieved 2026-11-06T08:00:00-05:00\, SHA-256
+  de7880f9f6f1a7ad5eb2807c6960856ee17f04ea2d117706fb1425cd9c1cacb4)\nDecisi
+ on: https://ncdcledger.org/items/fixture-county-boc-2026-11-05/\nComing up
+  on the record: https://ncdcledger.org/ahead/#fixture-county-moratorium-20
+ 26-11-05-expiry\nOnly dates stated in an archived document are listed. A b
+ ody can act on a matter before or after these dates.
+DTEND;VALUE=DATE:20270109
+DTSTAMP:20261106T130000Z
+DTSTART;VALUE=DATE:20270108
+SEQUENCE:0
+SUMMARY:Moratorium expiry date: Fixture County
+UID:a538c493e2774648240d960da52b6a2a6ad8b34de7c4af836aaf6fa5b8b2680f@dcledg
+ er
+END:VEVENT
+END:VCALENDAR

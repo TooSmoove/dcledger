@@ -44,4 +44,13 @@ public static class ExportPaths
 
     /// <summary>One jurisdiction's calendar, for example <c>public/radar/guilford.ics</c>.</summary>
     public static string JurisdictionRadar(string jurisdictionId) => $"public/radar/{jurisdictionId}.ics";
+
+    /// <summary>Every known date in one calendar (ADR-0010 Decision 4).</summary>
+    public const string Ahead = "public/ahead.ics";
+
+    /// <summary>
+    /// One jurisdiction's known dates, for example <c>public/ahead/davidson.ics</c>: every <c>watched</c> or
+    /// <c>decisions</c> jurisdiction gets one (ADR-0010 Decision 4).
+    /// </summary>
+    public static string JurisdictionAhead(string jurisdictionId) => $"public/ahead/{jurisdictionId}.ics";
 }

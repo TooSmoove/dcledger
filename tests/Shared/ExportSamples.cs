@@ -209,6 +209,73 @@ internal static class ExportSamples
         return ExportModelBuilder.Build(snapshot, Status()).Model;
     }
 
+    /// <summary>D for <see cref="ModelWithKnownDates"/>: Tuesday, December 1, 2026, 10:00 Eastern.</summary>
+    public static readonly DateTimeOffset KnownDatesGeneratedUtc = Utc(2026, 12, 1, 15, 0, 0);
+
+    /// <summary>
+    /// The Nov 5 decision with an expiry ahead (Jan 8, 2027) and a next step ahead (Dec 3, 2026): both upcoming at
+    /// <see cref="KnownDatesGeneratedUtc"/>; the 7-day reminder for Dec 3 is due, its 30-day one fell before the decision
+    /// was published.
+    /// </summary>
+    public static readonly LocalAction November5WithDates = November5Moratorium with
+    {
+        Terms = new DecisionTerms { Threshold = "electrical power demand exceeding 10 megawatts", ExpiresOn = new DateOnly(2027, 1, 8), Status = ActionStatus.InEffect },
+        NextOn = new DateOnly(2026, 12, 3),
+    };
+
+    /// <summary>The moratorium the Nov 5 decision extended: its Nov 4 expiry passed while superseded, so it is ended.</summary>
+    public static readonly LocalAction May4Moratorium = new()
+    {
+        Id = "fixture-county-moratorium-2026-05-04",
+        JurisdictionId = County.Id,
+        ActionType = ActionType.Moratorium,
+        Outcome = ActionOutcome.Adopted,
+        DecidedOn = new DateOnly(2026, 5, 4),
+        Sequence = 2,
+        Label = EvidenceLabel.ConfirmedOfficial,
+        DocumentIds = [CountyAgenda1599.Id],
+        Terms = new DecisionTerms { ExpiresOn = new DateOnly(2026, 11, 4), Status = ActionStatus.Superseded, SuccessorId = November5Moratorium.Id },
+    };
+
+    /// <summary>A continuance to Oct 15, when the county met: recorded.</summary>
+    public static readonly LocalAction October1Continuance = new()
+    {
+        Id = "fixture-county-text-amendment-2026-10-01",
+        JurisdictionId = County.Id,
+        ActionType = ActionType.TextAmendment,
+        Outcome = ActionOutcome.Continued,
+        DecidedOn = new DateOnly(2026, 10, 1),
+        Label = EvidenceLabel.ConfirmedOfficial,
+        DocumentIds = [CountyAgenda1599.Id],
+        NextOn = new DateOnly(2026, 10, 15),
+    };
+
+    /// <summary>A continuance to Nov 17, with nothing on the city's record that day: passed with nothing recorded.</summary>
+    public static readonly LocalAction October20Continuance = new()
+    {
+        Id = "fixture-city-rezoning-2026-10-20",
+        JurisdictionId = City.Id,
+        ActionType = ActionType.Rezoning,
+        Outcome = ActionOutcome.Continued,
+        DecidedOn = new DateOnly(2026, 10, 20),
+        Label = EvidenceLabel.ConfirmedOfficial,
+        DocumentIds = [CityAgenda.Id],
+        NextOn = new DateOnly(2026, 11, 17),
+    };
+
+    /// <summary>A model with a known date in every state (ADR-0010), at <see cref="KnownDatesGeneratedUtc"/>.</summary>
+    public static ExportModel ModelWithKnownDates(DateTimeOffset? generatedUtc = null)
+    {
+        var snapshot = Snapshot();
+        LocalAction[] actions = [October20Continuance, November5WithDates, October1Continuance, May4Moratorium];
+        snapshot = snapshot with
+        {
+            Actions = [.. actions.Select(action => Loaded("actions", action.Id, action))],
+            RecordFiles = [.. snapshot.RecordFiles.Where(file => !file.StartsWith("actions/", StringComparison.Ordinal)), .. actions.Select(action => $"actions/{action.Id}.yaml")],
+        };
+        return ExportModelBuilder.Build(snapshot, Status() with { GeneratedUtc = generatedUtc ?? KnownDatesGeneratedUtc }).Model;
+    }
+
     /// <summary>The ledger as the YAML reader would load it, records deliberately out of order.</summary>
     public static LedgerSnapshot Snapshot() => new()
     {

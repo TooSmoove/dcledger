@@ -72,6 +72,11 @@ public static class ExportModelBuilder
             .OrderBy(file => file.DocumentId.Value, StringComparer.Ordinal)
             .ToList();
 
+        var actionsById = actions.ToDictionary(item => item.Action.Id, StringComparer.Ordinal);
+        var knownDates = KnownDates.From(actions.Select(item => item.Action), events.Select(item => item.Event), KnownDateRules.EasternDate(status.GeneratedUtc))
+            .Select(item => new ExportKnownDate { Date = item.Date, State = item.State, Action = actionsById[item.Date.ActionId] })
+            .ToList();
+
         var model = new ExportModel
         {
             GeneratedUtc = status.GeneratedUtc,
@@ -80,6 +85,7 @@ public static class ExportModelBuilder
             Actions = actions,
             Corrections = corrections,
             Thumbnails = thumbnails,
+            KnownDates = knownDates,
         };
         return new ExportModelResult(model, Warnings(jurisdictions, status));
     }
