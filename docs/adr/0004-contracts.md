@@ -18,4 +18,6 @@
 
 **Amendment (Nov 16, 2026, issue #132):** within schema version 1, every document in `events.json` gained two keys after `retrieval`: `kind` (`minutes`, `legislation`, `agenda`, `agenda_packet`, `notice`, `news_release`, `news_article`, `other`, or null) and `thumbnail` (`{"path": "/thumbnails/{sha256}.webp", "width", "height"}`, or null), each always written. `dcl export` copies each listed document's reviewed picture to `public/thumbnails/{sha256}.webp`, a new path. The site defaults both keys to null and, whatever the data says, shows a picture only for `minutes` and `legislation` (`site/src/lib/thumbnails.js`, mirroring `Thumbnail.MayShow`). The CSV and Parquet downloads are unchanged.
 
+**Amendment (Nov 21, 2026, ADR-0010):** within schema version 1, each action in `events.json` gained `next_on` (`YYYY-MM-DD`, or null) after `status`, always written; `actions.csv` and `actions.parquet` gained it as their last column. The site defaults a missing key to null.
+
 **Consequences:** A drift fails one contract test in .NET or Node instead of breaking the site silently. Publish feeds the CLI an `ingest-status.json` built from ingest run history, so the CLI never calls the GitHub API to learn freshness.

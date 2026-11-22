@@ -231,7 +231,8 @@
       "early_termination": "upon adoption of text amendments",
       "exemptions": "applications deemed complete before the effective date",
       "successor_id": null,
-      "status": "in_effect"
+      "status": "in_effect",
+      "next_on": null
     },
     {
       "id": "fixture-city-text-amendment-2026-10-20",
@@ -263,7 +264,8 @@
       "early_termination": null,
       "exemptions": null,
       "successor_id": null,
-      "status": null
+      "status": null,
+      "next_on": "2026-11-17"
     },
     {
       "id": "fixture-guilford-resolution-2026-11-04",
@@ -295,7 +297,8 @@
       "early_termination": null,
       "exemptions": null,
       "successor_id": "fixture-guilford-moratorium-2026-11-05",
-      "status": "superseded"
+      "status": "superseded",
+      "next_on": null
     },
     {
       "id": "fixture-decided-moratorium-2026-09-02",
@@ -327,7 +330,8 @@
       "early_termination": null,
       "exemptions": null,
       "successor_id": null,
-      "status": null
+      "status": null,
+      "next_on": null
     }
   ]
 }

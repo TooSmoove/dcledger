@@ -366,6 +366,7 @@ public sealed class YamlLedgerReader : ILedgerReader
         var label = f.Choice("label", Labels);
         var documentIds = f.Hashes("document_ids");
         var terms = ReadTerms(f);
+        var nextOn = f.OptionalDate("next_on");
 
         return id is null || jurisdictionId is null || actionType is null || outcome is null || decidedOn is null || label is null
             ? null
@@ -383,6 +384,7 @@ public sealed class YamlLedgerReader : ILedgerReader
                 Label = label.Value,
                 DocumentIds = documentIds,
                 Terms = terms,
+                NextOn = nextOn,
             };
     }
 

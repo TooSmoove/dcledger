@@ -76,5 +76,7 @@ has not posted the official record yet. Each gains them, as an update in the fee
   - `instrument_number`, `threshold`, `scope`, `effective_on`, `expires_on`, `early_termination`, `exemptions`,
     `successor_id` and `status` after `document_retrieval` in `actions.csv`, and after `documents` in
     `actions.parquet` (#115).
+  - `next_on` as the last column of `actions.csv` and `actions.parquet`: the date an archived document gives for a
+    body's next step on the matter, such as the meeting a vote was continued to. Never computed (#124).
 - **Stability promise** for IDs, page addresses, UIDs, feed GUIDs, file paths, columns and vocabularies, held by
   tests (#116).

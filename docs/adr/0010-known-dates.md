@@ -1,6 +1,6 @@
 # ADR-0010: Known dates: what the record already says is coming
 
-**Status:** Proposed (Nov 20, 2026). Accepted when the pull request that adds it merges. Generalizes issue #124
+**Status:** Accepted (Nov 20, 2026, PR #160). Generalizes issue #124
 (its `/expiries/` page, `expiries.ics` and post-expiry flag become the first slice of this design, under new paths,
 before any of them ship). Amends ADR-0002 (one new optional action field), ADR-0004 (the contract additions below)
 and ADR-0005 (one new command). Builds on ADR-0008's idempotent issue comments.

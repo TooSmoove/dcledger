@@ -78,8 +78,8 @@ internal static class LedgerTables
     /// <summary>
     /// One row per local action (issue #90), in the order of <c>events.json</c>'s actions, documents joined like the
     /// events' and every text column guarded (see <see cref="CsvTextMacro"/>). <c>unanimous</c> is <c>true</c> or
-    /// <c>false</c>; <c>sequence</c> a number. The decision's terms and <c>status</c> (issue #115) are the last nine
-    /// columns, empty when the record doesn't state them, because new columns are appended.
+    /// <c>false</c>; <c>sequence</c> a number. The decision's terms and <c>status</c> (issue #115) follow, then
+    /// <c>next_on</c> (ADR-0010) last, each empty when the record doesn't state it, because new columns are appended.
     /// </summary>
     public const string ActionsCsvQuery = """
         SELECT
@@ -105,19 +105,21 @@ internal static class LedgerTables
             csv_text(a.early_termination) AS early_termination,
             csv_text(a.exemptions) AS exemptions,
             csv_text(a.successor_id) AS successor_id,
-            csv_text(a.status) AS status
+            csv_text(a.status) AS status,
+            csv_text(a.next_on) AS next_on
         FROM actions AS a
         JOIN action_documents AS ad ON ad.action_id = a.id
         JOIN documents AS d ON d.sha256 = ad.sha256
         GROUP BY a.id, a.jurisdiction_id, a.event_id, a.action_type, a.outcome, a.decided_on, a.votes, a.unanimous, a.sequence,
             a.label, a.instrument_number, a.threshold, a.scope, a.effective_on, a.expires_on, a.early_termination,
-            a.exemptions, a.successor_id, a.status
+            a.exemptions, a.successor_id, a.status, a.next_on
         ORDER BY a.decided_on, a.id
         """;
 
     /// <summary>
-    /// The actions' Parquet rows: native types (<c>decided_on</c>, <c>effective_on</c> and <c>expires_on</c> are DATEs)
-    /// and documents as a list of structs. The terms follow <c>documents</c>, null when not stated.
+    /// The actions' Parquet rows: native types (<c>decided_on</c>, <c>effective_on</c>, <c>expires_on</c> and
+    /// <c>next_on</c> are DATEs) and documents as a list of structs. The terms follow <c>documents</c>, then <c>next_on</c>
+    /// (ADR-0010), null when not stated.
     /// </summary>
     public const string ActionsParquetQuery = """
         SELECT
@@ -140,13 +142,14 @@ internal static class LedgerTables
             a.early_termination,
             a.exemptions,
             a.successor_id,
-            a.status
+            a.status,
+            CAST(a.next_on AS DATE) AS next_on
         FROM actions AS a
         JOIN action_documents AS ad ON ad.action_id = a.id
         JOIN documents AS d ON d.sha256 = ad.sha256
         GROUP BY a.id, a.jurisdiction_id, a.event_id, a.action_type, a.outcome, a.decided_on, a.votes, a.unanimous, a.sequence,
             a.label, a.instrument_number, a.threshold, a.scope, a.effective_on, a.expires_on, a.early_termination,
-            a.exemptions, a.successor_id, a.status
+            a.exemptions, a.successor_id, a.status, a.next_on
         ORDER BY a.decided_on, a.id
         """;
 
@@ -237,7 +240,8 @@ internal static class LedgerTables
             early_termination VARCHAR,
             exemptions VARCHAR,
             successor_id VARCHAR,
-            status VARCHAR
+            status VARCHAR,
+            next_on VARCHAR
         )
         """,
         """
@@ -389,6 +393,7 @@ internal static class LedgerTables
                     .AppendValue(action.Terms.Exemptions)
                     .AppendValue(action.Terms.SuccessorId)
                     .AppendValue(action.Terms.Status?.ToToken())
+                    .AppendValue(IsoTime.Date(action.NextOn))
                     .EndRow();
             }
         }

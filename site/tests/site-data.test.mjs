@@ -79,8 +79,15 @@ test('every fixture decision carries each term key, null when not stated (#115)'
     'exemptions',
     'successor_id',
     'status',
+    'next_on',
   ];
   for (const action of parseSiteData(fixture).actions) {
     assert.deepEqual(Object.keys(action).slice(-keys.length), keys, action.id);
   }
+});
+
+test('next_on is a plain date when the record states one, else null (ADR-0010)', () => {
+  const byId = Object.fromEntries(parseSiteData(fixture).actions.map((a) => [a.id, a.next_on]));
+  assert.equal(byId['fixture-city-text-amendment-2026-10-20'], '2026-11-17');
+  assert.equal(byId['fixture-guilford-moratorium-2026-11-05'], null);
 });

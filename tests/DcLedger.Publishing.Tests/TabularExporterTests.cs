@@ -29,7 +29,7 @@ public sealed class TabularExporterTests
     [
         "id", "jurisdiction_id", "event_id", "action_type", "outcome", "decided_on", "votes", "unanimous", "sequence", "label",
         "document_urls", "document_retrieved_utc", "document_sha256", "document_retrieval", "instrument_number", "threshold",
-        "scope", "effective_on", "expires_on", "early_termination", "exemptions", "successor_id", "status",
+        "scope", "effective_on", "expires_on", "early_termination", "exemptions", "successor_id", "status", "next_on",
     ];
 
     /// <summary>The CSV as text, without its BOM (asserted on the bytes below).</summary>
@@ -253,8 +253,8 @@ public sealed class TabularExporterTests
         Rfc4180.Parse(csv).ShouldHaveSingleItem().ShouldBe(ActionsHeader);
     }
 
-    private static string ActionsCsv() =>
-        TestFiles.Text(TestFiles.Single(new TabularExporter().Export(ExportSamples.Model()), ExportPaths.ActionsCsv)).TrimStart('\uFEFF');
+    private static string ActionsCsv(ExportModel? model = null) =>
+        TestFiles.Text(TestFiles.Single(new TabularExporter().Export(model ?? ExportSamples.Model()), ExportPaths.ActionsCsv)).TrimStart('\uFEFF');
 
     [Fact]
     public void Rows_round_trip_in_start_order_with_quoting()
@@ -367,7 +367,7 @@ public sealed class TabularExporterTests
 
         ActionsHeader[13].ShouldBe("document_retrieval", "the terms come after every column published before #115");
         rows[0].ShouldBe(ActionsHeader);
-        rows[1][14..].ShouldBe(
+        rows[1][14..23].ShouldBe(
         [
             "'=26-01",
             "'+electrical power demand exceeding 10 megawatts",
@@ -379,7 +379,7 @@ public sealed class TabularExporterTests
             "fixture-county-moratorium-2027-05-04",
             "superseded",
         ]);
-        rows[1][14..].Select(Unguard).ShouldBe(
+        rows[1][14..23].Select(Unguard).ShouldBe(
         [
             ExportSamples.FullTerms.InstrumentNumber, ExportSamples.FullTerms.Threshold, ExportSamples.FullTerms.Scope, "2026-11-05", "2027-05-04",
             ExportSamples.FullTerms.EarlyTermination, ExportSamples.FullTerms.Exemptions, ExportSamples.FullTerms.SuccessorId, "superseded",
@@ -390,6 +390,43 @@ public sealed class TabularExporterTests
     public void An_action_without_terms_has_empty_term_columns()
     {
         Rfc4180.Parse(ActionsCsv())[1][14..].ShouldAllBe(cell => cell.Length == 0);
+    }
+
+    [Fact]
+    public void Next_on_is_the_last_actions_csv_column_as_a_plain_date()
+    {
+        var rows = Rfc4180.Parse(ActionsCsv(ExportSamples.ModelWithNextOn()));
+
+        rows[0][^1].ShouldBe("next_on");
+        rows[1][^1].ShouldBe("2026-12-03");
+    }
+
+    [Fact]
+    public void Actions_parquet_has_next_on_as_a_native_date_in_the_last_column()
+    {
+        var directory = Directory.CreateTempSubdirectory("dcl-parquet-");
+        try
+        {
+            var path = Path.Combine(directory.FullName, "actions.parquet");
+            File.WriteAllBytes(path, TestFiles.Single(new TabularExporter().Export(ExportSamples.ModelWithNextOn()), ExportPaths.ActionsParquet).Content.ToArray());
+
+            var row = ReadParquet("SELECT typeof(next_on), next_on FROM parquet", path).ShouldHaveSingleItem();
+            var columns = ReadParquet("SELECT column_name FROM (DESCRIBE SELECT * FROM parquet)", path).Select(column => (string)column[0]!).ToList();
+
+            row[0].ShouldBe("DATE");
+            var nextOn = row[1] switch
+            {
+                DateOnly date => date,
+                DateTime dateTime => DateOnly.FromDateTime(dateTime),
+                var other => throw new InvalidOperationException($"next_on read back as {other?.GetType().Name ?? "null"}."),
+            };
+            nextOn.ShouldBe(ExportSamples.NextOn);
+            columns[^1].ShouldBe("next_on");
+        }
+        finally
+        {
+            directory.Delete(recursive: true);
+        }
     }
 
     [Fact]
@@ -419,7 +456,7 @@ public sealed class TabularExporterTests
             columns[columns.IndexOf("documents")..].ShouldBe(
             [
                 "documents", "instrument_number", "threshold", "scope", "effective_on", "expires_on", "early_termination", "exemptions",
-                "successor_id", "status",
+                "successor_id", "status", "next_on",
             ]);
         }
         finally

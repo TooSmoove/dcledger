@@ -16,12 +16,12 @@ public sealed class SiteContractTests
     private static readonly HashSet<string> Nullable = new(StringComparer.Ordinal) { "case_number", "last_checked_utc", "location", "event_id", "votes" };
 
     /// <summary>
-    /// A decision's terms (issue #115), each null when not stated. Listed by path because an event's <c>status</c> is
+    /// A decision's terms (issue #115) and its next-step date (ADR-0010), each null when not stated. Listed by path because an event's <c>status</c> is
     /// never null.
     /// A document's kind, title and first-page picture (issue #132) are null unless the record has them, on events and actions.
     /// </summary>
     private static readonly HashSet<string> NullablePaths = new(
-        new[] { "instrument_number", "threshold", "scope", "effective_on", "expires_on", "early_termination", "exemptions", "successor_id", "status" }
+        new[] { "instrument_number", "threshold", "scope", "effective_on", "expires_on", "early_termination", "exemptions", "successor_id", "status", "next_on" }
             .Select(key => $"$.actions[].{key}")
             .Concat(new[] { "events", "actions" }.SelectMany(items => new[] { "kind", "title", "thumbnail" }.Select(key => $"$.{items}[].documents[].{key}")))
             .Concat(new[] { "$.jurisdictions[].note", "$.jurisdictions[].note_documents[].kind", "$.jurisdictions[].note_documents[].title", "$.jurisdictions[].note_documents[].thumbnail" }),

@@ -181,4 +181,11 @@ public sealed record LocalAction
 
     /// <summary>What the adopted decision says and where it stands (issue #115); <see cref="DecisionTerms.None"/> when nothing is recorded.</summary>
     public DecisionTerms Terms { get; init; } = DecisionTerms.None;
+
+    /// <summary>
+    /// The date an archived document in <see cref="DocumentIds"/> gives for the body's next step on the same matter, such
+    /// as a continuance "to the November 5 meeting" (ADR-0010). Copied from the document, never computed; allowed on any
+    /// <see cref="Outcome"/> and always after <see cref="DecidedOn"/>. Null when no document states one.
+    /// </summary>
+    public DateOnly? NextOn { get; init; }
 }

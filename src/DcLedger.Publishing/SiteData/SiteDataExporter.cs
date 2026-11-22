@@ -114,6 +114,7 @@ public sealed class SiteDataExporter : IExporter
         json.WriteString("label", action.Label.ToToken());
         WriteDocuments(json, "documents", item.Documents);
         WriteTerms(json, action.Terms);
+        WriteStringOrNull(json, "next_on", IsoTime.Date(action.NextOn)); // ADR-0010, schema version 1, additive
         json.WriteEndObject();
     }
 

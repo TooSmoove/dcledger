@@ -79,6 +79,23 @@ public sealed class ActionRevisionsTests
     }
 
     [Fact]
+    public void Next_on_is_a_published_field()
+    {
+        ActionRevisions.ChangedFields(Reported(), Reported() with { NextOn = new DateOnly(2026, 12, 3) }).ShouldBe(new List<string> { "next_on" });
+    }
+
+    [Fact]
+    public void Rescheduling_next_on_without_a_raised_sequence_is_rejected()
+    {
+        var scheduled = Reported() with { NextOn = new DateOnly(2026, 12, 3) };
+        var rescheduled = scheduled with { NextOn = new DateOnly(2026, 12, 17) };
+
+        Check(scheduled, rescheduled).ShouldHaveSingleItem().Message
+            .ShouldBe("next_on changed but sequence is still 0. Raise it to 1 so feed readers see the change.");
+        Check(scheduled, rescheduled with { Sequence = 1 }).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Adding_terms_without_a_raised_sequence_is_rejected()
     {
         var withExpiry = Reported() with { Terms = new DecisionTerms { ExpiresOn = new DateOnly(2027, 2, 14) } };
