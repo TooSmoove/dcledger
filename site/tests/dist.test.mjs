@@ -921,6 +921,14 @@ test('/ahead/ lists the known dates by section, with anchors, flags, sources and
   assert.match(ahead, /SHA-256/, 'rows carry their sources');
   assert.ok(!hasScriptTag(ahead));
   assert.doesNotMatch(ahead, /deadline/i);
+  // The dates show their own order, so no section says it (Nov 24, 2026).
+  assert.doesNotMatch(ahead, /(Soonest|Newest) first/);
+  assert.match(later, /id="later-heading">Later<\/h2>\s*<article/, 'Later has no intro line');
+  assert.match(
+    section('next'),
+    /Through [A-Z][a-z]{2}, [A-Z][a-z]{2} \d{1,2}, \d{4}\.<\/p>/,
+    'the 30-day section keeps its end date',
+  );
 });
 
 test('the header links /ahead/ on every page, and the radar points to it', () => {
@@ -932,6 +940,7 @@ test('the header links /ahead/ on every page, and the radar points to it', () =>
     );
   }
   assert.match(radar, /href="\/ahead\/">Coming up on the record<\/a>/);
+  assert.match(radar, /Every item has been reviewed and\s+links to its official source\./);
 });
 
 test('a decision card shows its next-step date and flags a date passed with nothing recorded', () => {

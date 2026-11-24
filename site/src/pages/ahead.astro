@@ -11,6 +11,7 @@ import Base from '../layouts/Base.astro';
 import {
   COVERAGE_TEXT,
   PASSED_UNRECORDED_TEXT,
+  RECORDED_KEEP_DAYS,
   aheadSections,
   kindText,
   knownDates,
@@ -44,21 +45,21 @@ const groups = [
   {
     id: 'next',
     heading: `Next ${WINDOW_DAYS} days`,
-    intro: `Through ${dateText(sections.windowEnd)}, soonest first.`,
+    intro: `Through ${dateText(sections.windowEnd)}.`,
     rows: sections.next,
   },
-  { id: 'later', heading: 'Later', intro: 'Soonest first.', rows: sections.later },
+  // No intro: the order (soonest first) shows in the dates themselves.
+  { id: 'later', heading: 'Later', intro: null, rows: sections.later },
   {
     id: 'passed',
     heading: 'Date passed, nothing recorded',
-    intro: 'Newest first. The record doesn’t yet show what happened on these dates.',
+    intro: 'The record doesn’t yet show what happened on these dates.',
     rows: sections.passed,
   },
   {
     id: 'recorded',
     heading: 'Date passed, recorded',
-    intro:
-      'Newest first, for 90 days after the date. The decision’s page shows what the record says.',
+    intro: `Kept for ${RECORDED_KEEP_DAYS} days after the date. The decision’s page shows what the record says.`,
     rows: sections.recorded,
   },
 ];
@@ -86,7 +87,7 @@ const groups = [
       group.rows.length > 0 && (
         <section aria-labelledby={`${group.id}-heading`} class="decisions known-dates">
           <h2 id={`${group.id}-heading`}>{group.heading}</h2>
-          <p class="muted">{group.intro}</p>
+          {group.intro !== null && <p class="muted">{group.intro}</p>}
           {group.rows.map((k) => {
             const { id, data } = k.action;
             const name = names.get(data.jurisdiction_id) ?? data.jurisdiction_id;
