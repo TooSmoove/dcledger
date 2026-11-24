@@ -11,7 +11,7 @@
     <!-- 5.x; its own VTIMEZONE output is never used: the pinned block is injected instead (spike S6). -->
     <PackageVersion Include="Ical.Net" Version="5.2.4" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="11.0.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.14" />
     <PackageVersion Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
