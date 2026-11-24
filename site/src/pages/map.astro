@@ -40,8 +40,9 @@ const hasBasemap = basemapAssets(import.meta.env.PUBLIC_BASEMAP_URL) !== null;
       Nothing is scheduled through <time datetime={windowEnd}>{dateText(windowEnd)}</time> on the{' '}
       <a href="/radar/">Hearing Radar</a> (as of{' '}
       <time datetime={generated}>{easternText(generated)}</time>), so there are no proposed sites to
-      map. Recorded votes are under <a href="/#latest-heading">Latest decisions</a> on the home
-      page.
+      map. Dates the record already states, such as when a moratorium ends, are on{' '}
+      <a href="/ahead/">Coming up on the record</a>. Recorded votes are under{' '}
+      <a href="/#latest-heading">Latest decisions</a> on the home page.
     </p>
   ) : (
     <p>
